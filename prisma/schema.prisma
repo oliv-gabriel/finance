@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String
+  color        String        @default("#3b82f6")
+  icon         String        @default("Tag")
+  transactions Transaction[]
+  budgets      Budget[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Account {
+  id           String        @id @default(cuid())
+  name         String
+  type         String        // "CONTA" or "CARTAO"
+
+  // Credit Card Details
+  limit        Float?        @default(0)
+  closingDay   Int?
+  dueDay       Int?
+
+  // Link Card to Bank
+  bankId       String?
+  bank         Account?      @relation("BankToCards", fields: [bankId], references: [id], onDelete: SetNull)
+  cards        Account[]     @relation("BankToCards")
+
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Transaction {
+  id                  String   @id @default(cuid())
+  amount              Float
+  description         String
+  date                DateTime @default(now())
+  type                String   // INCOME or EXPENSE
+  paid                Boolean  @default(true)
+  accountId           String?
+  account             Account? @relation(fields: [accountId], references: [id])
+  categoryId          String
+  category            Category @relation(fields: [categoryId], references: [id])
+
+  // External Reference (e.g., from Email or Open Finance)
+  externalId          String?  @unique
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  amount     Float
+  month      Int
+  year       Int
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([categoryId, month, year])
+}

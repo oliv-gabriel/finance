@@ -1,65 +1,130 @@
-import Image from "next/image";
+import { getDashboardData } from "@/app/actions/dashboard";
+import { getTransactions } from "@/app/actions/transactions";
+import Navbar from "@/components/Navbar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { History, CheckCircle2, Wallet, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import Link from "next/link";
+import { format } from "date-fns";
+import Notepad from "@/components/dashboard/Notepad";
+import { ExpensesBarChart, CategoriesPieChart } from "@/components/dashboard/DashboardCharts";
+import FinancialSummary from "@/components/dashboard/FinancialSummary";
+import RecentTransactions from "@/components/dashboard/RecentTransactions";
 
-export default function Home() {
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string; year?: string }>;
+}) {
+  const params = await searchParams;
+  const now = new Date();
+  const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
+  const year = params.year ? parseInt(params.year) : now.getFullYear();
+
+  const data = await getDashboardData(month, year);
+  const recentTransactions = await getTransactions({ limit: 5, month, year });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="flex flex-col min-h-screen">
+      <Navbar summary={data.summary} />
+      
+      <div className="p-8 space-y-8 flex-1 overflow-auto">
+        {/* Row de Métricas Centrais */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-blue-800 dark:text-blue-300">Saldo Geral</CardTitle>
+              <Wallet className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-black ${data.summary.balance >= 0 ? "text-blue-700" : "text-red-700"}`}>
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.balance)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-green-800 dark:text-green-300">Receitas</CardTitle>
+              <ArrowUpCircle className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-green-700">
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.income)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 border-red-200 dark:border-red-800 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-red-800 dark:text-red-300">Despesas</CardTitle>
+              <ArrowDownCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-red-700">
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.expenses)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-indigo-800 dark:text-indigo-300">Total Pago</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-indigo-700">
+                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.paidExpenses)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Novo Dashboard Summary */}
+        <FinancialSummary 
+          accounts={data.accounts}
+          creditCards={data.creditCards}
+          month={month}
+          year={year}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        {/* Row do Bloco de Notas */}
+
+        <div className="w-full">
+          <Notepad />
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid gap-6 lg:grid-cols-7">
+          <Card className="lg:col-span-4 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Gastos Diários</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <ExpensesBarChart data={data.dailyExpenses} />
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-3 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">Distribuição por Categoria</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <CategoriesPieChart data={data.categoryDistribution} />
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        {/* Row das Transações Recentes */}
+        <Card className="shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg font-bold">Transações Recentes</CardTitle>
+            <Link href="/transactions" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
+              <History className="h-4 w-4" /> Ver todas
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <RecentTransactions transactions={recentTransactions as any} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
