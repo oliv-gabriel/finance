@@ -39,22 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.gitignore
 /src/generated/prisma
-
-# AI Assistants & Tools
-AGENTS.md
-CLAUDE.md
-.gemini/
-.cursor/
-.cursorrules
-.copilot/
-.copilotignore
-.aider*
-.roo/
-.clinerules
-.continue/
-.codeium/
 
 # Local database files
 *.db
