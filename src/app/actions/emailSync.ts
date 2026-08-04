@@ -14,7 +14,7 @@ const imapConfig = {
         user: process.env.EMAIL_USER || "",
         pass: process.env.EMAIL_PASS || "",
     },
-    logger: false,
+    logger: false as const,
 };
 
 /**
@@ -43,7 +43,7 @@ export async function syncEmails() {
             // Busca APENAS e-mails não lidos
             const uids = await client.search({ seen: false });
 
-            if (uids.length > 0) {
+            if (uids && uids.length > 0) {
                 // Pega no máximo os 50 mais recentes para não estourar a memória
                 const recentUids = uids.slice(-50);
                 console.log(`Baixando ${recentUids.length} e-mails (de ${uids.length} não lidos)...`);
