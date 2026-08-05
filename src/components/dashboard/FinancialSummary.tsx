@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff } from "lucide-react";
 import { payCardBill } from "@/app/actions/transactions";
+import CardInvoiceModal from "@/components/accounts/CardInvoiceModal";
 
 interface CardData {
   id: string;
@@ -43,6 +44,7 @@ const getBankIcon = (name: string) => {
 
 export default function FinancialSummary({ creditCards, accounts, month, year }: FinancialSummaryProps) {
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -151,9 +153,16 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
           <div className="flex w-full flex-col gap-3">
             {creditCards.length > 0 ? (
               creditCards.map((card) => (
-                <div key={card.id} className="group relative flex w-full cursor-default flex-col rounded-xl p-4 transition-colors bg-muted/30 hover:bg-muted/50">
+                <div 
+                  key={card.id} 
+                  onClick={() => setSelectedCardId(card.id)}
+                  className="group relative flex w-full cursor-pointer flex-col rounded-xl p-4 transition-all duration-200 bg-muted/30 hover:bg-muted/60 hover:border-[#b300e4]/40 border border-transparent shadow-2xs hover:shadow-md hover:scale-[1.01]"
+                >
                   <div className="absolute top-3 right-3 z-10">
-                    <button className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-[#b300e4] hover:bg-accent hover:text-accent-foreground size-9">
+                    <button 
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-[#b300e4] hover:bg-accent hover:text-accent-foreground size-9"
+                    >
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
@@ -204,8 +213,8 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                   <button 
                     type="button" 
                     disabled={payingId === card.id || card.faturaAtual === 0}
-                    onClick={() => handlePayBill(card.id)}
-                    className="border-border bg-card text-foreground hover:bg-muted mt-5 h-10 w-full rounded-full border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={(e) => { e.stopPropagation(); handlePayBill(card.id); }}
+                    className="border-border bg-card text-foreground hover:bg-muted mt-5 h-10 w-full rounded-full border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {payingId === card.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -237,6 +246,14 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
           </div>
         </div>
       </div>
+      
+      <CardInvoiceModal
+        isOpen={!!selectedCardId}
+        onClose={() => setSelectedCardId(null)}
+        cardId={selectedCardId}
+        initialMonth={month}
+        initialYear={year}
+      />
     </div>
   );
 }

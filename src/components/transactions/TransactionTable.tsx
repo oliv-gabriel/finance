@@ -4,14 +4,10 @@ import React, { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
-  MoreVertical, 
-  CheckCircle, 
-  Edit2, 
-  Trash2, 
-  ArrowUpRight, 
-  ArrowDownLeft,
-  Calendar,
-  Tag
+  MoreVertical, CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag, 
+  ChevronUp, Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone, 
+  Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon, 
+  ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle
 } from "lucide-react";
 import Link from "next/link";
 import { toggleTransactionPaid, deleteTransaction } from "@/app/actions/transactions";
@@ -35,23 +31,48 @@ interface Transaction {
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  summary?: {
+    income?: number;
+    expenses?: number;
+    balance?: number;
+  };
 }
 
 const getBankIcon = (name: string) => {
   const nameLower = name.toLowerCase();
-  if (nameLower.includes("brasil")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-do-brasil.svg";
+  if (nameLower.includes("brasil") || nameLower === "bb") return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-do-brasil.svg";
   if (nameLower.includes("99")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/99-pay.svg";
   if (nameLower.includes("carteira")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-  if (nameLower.includes("nubank")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/nubank.svg";
-  if (nameLower.includes("itau")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/itau.svg";
+  if (nameLower.includes("nubank") || nameLower.includes("nu")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/nubank.svg";
+  if (nameLower.includes("itau") || nameLower.includes("itaú")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/itau.svg";
   if (nameLower.includes("bradesco")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/bradesco.svg";
   if (nameLower.includes("inter")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-inter.svg";
   if (nameLower.includes("santander")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/santander.svg";
+  if (nameLower.includes("picpay")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
   return "https://cdn.despezzas.com.br/svgs/carteira.svg";
 };
 
-export default function TransactionTable({ transactions }: TransactionTableProps) {
+const getCategoryIconComponent = (name: string) => {
+  const lower = name.toLowerCase();
+  if (lower.includes("aliment") || lower.includes("restauran") || lower.includes("comida") || lower.includes("ifood") || lower.includes("lanche")) return Utensils;
+  if (lower.includes("bar") || lower.includes("bebida") || lower.includes("vinho") || lower.includes("lazer")) return Wine;
+  if (lower.includes("compra") || lower.includes("mercado") || lower.includes("loja") || lower.includes("supermercado")) return ShoppingBag;
+  if (lower.includes("transpor") || lower.includes("uber") || lower.includes("carro") || lower.includes("gasolina") || lower.includes("combustível")) return Car;
+  if (lower.includes("casa") || lower.includes("aluguel") || lower.includes("moradia") || lower.includes("luz") || lower.includes("água")) return Home;
+  if (lower.includes("celular") || lower.includes("telefone") || lower.includes("internet") || lower.includes("assinatura") || lower.includes("spotify") || lower.includes("netflix")) return Smartphone;
+  if (lower.includes("jogo") || lower.includes("game") || lower.includes("steam") || lower.includes("psn") || lower.includes("xbox")) return Gamepad2;
+  if (lower.includes("viagem") || lower.includes("ferias") || lower.includes("voo") || lower.includes("hotel")) return Plane;
+  if (lower.includes("saude") || lower.includes("saúde") || lower.includes("farmacia") || lower.includes("medico") || lower.includes("academia")) return HeartPulse;
+  if (lower.includes("educa") || lower.includes("curso") || lower.includes("faculdade") || lower.includes("escola") || lower.includes("livro")) return GraduationCap;
+  if (lower.includes("salario") || lower.includes("salário") || lower.includes("renda") || lower.includes("invest")) return DollarSign;
+  return Tag;
+};
+
+export default function TransactionTable({ transactions, summary }: TransactionTableProps) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "pending">("all");
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
 
   const handleTogglePaid = async (id: string, currentStatus: boolean) => {
     setLoadingId(id);
@@ -69,6 +90,7 @@ export default function TransactionTable({ transactions }: TransactionTableProps
     if (!confirm("Deseja realmente excluir esta transação?")) return;
     try {
       await deleteTransaction(id);
+      if (selectedTx?.id === id) setSelectedTx(null);
     } catch (error) {
       console.error(error);
       alert("Falha ao excluir transação");
@@ -76,132 +98,459 @@ export default function TransactionTable({ transactions }: TransactionTableProps
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
+    return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
   };
 
+  const formatNumberOnly = (value: number) => {
+    const formatted = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+    return formatted;
+  };
+
+  // Filtragem no Desktop
+  const filteredTransactions = transactions.filter((t) => {
+    const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          t.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (t.account?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+    if (filterType === "income") return t.type === "INCOME";
+    if (filterType === "expense") return t.type === "EXPENSE";
+    if (filterType === "pending") return !t.paid;
+    return true;
+  });
+
+  // Agrupamento por Data
+  const groupTransactionsByDate = (list: Transaction[]) => {
+    const groups: { [key: string]: Transaction[] } = {};
+    list.forEach((t) => {
+      const d = typeof t.date === "string" ? new Date(t.date) : t.date;
+      // Normalizar para YYYY-MM-DD mantendo data local
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const dateKey = `${year}-${month}-${day}`;
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(t);
+    });
+
+    const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    return sortedKeys.map((key) => ({
+      dateKey: key,
+      items: groups[key],
+    }));
+  };
+
+  const formatGroupHeader = (dateStr: string) => {
+    const parts = dateStr.split("-").map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today.getTime() - 86400000);
+
+    const dayMonth = format(d, "dd 'de' MMMM", { locale: ptBR });
+
+    if (d.getTime() === today.getTime()) {
+      return `Hoje, dia ${dayMonth}`;
+    }
+    if (d.getTime() === yesterday.getTime()) {
+      return `Ontem, dia ${dayMonth}`;
+    }
+    const dow = format(d, "EEE.", { locale: ptBR });
+    const dowCap = dow.charAt(0).toUpperCase() + dow.slice(1);
+    return `${dowCap}, ${dayMonth}`;
+  };
+
+  const groupedMobile = groupTransactionsByDate(transactions);
+  const groupedDesktop = groupTransactionsByDate(filteredTransactions);
+
+  // Cálculos para Desktop Cards
+  const calcIncome = summary?.income ?? transactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
+  const calcExpense = summary?.expenses ?? transactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
+  const calcBalance = summary?.balance ?? (calcIncome - calcExpense);
+
   return (
-    <div className="overflow-hidden border border-border/70 bg-card rounded-2xl shadow-xs">
-      <div className="relative w-full overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-muted/40 text-muted-foreground">
-            <tr className="border-b border-border/60">
-              <th className="px-4 py-3 font-medium w-24">Data</th>
-              <th className="px-4 py-3 font-medium">Descrição</th>
-              <th className="px-4 py-3 font-medium hidden md:table-cell">Categoria</th>
-              <th className="px-4 py-3 font-medium">Conta</th>
-              <th className="px-4 py-3 font-medium w-24">Status</th>
-              <th className="px-4 py-3 font-medium text-right w-32">Valor</th>
-              <th className="px-4 py-3 w-12"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/60">
-            {transactions.map((t) => (
-              <tr key={t.id} className="group hover:bg-muted/30 transition-colors cursor-default">
-                <td className="px-4 py-4 align-middle whitespace-nowrap">
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-foreground font-medium">
-                      {format(new Date(t.date), "dd MMM", { locale: ptBR })}
-                    </span>
-                    <span className="text-muted-foreground text-[10px]">
-                      {format(new Date(t.date), "yyyy")}
-                    </span>
-                  </div>
-                </td>
-                
-                <td className="px-4 py-4 align-middle">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      className="flex items-center justify-center rounded-full shrink-0 h-8 w-8 text-white"
-                      style={{ backgroundColor: t.category.color }}
-                    >
-                      <Tag size={16} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-foreground font-medium truncate">{t.description}</p>
-                      <p className="text-muted-foreground text-[10px] md:hidden">
-                        {t.category.name}
-                      </p>
-                    </div>
-                  </div>
-                </td>
+    <div>
+      {/* ========================================================================= */}
+      {/* 1. VERSÃO MOBILE (LAYOUT EXATO DA REFERÊNCIA)                             */}
+      {/* ========================================================================= */}
+      <div className="md:hidden flex flex-col space-y-4">
+        {groupedMobile.length > 0 ? (
+          <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm divide-y divide-border/30">
+            {groupedMobile.map((group) => (
+              <div key={group.dateKey} className="flex flex-col">
+                {/* Cabeçalho de Data Mobile */}
+                <div className="bg-[#18181b] text-[#9e9ea3] text-[13px] font-semibold px-4 py-2.5 border-y border-border/40 select-none">
+                  {formatGroupHeader(group.dateKey)}
+                </div>
 
-                <td className="px-4 py-4 align-middle hidden md:table-cell">
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-foreground truncate">{t.category.name}</span>
-                  </div>
-                </td>
+                {/* Lista do Dia */}
+                <div className="divide-y divide-border/30">
+                  {group.items.map((t) => {
+                    const IconComponent = getCategoryIconComponent(t.category.name);
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => setSelectedTx(t)}
+                        className="group/item flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer select-none"
+                      >
+                        {/* Ícone Circular e Descrição */}
+                        <div className="flex items-center min-w-0 pr-3">
+                          <div
+                            className="size-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-transform duration-200 group-hover/item:scale-105"
+                            style={{ backgroundColor: t.category.color || "#b300e4" }}
+                          >
+                            <IconComponent className="w-6 h-6 stroke-[2.2]" />
+                          </div>
 
-                <td className="px-4 py-4 align-middle">
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 rounded-full border border-border overflow-hidden flex items-center justify-center bg-white p-0.5">
-                      <img 
-                        src={getBankIcon(t.account?.name || "")} 
-                        alt={t.account?.name}
-                        className="h-full w-full object-contain"
-                      />
-                    </div>
-                    <span className="text-foreground font-medium truncate max-w-[100px]">
-                      {t.account?.name || "N/A"}
-                    </span>
-                  </div>
-                </td>
+                          <div className="flex flex-col pl-3.5 min-w-0">
+                            <p className="text-foreground font-bold text-base leading-tight truncate max-w-[170px] sm:max-w-[240px]">
+                              {t.description || "Transação"}
+                            </p>
+                            <div className="flex items-center gap-1 text-[#84848a] text-xs font-medium mt-1">
+                              <span className="truncate max-w-[130px]">
+                                {t.account?.name || "Carteira"}
+                              </span>
+                              <CreditCardIcon className="w-3.5 h-3.5 text-[#84848a]/90 inline shrink-0 ml-0.5" />
+                            </div>
+                          </div>
+                        </div>
 
-                <td className="px-4 py-4 align-middle">
-                  <button
-                    onClick={() => handleTogglePaid(t.id, t.paid)}
-                    disabled={loadingId === t.id}
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold border transition-all hover:scale-105 active:scale-95 disabled:opacity-50 ${
-                      t.paid 
-                        ? "bg-green-500/10 text-green-500 border-green-500/20 hover:bg-green-500/20" 
-                        : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20 hover:bg-yellow-500/20"
-                    }`}
-                  >
-                    {loadingId === t.id ? (
-                      <span className="h-2 w-2 rounded-full border-2 border-current border-t-transparent animate-spin mr-1"></span>
-                    ) : null}
-                    {t.paid ? "Pago" : "Não pago"}
-                  </button>
-                </td>
+                        {/* Valor e Recorrência/Status */}
+                        <div className="flex flex-col items-end shrink-0">
+                          <span
+                            className={`font-extrabold tabular-nums text-base whitespace-nowrap tracking-tight ${
+                              t.type === "INCOME" ? "text-emerald-400" : "text-rose-500"
+                            }`}
+                          >
+                            {t.type === "INCOME" ? "R$ " : "-R$ "}
+                            {formatNumberOnly(t.amount)}
+                          </span>
 
-                <td className="px-4 py-4 align-middle text-right relative group">
-                  <div className="flex items-center justify-end">
-                    <span className={`font-semibold whitespace-nowrap ${
-                      t.type === "INCOME" ? "text-green-500" : "text-red-500"
-                    }`}>
-                      {t.type === "INCOME" ? "+" : "-"} {formatCurrency(t.amount)}
-                    </span>
-                  </div>
-                </td>
-
-                <td className="px-4 py-4 align-middle text-right">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Link href={`/transactions/edit/${t.id}`}>
-                      <button className="p-1.5 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground">
-                        <Edit2 size={14} />
-                      </button>
-                    </Link>
-                    <button 
-                      onClick={() => handleDelete(t.id)}
-                      className="p-1.5 hover:bg-red-500/10 rounded-full text-muted-foreground hover:text-red-500"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[#84848a] text-xs font-medium">
+                              Único
+                            </span>
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTogglePaid(t.id, t.paid);
+                              }}
+                              title={t.paid ? "Pago (clique para alterar)" : "Pendente (clique para alterar)"}
+                              className={`size-2.5 rounded-full cursor-pointer transition-transform hover:scale-125 ${
+                                t.paid ? "bg-emerald-500 shadow-2xs shadow-emerald-500/50" : "bg-amber-400 animate-pulse"
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        ) : (
+          <div className="py-16 px-4 text-center bg-card rounded-2xl border border-border/60 text-muted-foreground">
+            <Calendar className="mx-auto h-12 w-12 mb-3 opacity-20 text-[#b300e4]" />
+            <p className="font-semibold text-foreground">Nenhuma transação neste período</p>
+            <p className="text-xs mt-1">Clique no botão abaixo ou no topo para cadastrar.</p>
+          </div>
+        )}
+
+        {/* Barra Inferior Fixada - Balanço Total */}
+        <div className="fixed bottom-16 left-0 right-0 z-30 bg-[#18181b]/95 backdrop-blur-md border-t border-border/70 px-5 py-3 shadow-2xl shadow-black/90 flex flex-col justify-between">
+          <div className="w-full flex items-center justify-center pb-1">
+            <ChevronUp className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
+          </div>
+          <div className="flex items-center justify-between w-full">
+            <span className="text-sm font-semibold text-[#a0a0a5]">Balanço total</span>
+            <span className="text-base font-extrabold tabular-nums text-foreground">
+              {formatCurrency(calcBalance)}
+            </span>
+          </div>
+        </div>
       </div>
-      {transactions.length === 0 && (
-        <div className="p-12 text-center text-muted-foreground bg-card">
-          <Calendar className="mx-auto h-12 w-12 mb-4 opacity-10" />
-          <p>Nenhuma transação encontrada neste período.</p>
+
+      {/* Modal / Action Sheet Mobile ao tocar numa transação */}
+      {selectedTx && (
+        <div className="md:hidden fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
+          <div 
+            className="w-full bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-4 text-foreground animate-in slide-in-from-bottom-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-border/40">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="size-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
+                  style={{ backgroundColor: selectedTx.category.color }}
+                >
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base leading-tight">{selectedTx.description}</h3>
+                  <p className="text-xs text-muted-foreground">{selectedTx.category.name} • {selectedTx.account?.name || "Carteira"}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTx(null)} className="p-1 text-muted-foreground hover:text-foreground rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="text-center py-2 bg-muted/20 rounded-2xl border border-border/40">
+              <span className="text-xs text-muted-foreground block uppercase font-semibold">Valor Registrado</span>
+              <span className={`text-2xl font-black tabular-nums ${selectedTx.type === "INCOME" ? "text-emerald-400" : "text-rose-500"}`}>
+                {selectedTx.type === "INCOME" ? "+ " : "- "}
+                {formatCurrency(selectedTx.amount)}
+              </span>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={() => {
+                  handleTogglePaid(selectedTx.id, selectedTx.paid);
+                  setSelectedTx(null);
+                }}
+                className={`w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                  selectedTx.paid 
+                    ? "bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                    : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                }`}
+              >
+                {selectedTx.paid ? (
+                  <><Clock className="w-4 h-4" /> Alterar para Em Aberto (Pendente)</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> Confirmar Pagamento (Pago)</>
+                )}
+              </button>
+
+              <Link href={`/transactions/edit/${selectedTx.id}`} className="w-full block">
+                <button className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                  <Edit2 className="w-4 h-4 text-[#b300e4]" /> Editar Transação
+                </button>
+              </Link>
+
+              <button
+                onClick={() => handleDelete(selectedTx.id)}
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Excluir Lançamento
+              </button>
+            </div>
+          </div>
         </div>
       )}
+
+
+      {/* ========================================================================= */}
+      {/* 2. VERSÃO DESKTOP (COMPUTador - DASHBOARD E TABELA MODERNA)               */}
+      {/* ========================================================================= */}
+      <div className="hidden md:flex flex-col space-y-6">
+        {/* Strip de Cards Resumidos do Período */}
+        <div className="grid grid-cols-3 gap-6">
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total de Entradas</span>
+              <p className="text-2xl font-black text-emerald-400 mt-1 tabular-nums">{formatCurrency(calcIncome)}</p>
+            </div>
+            <div className="size-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-inner">
+              <ArrowUpRight className="h-6 w-6 stroke-[2.5]" />
+            </div>
+          </div>
+
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total de Saídas</span>
+              <p className="text-2xl font-black text-rose-500 mt-1 tabular-nums">{formatCurrency(calcExpense)}</p>
+            </div>
+            <div className="size-12 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center shadow-inner">
+              <ArrowDownLeft className="h-6 w-6 stroke-[2.5]" />
+            </div>
+          </div>
+
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between border-l-4 border-l-[#b300e4]">
+            <div>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Balanço do Período</span>
+              <p className={`text-2xl font-black mt-1 tabular-nums ${calcBalance >= 0 ? "text-foreground" : "text-red-500"}`}>
+                {formatCurrency(calcBalance)}
+              </p>
+            </div>
+            <div className="size-12 rounded-2xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-inner">
+              <TrendingUp className="h-6 w-6 stroke-[2.5]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de Filtros e Pesquisa Desktop */}
+        <div className="flex items-center justify-between bg-card border border-border/70 rounded-2xl p-3 px-4 shadow-2xs gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Buscar por descrição, categoria ou conta..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 text-sm bg-muted/30 border border-border/80 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#b300e4]/60 transition-all"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
+            {[
+              { id: "all", label: "Todas" },
+              { id: "income", label: "Entradas", text: "text-emerald-400" },
+              { id: "expense", label: "Saídas", text: "text-rose-400" },
+              { id: "pending", label: "Pendentes", text: "text-amber-400" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterType(tab.id as any)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  filterType === tab.id
+                    ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tabela Desktop Agrupada por Data */}
+        <div className="overflow-hidden border border-border/70 bg-card rounded-2xl shadow-xs">
+          {groupedDesktop.length > 0 ? (
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/50 text-muted-foreground font-semibold uppercase text-[11px] tracking-wider border-b border-border/70">
+                  <tr>
+                    <th className="px-6 py-3.5 w-40">Categoria & Descrição</th>
+                    <th className="px-6 py-3.5">Conta / Cartão</th>
+                    <th className="px-6 py-3.5 w-32">Recorrência</th>
+                    <th className="px-6 py-3.5 text-center w-36">Status</th>
+                    <th className="px-6 py-3.5 text-right w-44">Valor</th>
+                    <th className="px-6 py-3.5 w-20 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/40">
+                  {groupedDesktop.map((group) => (
+                    <React.Fragment key={group.dateKey}>
+                      {/* Linha de Cabeçalho da Data no Desktop */}
+                      <tr className="bg-[#18181b]/90 text-[#a0a0a5] font-bold text-xs border-y border-border/40">
+                        <td colSpan={6} className="px-6 py-2.5 tracking-wide uppercase">
+                          {formatGroupHeader(group.dateKey)}
+                        </td>
+                      </tr>
+
+                      {/* Transações daquela data */}
+                      {group.items.map((t) => {
+                        const IconComponent = getCategoryIconComponent(t.category.name);
+                        return (
+                          <tr key={t.id} className="group hover:bg-muted/30 transition-colors">
+                            <td className="px-6 py-4 align-middle">
+                              <div className="flex items-center gap-3.5">
+                                <div
+                                  className="size-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                  style={{ backgroundColor: t.category.color || "#b300e4" }}
+                                >
+                                  <IconComponent size={18} className="stroke-[2.5]" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-foreground font-extrabold text-sm truncate max-w-[250px] group-hover:text-[#b300e4] transition-colors">
+                                    {t.description}
+                                  </p>
+                                  <p className="text-muted-foreground text-xs font-semibold mt-0.5">
+                                    {t.category.name}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="px-6 py-4 align-middle">
+                              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
+                                <img
+                                  src={getBankIcon(t.account?.name || "")}
+                                  alt={t.account?.name}
+                                  className="h-4 w-4 object-contain rounded-full"
+                                />
+                                <span className="text-foreground font-semibold text-xs truncate max-w-[130px]">
+                                  {t.account?.name || "Carteira"}
+                                </span>
+                              </div>
+                            </td>
+
+                            <td className="px-6 py-4 align-middle">
+                              <span className="text-muted-foreground text-xs font-semibold">
+                                Único
+                              </span>
+                            </td>
+
+                            <td className="px-6 py-4 align-middle text-center">
+                              <button
+                                onClick={() => handleTogglePaid(t.id, t.paid)}
+                                disabled={loadingId === t.id}
+                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 disabled:opacity-50 ${
+                                  t.paid
+                                    ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25 hover:border-emerald-500/50"
+                                    : "bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25 hover:border-amber-500/50"
+                                }`}
+                              >
+                                {loadingId === t.id ? (
+                                  <span className="size-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                                ) : t.paid ? (
+                                  <><CheckCircle2 className="w-3.5 h-3.5" /> Pago</>
+                                ) : (
+                                  <><Clock className="w-3.5 h-3.5" /> Pendente</>
+                                )}
+                              </button>
+                            </td>
+
+                            <td className="px-6 py-4 align-middle text-right">
+                              <span
+                                className={`font-black tabular-nums text-base whitespace-nowrap ${
+                                  t.type === "INCOME" ? "text-emerald-400" : "text-rose-500"
+                                }`}
+                              >
+                                {t.type === "INCOME" ? "R$ " : "-R$ "}{formatNumberOnly(t.amount)}
+                              </span>
+                            </td>
+
+                            <td className="px-6 py-4 align-middle text-right">
+                              <div className="flex items-center justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                                <Link href={`/transactions/edit/${t.id}`}>
+                                  <button title="Editar transação" className="p-2 hover:bg-muted/80 rounded-xl text-muted-foreground hover:text-foreground transition-colors">
+                                    <Edit2 size={16} />
+                                  </button>
+                                </Link>
+                                <button
+                                  title="Excluir transação"
+                                  onClick={() => handleDelete(t.id)}
+                                  className="p-2 hover:bg-rose-500/15 rounded-xl text-muted-foreground hover:text-rose-500 transition-colors"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-16 text-center text-muted-foreground bg-card">
+              <Calendar className="mx-auto h-12 w-12 mb-4 opacity-20 text-[#b300e4]" />
+              <p className="font-bold text-foreground text-base">Nenhuma transação encontrada</p>
+              <p className="text-xs mt-1">Nenhum registro corresponde ao filtro selecionado para este mês.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

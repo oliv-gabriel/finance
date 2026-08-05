@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getTransactionWhereForMonth } from "@/lib/billingCycles";
 
 export async function getBudgets(month: number, year: number) {
   try {
@@ -54,17 +55,14 @@ export async function getBudgetSummary(month: number, year: number) {
       where: { month, year },
     });
 
-    // Get all expense transactions for the month
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    // Get all expense transactions for the month respecting credit card closing days
+    const allAccounts = await prisma.account.findMany();
+    const whereClause = getTransactionWhereForMonth(month, year, allAccounts);
 
     const transactions = await prisma.transaction.findMany({
       where: {
         type: "EXPENSE",
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
+        ...whereClause,
       },
     });
 

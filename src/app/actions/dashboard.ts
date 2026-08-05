@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
 
 export async function getDashboardData(month?: number, year?: number) {
   try {
@@ -8,16 +9,14 @@ export async function getDashboardData(month?: number, year?: number) {
     const targetMonth = month ?? (now.getMonth() + 1);
     const targetYear = year ?? now.getFullYear();
 
+    const allAccounts = await prisma.account.findMany();
     const startDate = new Date(targetYear, targetMonth - 1, 1);
     const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
 
+    const whereClause = getTransactionWhereForMonth(targetMonth, targetYear, allAccounts);
+
     const transactions = await prisma.transaction.findMany({
-      where: {
-        date: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
+      where: whereClause,
       include: {
         account: true,
       },
@@ -116,12 +115,13 @@ export async function getDashboardData(month?: number, year?: number) {
       creditCards: await Promise.all((await prisma.account.findMany({
         where: { type: "CARTAO" }
       })).map(async (card) => {
+        const { startDate: cardStart, endDate: cardEnd } = getAccountBillingCycle(card, targetMonth, targetYear);
         const cardTransactions = await prisma.transaction.findMany({
           where: { 
             accountId: card.id,
             date: {
-              gte: startDate,
-              lte: endDate,
+              gte: cardStart,
+              lte: cardEnd,
             }
           }
         });

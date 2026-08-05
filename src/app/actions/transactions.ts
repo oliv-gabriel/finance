@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
 
 export async function getTransactions(options?: {
   categoryId?: string;
@@ -11,21 +12,17 @@ export async function getTransactions(options?: {
   year?: number;
 }) {
   try {
-    let dateFilter = {};
+    let monthFilter: any = {};
     if (options?.month && options?.year) {
-      const startDate = new Date(options.year, options.month - 1, 1);
-      const endDate = new Date(options.year, options.month, 0, 23, 59, 59, 999);
-      dateFilter = {
-        gte: startDate,
-        lte: endDate,
-      };
+      const allAccounts = await prisma.account.findMany();
+      monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
     }
 
     const transactions = await prisma.transaction.findMany({
       where: {
         categoryId: options?.categoryId,
         type: options?.type,
-        date: dateFilter,
+        ...monthFilter,
       },
       include: {
         category: true,
@@ -188,8 +185,8 @@ export async function deleteTransaction(id: string) {
 
 export async function payCardBill(cardId: string, month: number, year: number) {
   try {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const card = await prisma.account.findUnique({ where: { id: cardId } });
+    const { startDate, endDate } = getAccountBillingCycle(card || { type: "" }, month, year);
 
     await prisma.transaction.updateMany({
       where: {
