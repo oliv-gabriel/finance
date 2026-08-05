@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { syncEmails } from "@/app/actions/emailSync";
-import { Button } from "@/components/ui/Button";
-import { Mail, Loader2, Check } from "lucide-react";
+import { RefreshCw, Loader2, Check } from "lucide-react";
 
 export default function SyncEmailsButton() {
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -43,39 +42,38 @@ export default function SyncEmailsButton() {
         <button
             onClick={handleSync}
             disabled={status === "loading"}
-            title={errorMessage ? `Detalhes do erro: ${errorMessage}` : "Clique para buscar comprovantes de PIX no e-mail"}
-            className={`inline-flex items-center gap-2.5 h-9 px-4 rounded-xl text-xs font-semibold border transition-all duration-300 cursor-pointer disabled:cursor-wait ${
+            title={
                 status === "loading"
-                    ? "bg-[#b300e4]/15 text-[#b300e4] border-[#b300e4]/40 animate-pulse shadow-sm shadow-[#b300e4]/20"
+                    ? "Sincronizando 99Pay..."
+                    : status === "success"
+                    ? count === 0 ? "Tudo atualizado!" : `${count} novas transações da 99Pay sincronizadas!`
+                    : status === "error"
+                    ? `Erro ao sincronizar: ${errorMessage || "Falha IMAP"}`
+                    : "Sincronizar 99Pay (PIX e Corridas)"
+            }
+            className={`group inline-flex items-center justify-center gap-1.5 h-10 px-3 min-w-10 rounded-xl text-xs font-semibold border transition-all duration-300 cursor-pointer disabled:cursor-wait ${
+                status === "loading"
+                    ? "bg-[#b300e4]/15 text-[#b300e4] border-[#b300e4]/40 shadow-sm shadow-[#b300e4]/20"
                     : status === "success"
                     ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 shadow-2xs"
                     : status === "error"
                     ? "bg-red-500/15 text-red-400 border-red-500/30"
-                    : "bg-card/80 hover:bg-card text-foreground border-border/80 hover:border-[#b300e4]/50 hover:shadow-xs"
+                    : "bg-card/80 hover:bg-card text-muted-foreground hover:text-[#b300e4] border-border/80 hover:border-[#b300e4]/50 hover:shadow-xs"
             }`}
         >
             {status === "loading" ? (
-                <>
-                    <Loader2 className="h-4 w-4 animate-spin text-[#b300e4]" />
-                    <span>Sincronizando 99Pay...</span>
-                </>
+                <Loader2 className="h-4 w-4 animate-spin text-[#b300e4]" />
             ) : status === "success" ? (
                 <>
                     <Check className="h-4 w-4 text-emerald-400" />
-                    <span>{count === 0 ? "Tudo atualizado!" : `${count} novo(s) PIX gravados!`}</span>
+                    {count > 0 && <span>+{count}</span>}
                 </>
             ) : status === "error" ? (
                 <>
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping mr-0.5" />
-                    <span className="truncate max-w-[180px]">{errorMessage || "Erro no IMAP"}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
                 </>
             ) : (
-                <>
-                    <div className="p-1 rounded-md bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center">
-                        <Mail className="h-3.5 w-3.5" />
-                    </div>
-                    <span>Sincronizar 99Pay</span>
-                </>
+                <RefreshCw className="h-4 w-4 transition-transform duration-500 group-hover:rotate-180" />
             )}
         </button>
     );

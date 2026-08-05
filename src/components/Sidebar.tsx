@@ -37,7 +37,7 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "fixed left-0 top-0 z-40 h-screen bg-[#121212] transition-all duration-300 ease-in-out",
+      "fixed left-0 top-0 z-40 h-screen bg-[#121212] transition-all duration-300 ease-in-out hidden md:block",
       isCollapsed ? "w-20" : "w-64"
     )}>
       <div className="flex h-full flex-col px-3 py-4 relative">
