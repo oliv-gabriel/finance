@@ -63,16 +63,39 @@ export async function syncEmails() {
         
         console.log(`Download concluído. Processando ${rawMessages.length} e-mails offline...`);
 
+        // Busca ou cria a Conta "99 Pay"
+        const allAccounts = await prisma.account.findMany();
+        let account99 = allAccounts.find(a => a.name.toLowerCase().includes("99"));
+        if (!account99) {
+            account99 = await prisma.account.create({
+                data: { name: "99 Pay", type: "CONTA", includeInTotal: true }
+            });
+        }
+
+        // Busca ou cria a Categoria "Sincronizado"
+        const allCategories = await prisma.category.findMany();
+        let category = allCategories.find(c => c.name === "Sincronizado");
+        if (!category) {
+            category = await prisma.category.create({
+                data: { name: "Sincronizado", color: "#94a3b8", icon: "ArrowLeftRight" }
+            });
+        }
+
+        // Garante que todas as transações já sincronizadas anteriormente fiquem atreladas à conta 99
+        await prisma.transaction.updateMany({
+            where: {
+                OR: [
+                    { externalId: { not: null } },
+                    { categoryId: category.id }
+                ]
+            },
+            data: {
+                accountId: account99.id
+            }
+        });
+
         // FASE 2: Processamento Offline (Sem risco de Timeout do E-mail)
         if (rawMessages.length > 0) {
-            const allCategories = await prisma.category.findMany();
-            let category = allCategories.find(c => c.name === "Sincronizado");
-            if (!category) {
-                category = await prisma.category.create({
-                    data: { name: "Sincronizado", color: "#94a3b8", icon: "ArrowLeftRight" }
-                });
-            }
-
             for (const rawMsg of rawMessages) {
                 const parsed = await simpleParser(rawMsg.source);
                 let body = parsed.text || "";
@@ -80,38 +103,72 @@ export async function syncEmails() {
                     body = parsed.html.replace(/<[^>]*>?/gm, " "); 
                 }
                 
-                if (body.includes("99Pay") || parsed.subject?.includes("99Pay")) {
+                const subject = parsed.subject || "";
+                const from = parsed.from?.text || "";
+
+                if (body.includes("99Pay") || subject.includes("99") || from.includes("99")) {
+                    let amount = 0;
+                    let description = "";
+                    let externalId = "";
+                    let date = parsed.date ? new Date(parsed.date) : new Date();
+                    let type = "EXPENSE";
+                    let matched = false;
+
+                    // Padrão 1: PIX / Comprovante detalhado (Valor: R$..., Para:..., Código da transação:...)
                     const amountMatch = body.match(/Valor:\s*R\$?\s*([\d,.]+)/i);
                     const recipientMatch = body.match(/Para:\s*([\d.\s]*)(.*)/i);
-                    const externalIdMatch = body.match(/Código da transação:\s*(\w+)/i);
+                    const externalIdMatch = body.match(/(?:Código da transação|ID do pedido):\s*([a-zA-Z0-9_-]+)/i);
                     const dateMatch = body.match(/Data:\s*([\d/: ]+)/i);
 
-                    if (amountMatch && amountMatch[1] && externalIdMatch && externalIdMatch[1]) {
+                    if (amountMatch && amountMatch[1]) {
                         const rawAmount = String(amountMatch[1]).replace(/\./g, "").replace(",", ".");
-                        const amount = parseFloat(rawAmount) || 0;
-                        const externalId = String(externalIdMatch[1]);
+                        amount = parseFloat(rawAmount) || 0;
                         const recipient = recipientMatch?.[2] ? String(recipientMatch[2]).trim() : "99Pay";
-                        const date = dateMatch ? parseDate(dateMatch[1]) : new Date();
+                        description = `PIX para ${recipient}`.substring(0, 200);
+                        externalId = externalIdMatch ? String(externalIdMatch[1]) : `99PIX_${parsed.messageId || rawMsg.uid}_${amount}`;
+                        if (dateMatch) date = parseDate(dateMatch[1]);
+                        matched = amount > 0;
+                    } 
+                    // Padrão 2: Corridas 99 e Pagamentos Diretos ("Corrida 99 paga com sucesso via 99Pay, no total de R$21,84.")
+                    else {
+                        const corridaMatch = body.match(/(?:Corrida 99|Pagamento) pag[oa] com sucesso via 99Pay, no total de R\$?\s*([\d,.]+)/i)
+                                          || body.match(/no total de R\$?\s*([\d,.]+)/i)
+                                          || body.match(/no valor de R\$?\s*([\d,.]+)/i);
 
+                        if (corridaMatch && corridaMatch[1]) {
+                            const rawAmount = String(corridaMatch[1]).replace(/\./g, "").replace(",", ".");
+                            amount = parseFloat(rawAmount) || 0;
+                            description = body.includes("Corrida 99") ? "Corrida 99" : "Pagamento 99Pay";
+                            const cleanMsgId = (parsed.messageId || String(rawMsg.uid)).replace(/[^a-zA-Z0-9]/g, "");
+                            externalId = `99RIDE_${cleanMsgId}_${amount}`;
+                            matched = amount > 0;
+                        }
+                    }
+
+                    if (matched && externalId && amount > 0) {
                         const payload = {
-                            description: `PIX para ${recipient}`.substring(0, 200),
+                            description,
                             amount,
                             date,
-                            type: "EXPENSE",
+                            type,
                             paid: true,
                             externalId,
                             categoryId: category.id,
+                            accountId: account99.id,
                         };
 
                         try {
                             await prisma.transaction.upsert({
                                 where: { externalId },
-                                update: {}, 
+                                update: {
+                                    accountId: account99.id,
+                                    categoryId: category.id,
+                                }, 
                                 create: payload
                             });
                             syncedCount++;
                             uidsToMarkAsSeen.push(rawMsg.uid);
-                            console.log(`Sucesso: PIX de ${amount} para ${recipient} salvo.`);
+                            console.log(`Sucesso: ${description} de R$${amount} salvo na conta 99 (ID: ${externalId}).`);
                         } catch (dbError) {
                             console.error("Erro ao salvar no banco:", dbError);
                         }

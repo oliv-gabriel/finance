@@ -83,7 +83,7 @@ export default function TransactionTable({ transactions }: TransactionTableProps
   };
 
   return (
-    <div className="overflow-hidden border-0 bg-card rounded-2xl shadow-sm">
+    <div className="overflow-hidden border border-border/70 bg-card rounded-2xl shadow-xs">
       <div className="relative w-full overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead className="bg-muted/40 text-muted-foreground">

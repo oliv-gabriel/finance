@@ -37,7 +37,7 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "fixed left-0 top-0 z-40 h-screen border-r bg-background transition-all duration-300 ease-in-out",
+      "fixed left-0 top-0 z-40 h-screen bg-[#121212] transition-all duration-300 ease-in-out",
       isCollapsed ? "w-20" : "w-64"
     )}>
       <div className="flex h-full flex-col px-3 py-4 relative">
@@ -45,8 +45,8 @@ export default function Sidebar() {
           "mb-10 px-2 flex items-center",
           isCollapsed ? "justify-center" : "justify-between"
         )}>
-          {!isCollapsed && <h1 className="text-2xl font-bold text-primary truncate">Financeiro</h1>}
-          {isCollapsed && <CircleDollarSign className="h-8 w-8 text-primary" />}
+          {!isCollapsed && <h1 className="text-2xl font-extrabold tracking-tight text-[#b300e4] truncate">Financeiro</h1>}
+          {isCollapsed && <CircleDollarSign className="h-8 w-8 text-[#b300e4]" />}
         </div>
 
         <Button
@@ -67,15 +67,15 @@ export default function Sidebar() {
                 href={item.href}
                 title={isCollapsed ? item.name : undefined}
                 className={cn(
-                  "flex items-center rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted",
-                  isActive ? "bg-muted text-primary" : "text-muted-foreground",
+                  "flex items-center rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                  isActive ? "bg-[#b300e4]/15 text-[#b300e4] font-bold shadow-2xs border border-[#b300e4]/20" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   isCollapsed && "justify-center px-2"
                 )}
               >
                 <item.icon className={cn(
-                  "h-5 w-5", 
+                  "h-5 w-5 transition-transform duration-200 group-hover:scale-105", 
                   !isCollapsed && "mr-3",
-                  isActive ? "text-primary" : "text-muted-foreground"
+                  isActive ? "text-[#b300e4]" : "text-muted-foreground"
                 )} />
                 {!isCollapsed && <span className="truncate">{item.name}</span>}
               </Link>
@@ -83,7 +83,7 @@ export default function Sidebar() {
           })}
         </nav>
 
-        <div className="mt-auto pt-4 border-t space-y-1">
+        <div className="mt-auto pt-4 space-y-1">
           <Link
             href="/export"
             title={isCollapsed ? "Exportar Dados" : undefined}

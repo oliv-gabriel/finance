@@ -15,7 +15,7 @@ interface NavbarProps {
 
 export default function Navbar({ summary }: NavbarProps) {
   return (
-    <header className="sticky top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 w-full bg-[#121212]/95 backdrop-blur supports-[backdrop-filter]:bg-[#121212]/80">
       <div className="flex h-16 items-center px-8 gap-4">
         <DateFilter />
         <SyncEmailsButton />

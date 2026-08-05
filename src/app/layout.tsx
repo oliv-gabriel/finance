@@ -26,10 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="pt-BR" className="dark" style={{ backgroundColor: "#121212" }}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#121212] text-foreground`} style={{ backgroundColor: "#121212" }}>
         <SidebarProvider>
-          <div className="flex min-h-screen bg-background text-foreground">
+          <div className="flex min-h-screen bg-[#121212] text-foreground">
             <Sidebar />
             <ClientMainContent>
               {children}

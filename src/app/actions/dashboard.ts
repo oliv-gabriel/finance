@@ -18,29 +18,36 @@ export async function getDashboardData(month?: number, year?: number) {
           lte: endDate,
         },
       },
+      include: {
+        account: true,
+      },
     });
 
-    const income = transactions
+    const includedTransactions = transactions.filter(
+      (t) => t.account?.includeInTotal !== false
+    );
+
+    const income = includedTransactions
       .filter((t) => t.type === "INCOME")
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const expenses = transactions
+    const expenses = includedTransactions
       .filter((t) => t.type === "EXPENSE")
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const paidIncome = transactions
+    const paidIncome = includedTransactions
       .filter((t) => t.type === "INCOME" && t.paid)
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const pendingIncome = transactions
+    const pendingIncome = includedTransactions
       .filter((t) => t.type === "INCOME" && !t.paid)
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const paidExpenses = transactions
+    const paidExpenses = includedTransactions
       .filter((t) => t.type === "EXPENSE" && t.paid)
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const pendingExpenses = transactions
+    const pendingExpenses = includedTransactions
       .filter((t) => t.type === "EXPENSE" && !t.paid)
       .reduce((acc, curr) => acc + curr.amount, 0);
 
@@ -54,7 +61,7 @@ export async function getDashboardData(month?: number, year?: number) {
       amount: 0,
     }));
 
-    transactions
+    includedTransactions
       .filter((t) => t.type === "EXPENSE")
       .forEach((t) => {
         const day = new Date(t.date).getDate();
@@ -64,7 +71,7 @@ export async function getDashboardData(month?: number, year?: number) {
     // Category distribution
     const categories = await prisma.category.findMany();
     const categoryDistribution = categories.map((cat) => {
-      const amount = transactions
+      const amount = includedTransactions
         .filter((t) => t.categoryId === cat.id && t.type === "EXPENSE")
         .reduce((acc, curr) => acc + curr.amount, 0);
       
@@ -102,7 +109,8 @@ export async function getDashboardData(month?: number, year?: number) {
           id: acc.id,
           name: acc.name,
           balance: accBalance,
-          type: acc.type
+          type: acc.type,
+          includeInTotal: acc.includeInTotal,
         };
       })),
       creditCards: await Promise.all((await prisma.account.findMany({
@@ -148,7 +156,8 @@ export async function getDashboardData(month?: number, year?: number) {
           limiteDisponivel,
           closingDay: card.closingDay,
           dueDay: card.dueDay,
-          status
+          status,
+          includeInTotal: card.includeInTotal,
         };
       }))
     };

@@ -79,12 +79,12 @@ export default function Notepad() {
   };
 
   return (
-    <Card className="h-full flex flex-col shadow-sm bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-800">
-      <CardHeader className="flex flex-row items-center justify-between py-2 border-b drag-handle cursor-move bg-transparent rounded-t-lg">
+    <div className="h-full flex flex-col shadow-xs bg-card border border-border/70 rounded-2xl overflow-hidden">
+      <div className="flex flex-row items-center justify-between px-6 py-4 border-b border-border/50">
         <div className="flex items-center gap-2">
-          <CardTitle className="text-md">Bloco de Notas</CardTitle>
+          <h2 className="text-foreground text-base font-semibold tracking-tight">Bloco de Notas</h2>
           {showStatus && (
-            <span className="flex items-center text-[10px] text-green-600 animate-in fade-in duration-300">
+            <span className="flex items-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 animate-in fade-in duration-300">
               <CheckCircle2 size={12} className="mr-1" />
               Salvo
             </span>
@@ -93,29 +93,29 @@ export default function Notepad() {
         <div className="flex gap-1">
           <button 
             onClick={handleClear}
-            className="p-1 rounded-md text-red-500 hover:bg-red-50 transition-colors"
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
             title="Limpar tudo"
           >
-            <Trash2 size={14} />
+            <Trash2 size={15} />
           </button>
         </div>
-      </CardHeader>
+      </div>
       
       {/* Barra de Ferramentas de Formatação */}
-      <div className="flex items-center gap-0.5 p-1 bg-muted/30 border-b flex-wrap">
+      <div className="flex items-center gap-0.5 px-6 py-1.5 bg-muted/20 border-b border-border/50 flex-wrap">
         <ToolbarButton onClick={() => execCommand("bold")} title="Negrito"><Bold size={14} /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand("italic")} title="Itálico"><Italic size={14} /></ToolbarButton>
-        <div className="w-px h-4 bg-border mx-1" />
+        <div className="w-px h-4 bg-border/60 mx-1" />
         <ToolbarButton onClick={() => execCommand("insertUnorderedList")} title="Lista"><List size={14} /></ToolbarButton>
         <ToolbarButton onClick={() => execCommand("insertOrderedList")} title="Lista Numerada"><ListOrdered size={14} /></ToolbarButton>
-        <div className="w-px h-4 bg-border mx-1" />
+        <div className="w-px h-4 bg-border/60 mx-1" />
         <ToolbarButton onClick={insertTable} title="Inserir Tabela"><Grid3X3 size={14} /></ToolbarButton>
-        <div className="w-px h-4 bg-border mx-1" />
+        <div className="w-px h-4 bg-border/60 mx-1" />
         <ToolbarButton onClick={() => execCommand("formatBlock", "h3")} title="Título">H</ToolbarButton>
         <ToolbarButton onClick={() => execCommand("removeFormat")} title="Limpar Formatação"><Type size={14} /></ToolbarButton>
       </div>
 
-      <CardContent className="flex-1 p-0 overflow-hidden">
+      <div className="flex-1 p-0 overflow-hidden">
         <style dangerouslySetInnerHTML={{ __html: `
           .notepad-editor table { width: 100%; border-collapse: collapse; }
           .notepad-editor td { border: 1px solid #e2e8f0; padding: 8px; min-width: 80px; }
@@ -124,11 +124,11 @@ export default function Notepad() {
         <div
           ref={editorRef}
           contentEditable
-          className="notepad-editor w-full h-full p-4 overflow-auto focus:outline-none prose prose-sm max-w-none dark:prose-invert"
-          style={{ minHeight: "100px" }}
+          className="notepad-editor w-full h-full px-6 py-4 overflow-auto focus:outline-none text-sm text-foreground placeholder:text-muted-foreground"
+          style={{ minHeight: "120px" }}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

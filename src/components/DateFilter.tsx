@@ -44,12 +44,12 @@ export default function DateFilter() {
   };
 
   return (
-    <div className="flex items-center gap-2 bg-white dark:bg-gray-900 p-2 rounded-lg border shadow-sm">
-      <Calendar className="h-4 w-4 text-muted-foreground ml-1" />
+    <div className="flex items-center gap-2 bg-card p-2 rounded-xl border border-border/70 shadow-xs">
+      <Calendar className="h-4 w-4 text-[#b300e4] ml-1" />
       <select
         value={currentMonth}
         onChange={(e) => handleFilterChange(e.target.value, currentYear)}
-        className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-blue-600 transition-colors"
+        className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-[#b300e4] transition-colors text-foreground"
       >
         {months.map((m) => (
           <option key={m.value} value={m.value}>
@@ -61,7 +61,7 @@ export default function DateFilter() {
       <select
         value={currentYear}
         onChange={(e) => handleFilterChange(currentMonth, e.target.value)}
-        className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-blue-600 transition-colors"
+        className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-[#b300e4] transition-colors text-foreground"
       >
         {years.map((y) => (
           <option key={y} value={y}>

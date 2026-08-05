@@ -35,6 +35,7 @@ model Account {
   cards        Account[]     @relation("BankToCards")
 
   transactions Transaction[]
+  includeInTotal Boolean     @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }

@@ -24,6 +24,7 @@ export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] 
     const limit = formData.get("limit") ? parseFloat(formData.get("limit") as string) : undefined;
     const closingDay = formData.get("closingDay") ? parseInt(formData.get("closingDay") as string) : undefined;
     const dueDay = formData.get("dueDay") ? parseInt(formData.get("dueDay") as string) : undefined;
+    const includeInTotal = formData.get("includeInTotal") !== null;
 
     const result = await createAccount({ 
       name, 
@@ -32,6 +33,7 @@ export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] 
       limit: type === "CARTAO" ? limit : undefined,
       closingDay: type === "CARTAO" ? closingDay : undefined,
       dueDay: type === "CARTAO" ? dueDay : undefined,
+      includeInTotal,
     });
 
     if (!result.success) {
@@ -42,12 +44,9 @@ export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] 
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Cadastrar Nova Conta ou Cartão</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form action={handleSubmit} className="flex flex-col md:flex-row items-end gap-4">
+    <div className="bg-card border border-border/70 rounded-2xl p-6 shadow-xs">
+      <h2 className="text-base font-semibold tracking-tight text-foreground mb-4">Cadastrar Nova Conta ou Cartão</h2>
+      <form action={handleSubmit} className="flex flex-col md:flex-row items-end gap-4">
           <div className="flex-1 w-full space-y-2">
             <label className="text-sm font-medium">Nome</label>
             <Input name="name" required placeholder="Ex: Nubank, Itaú..." />
@@ -96,13 +95,25 @@ export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] 
             </>
           )}
 
+          <div className="flex items-center gap-2 pb-2">
+            <input
+              type="checkbox"
+              id="includeInTotal"
+              name="includeInTotal"
+              defaultChecked={true}
+              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+            <label htmlFor="includeInTotal" className="text-sm font-medium cursor-pointer text-muted-foreground whitespace-nowrap">
+              Somar no saldo geral
+            </label>
+          </div>
+
           <div className="flex-shrink-0">
             <Button type="submit" disabled={isPending}>
               {isPending ? "Cadastrando..." : "Cadastrar"}
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

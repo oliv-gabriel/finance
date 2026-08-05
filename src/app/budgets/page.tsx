@@ -19,10 +19,10 @@ export default async function BudgetsPage({
   const data = await getDashboardData(month, year);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#121212]">
       <Navbar summary={data.summary} />
       
-      <div className="p-8 space-y-6 flex-1 overflow-auto">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-1 overflow-auto">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Orçamentos</h1>

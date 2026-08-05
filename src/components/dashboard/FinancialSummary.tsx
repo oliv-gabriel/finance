@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2 } from "lucide-react";
+import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff } from "lucide-react";
 import { payCardBill } from "@/app/actions/transactions";
 
 interface CardData {
@@ -11,12 +11,14 @@ interface CardData {
   limiteDisponivel: number;
   closingDay: number | null;
   status: string;
+  includeInTotal?: boolean;
 }
 
 interface AccountData {
   id: string;
   name: string;
   balance: number;
+  includeInTotal?: boolean;
 }
 
 interface FinancialSummaryProps {
@@ -72,28 +74,28 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
   };
 
   return (
-    <div className="3xl:gap-6 flex w-full flex-col gap-4 md:flex-row md:justify-between">
+    <div className="flex w-full flex-col gap-6 md:flex-row md:justify-between">
       {/* Meus cartões */}
-      <div className="bg-card border-border flex h-auto w-full flex-col rounded-2xl border px-4 py-4 sm:px-6 sm:py-6">
+      <div className="bg-card border border-border/70 shadow-xs flex h-auto w-full flex-col rounded-2xl p-6">
         <div className="flex w-full flex-col">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <CreditCard className="text-foreground h-5 w-5" />
-              <h1 className="text-foreground text-sm font-normal">
-                Meus <strong className="font-bold">cartões</strong>
-              </h1>
+              <div className="size-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <CreditCard className="h-4 w-4" />
+              </div>
+              <h2 className="text-foreground text-base font-semibold tracking-tight">
+                Meus cartões
+              </h2>
             </div>
-            <Plus className="text-blue-500 cursor-pointer h-5 w-5" />
+            <Plus className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer h-5 w-5" />
           </div>
-          
-          <div className="bg-border/60 my-4 h-px w-full"></div>
           
           <div className="flex w-full flex-col gap-3">
             {creditCards.length > 0 ? (
               creditCards.map((card) => (
                 <div key={card.id} className="group relative flex w-full cursor-default flex-col rounded-xl p-4 transition-colors bg-muted/30 hover:bg-muted/50">
                   <div className="absolute top-3 right-3 z-10">
-                    <button className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-primary hover:bg-accent hover:text-accent-foreground size-9">
+                    <button className="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full text-[#b300e4] hover:bg-accent hover:text-accent-foreground size-9">
                       <MoreVertical className="h-5 w-5" />
                     </button>
                   </div>
@@ -106,8 +108,13 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                       className="shrink-0 rounded-md"
                       src={getBankIcon(card.name)}
                     />
-                    <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                    <div className="flex min-w-0 flex-1 items-center gap-1.5 flex-wrap">
                       <p className="text-foreground min-w-0 truncate text-sm font-medium">{card.name}</p>
+                      {card.includeInTotal === false && (
+                        <span title="Oculto do saldo atual" className="inline-flex items-center gap-1 text-[11px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-md border border-border/60">
+                          <EyeOff className="h-3.5 w-3.5" /> Oculta
+                        </span>
+                      )}
                     </div>
                   </div>
                   
@@ -157,21 +164,21 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
       </div>
 
       {/* Minhas contas */}
-      <div className="bg-card border-border flex h-auto w-full flex-col rounded-2xl border px-4 py-4 sm:px-6 sm:py-6">
+      <div className="bg-card border border-border/70 shadow-xs flex h-auto w-full flex-col rounded-2xl p-6">
         <div className="flex w-full flex-col">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Wallet className="text-foreground h-5 w-5" />
-              <h1 className="text-foreground text-sm font-normal">
-                Minhas <strong className="font-bold">contas</strong>
-              </h1>
+              <div className="size-8 rounded-lg bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-2xs">
+                <Wallet className="h-4 w-4" />
+              </div>
+              <h2 className="text-foreground text-base font-semibold tracking-tight">
+                Minhas contas
+              </h2>
             </div>
-            <Plus className="text-blue-500 cursor-pointer h-5 w-5" />
+            <Plus className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer h-5 w-5" />
           </div>
           
-          <div className="bg-border/60 my-4 h-px w-full"></div>
-          
-          <ul className="flex w-full flex-col gap-1">
+          <ul className="flex w-full flex-col gap-1.5">
             {accounts.length > 0 ? (
               accounts.map((acc) => (
                 <li key={acc.id} className="hover:bg-muted flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-3 transition-colors">
@@ -184,7 +191,14 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                       src={getBankIcon(acc.name)}
                     />
                     <div>
-                      <p className="text-foreground text-sm font-medium">{acc.name}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-foreground text-sm font-medium">{acc.name}</p>
+                        {acc.includeInTotal === false && (
+                          <span title="Conta oculta do saldo atual" className="inline-flex items-center gap-1 text-[11px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-md border border-border/60">
+                            <EyeOff className="h-3.5 w-3.5" /> Oculta
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <p className={`font-semibold tabular-nums text-sm ${acc.balance >= 0 ? "text-foreground" : "text-red-500"}`}>

@@ -20,11 +20,11 @@ export default async function CategoriesPage({
   const data = await getDashboardData(month, year);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#121212]">
       <Navbar summary={data.summary} />
       
-      <div className="p-8 space-y-6 flex-1 overflow-auto">
-        <div className="flex items-center justify-between">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-1 overflow-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Categorias</h1>
             <p className="text-muted-foreground">
@@ -41,30 +41,32 @@ export default async function CategoriesPage({
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {categories.map((category) => (
-            <Card key={category.id} className="shadow-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {category.name}
-                </CardTitle>
-                <div 
-                  className="h-4 w-4 rounded-full" 
-                  style={{ backgroundColor: category.color }}
-                />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2 text-muted-foreground">
-                  <Tag className="h-4 w-4" />
-                  <span className="text-xs uppercase font-semibold">Ícone: {category.icon}</span>
+            <div key={category.id} className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-border transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-border/50">
+                  <div className="flex items-center gap-2.5">
+                    <div 
+                      className="h-3.5 w-3.5 rounded-full shadow-2xs shrink-0" 
+                      style={{ backgroundColor: category.color }}
+                    />
+                    <span className="text-base font-semibold tracking-tight text-foreground truncate">
+                      {category.name}
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-4 flex justify-end space-x-2">
-                  <Link href={`/categories/edit/${category.id}`}>
-                    <Button variant="outline" size="sm">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                <div className="flex items-center gap-1.5 text-muted-foreground bg-muted/40 px-2.5 py-1.5 rounded-lg w-fit text-xs font-medium border border-border/40">
+                  <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Ícone: <strong className="font-semibold text-foreground">{category.icon}</strong></span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <Link href={`/categories/edit/${category.id}`}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs font-medium rounded-lg px-3">
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
+                  </Button>
+                </Link>
+              </div>
+            </div>
           ))}
           {categories.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg">

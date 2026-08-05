@@ -1,10 +1,8 @@
 import { getDashboardData } from "@/app/actions/dashboard";
 import { getTransactions } from "@/app/actions/transactions";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { History, CheckCircle2, Wallet, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
 import Notepad from "@/components/dashboard/Notepad";
 import { ExpensesBarChart, CategoriesPieChart } from "@/components/dashboard/DashboardCharts";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
@@ -24,59 +22,59 @@ export default async function Dashboard({
   const recentTransactions = await getTransactions({ limit: 5, month, year });
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#121212]">
       <Navbar summary={data.summary} />
       
-      <div className="p-8 space-y-8 flex-1 overflow-auto">
+      <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-1 overflow-auto">
         {/* Row de Métricas Centrais */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/20 dark:to-blue-900/20 border-blue-200 dark:border-blue-800 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-blue-800 dark:text-blue-300">Saldo Geral</CardTitle>
-              <Wallet className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-black ${data.summary.balance >= 0 ? "text-blue-700" : "text-red-700"}`}>
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.balance)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs hover:border-border transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Saldo Geral</span>
+              <div className="size-8 rounded-full bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-2xs">
+                <Wallet className="h-4 w-4" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className={`text-2xl lg:text-3xl font-bold tracking-tight mt-4 ${data.summary.balance >= 0 ? "text-foreground" : "text-red-500"}`}>
+              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.balance)}
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/20 dark:to-green-900/20 border-green-200 dark:border-green-800 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-green-800 dark:text-green-300">Receitas</CardTitle>
-              <ArrowUpCircle className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-green-700">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.income)}
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs hover:border-border transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Receitas</span>
+              <div className="size-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <ArrowUpCircle className="h-4 w-4" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground mt-4">
+              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.income)}
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950/20 dark:to-red-900/20 border-red-200 dark:border-red-800 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-red-800 dark:text-red-300">Despesas</CardTitle>
-              <ArrowDownCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-red-700">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.expenses)}
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs hover:border-border transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Despesas</span>
+              <div className="size-8 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                <ArrowDownCircle className="h-4 w-4" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground mt-4">
+              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.expenses)}
+            </div>
+          </div>
 
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-950/20 dark:to-indigo-900/20 border-indigo-200 dark:border-indigo-800 shadow-md">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold text-indigo-800 dark:text-indigo-300">Total Pago</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-indigo-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-black text-indigo-700">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.paidExpenses)}
+          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs hover:border-border transition-colors">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Pago</span>
+              <div className="size-8 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <CheckCircle2 className="h-4 w-4" />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground mt-4">
+              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.paidExpenses)}
+            </div>
+          </div>
         </div>
 
         {/* Novo Dashboard Summary */}
@@ -88,42 +86,35 @@ export default async function Dashboard({
         />
 
         {/* Row do Bloco de Notas */}
-
         <div className="w-full">
           <Notepad />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-7">
-          <Card className="lg:col-span-4 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Gastos Diários</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
+          <div className="lg:col-span-4 bg-card border border-border/70 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <h2 className="text-base font-semibold tracking-tight text-foreground mb-4">Gastos Diários</h2>
+            <div className="h-[300px] w-full">
               <ExpensesBarChart data={data.dailyExpenses} />
-            </CardContent>
-          </Card>
-          <Card className="lg:col-span-3 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">Distribuição por Categoria</CardTitle>
-            </CardHeader>
-            <CardContent className="h-[300px]">
+            </div>
+          </div>
+          <div className="lg:col-span-3 bg-card border border-border/70 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+            <h2 className="text-base font-semibold tracking-tight text-foreground mb-4">Distribuição por Categoria</h2>
+            <div className="h-[300px] w-full">
               <CategoriesPieChart data={data.categoryDistribution} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Row das Transações Recentes */}
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-bold">Transações Recentes</CardTitle>
-            <Link href="/transactions" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-              <History className="h-4 w-4" /> Ver todas
+        <div className="bg-card border border-border/70 rounded-2xl p-6 shadow-xs">
+          <div className="flex flex-row items-center justify-between mb-4">
+            <h2 className="text-base font-semibold tracking-tight text-foreground">Transações Recentes</h2>
+            <Link href="/transactions" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 bg-muted/50 hover:bg-muted px-2.5 py-1.5 rounded-lg">
+              <History className="h-3.5 w-3.5" /> Ver todas
             </Link>
-          </CardHeader>
-          <CardContent>
-            <RecentTransactions transactions={recentTransactions as any} />
-          </CardContent>
-        </Card>
+          </div>
+          <RecentTransactions transactions={recentTransactions as any} />
+        </div>
       </div>
     </div>
   );

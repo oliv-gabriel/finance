@@ -47,28 +47,30 @@ export default function ExportPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="p-6 md:p-8 max-w-3xl mx-auto w-full space-y-8 flex-1 overflow-auto">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Exportar Dados</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Exportar Dados</h1>
+        <p className="text-muted-foreground mt-1">
           Baixe todas as suas transações em formato CSV para usar no Excel ou Google Sheets.
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center space-x-2">
-            <FileSpreadsheet className="h-6 w-6 text-green-600" />
-            <CardTitle>Exportar para CSV</CardTitle>
+      <div className="bg-card border border-border/70 rounded-2xl p-6 md:p-8 shadow-xs">
+        <div className="border-b border-border/50 pb-4 mb-6">
+          <div className="flex items-center space-x-2.5 mb-1">
+            <div className="size-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <FileSpreadsheet className="h-4 w-4" />
+            </div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">Exportar para CSV</h2>
           </div>
-          <CardDescription>
+          <p className="text-xs text-muted-foreground ml-10">
             Todas as transações cadastradas até o momento serão incluídas no arquivo.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="text-sm font-medium mb-2">Campos incluídos:</h4>
-            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+          </p>
+        </div>
+        <div className="mb-8">
+          <div className="bg-muted/30 border border-border/40 p-5 rounded-xl">
+            <h4 className="text-sm font-semibold text-foreground mb-2.5">Campos incluídos:</h4>
+            <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1.5 font-medium">
               <li>Data da transação</li>
               <li>Descrição</li>
               <li>Tipo (Receita/Despesa)</li>
@@ -76,10 +78,10 @@ export default function ExportPage() {
               <li>Valor (R$)</li>
             </ul>
           </div>
-        </CardContent>
-        <CardFooter className="border-t p-6">
+        </div>
+        <div className="pt-2">
           <Button 
-            className="w-full" 
+            className="w-full h-11 rounded-xl text-sm font-semibold shadow-2xs" 
             size="lg" 
             onClick={handleExport}
             disabled={isExporting}
@@ -96,8 +98,8 @@ export default function ExportPage() {
               </>
             )}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

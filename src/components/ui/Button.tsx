@@ -15,12 +15,12 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => {
     const variants = {
-      default: "bg-blue-600 text-white hover:bg-blue-700",
+      default: "bg-[#b300e4] text-white hover:bg-[#9a00c4] shadow-sm shadow-[#b300e4]/25 transition-all duration-200",
       destructive: "bg-red-600 text-white hover:bg-red-700",
       outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
       secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
       ghost: "hover:bg-accent hover:text-accent-foreground",
-      link: "text-blue-600 underline-offset-4 hover:underline",
+      link: "text-[#b300e4] underline-offset-4 hover:underline",
     }
     
     const sizes = {
