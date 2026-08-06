@@ -21,6 +21,9 @@ export async function createCategory(data: { name: string; color: string; icon: 
       data,
     });
     revalidatePath("/categories");
+    revalidatePath("/transactions/new");
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true, category };
   } catch (error) {
     console.error("Error creating category:", error);
@@ -35,6 +38,9 @@ export async function updateCategory(id: string, data: { name: string; color: st
       data,
     });
     revalidatePath("/categories");
+    revalidatePath("/transactions/new");
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true, category };
   } catch (error) {
     console.error("Error updating category:", error);
@@ -57,6 +63,9 @@ export async function deleteCategory(id: string) {
       where: { id },
     });
     revalidatePath("/categories");
+    revalidatePath("/transactions/new");
+    revalidatePath("/transactions");
+    revalidatePath("/");
     return { success: true };
   } catch (error) {
     console.error("Error deleting category:", error);
