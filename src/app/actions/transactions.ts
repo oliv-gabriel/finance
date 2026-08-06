@@ -49,9 +49,10 @@ export async function createTransaction(data: {
   entryType?: string;
   recurrenceFreq?: string;
   quantity?: number;
+  installmentValueType?: string;
 }) {
   try {
-    const { entryType, recurrenceFreq, quantity, ...transactionData } = data;
+    const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = data;
 
     const account = await prisma.account.findUnique({
       where: { id: transactionData.accountId },
@@ -75,7 +76,7 @@ export async function createTransaction(data: {
         let description = transactionData.description;
 
         if (entryType === "parcelado") {
-          amount = transactionData.amount / quantity;
+          amount = installmentValueType === "parcela" ? transactionData.amount : (transactionData.amount / quantity);
           description = `${transactionData.description} (${i + 1}/${quantity})`;
         } else if (entryType === "recorrente") {
           description = `${transactionData.description} (${i + 1}/${quantity})`;
@@ -124,10 +125,55 @@ export async function updateTransaction(
     entryType?: string;
     recurrenceFreq?: string;
     quantity?: number;
-  }
+    installmentValueType?: string;
+  },
+  updateAllInSeries?: boolean
 ) {
   try {
-    const { entryType, recurrenceFreq, quantity, ...updateData } = data;
+    const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = data;
+    
+    if (updateAllInSeries) {
+      const target = await prisma.transaction.findUnique({ where: { id } });
+      if (target) {
+        let baseDescription = target.description;
+        const match = target.description.match(/^(.*?)\s*\(\d+\/\d+\)$/);
+        if (match) baseDescription = match[1].trim();
+        
+        const related = await prisma.transaction.findMany({
+          where: {
+            accountId: target.accountId,
+            categoryId: target.categoryId,
+            description: { startsWith: baseDescription },
+          },
+          orderBy: { date: "asc" },
+        });
+
+        let newBaseDesc = updateData.description;
+        const newMatch = newBaseDesc.match(/^(.*?)\s*\(\d+\/\d+\)$/);
+        if (newMatch) newBaseDesc = newMatch[1].trim();
+
+        for (let i = 0; i < related.length; i++) {
+          const item = related[i];
+          const hasSuffix = /\(\d+\/\d+\)$/.test(item.description);
+          const itemDesc = hasSuffix ? `${newBaseDesc} (${i + 1}/${related.length})` : updateData.description;
+          
+          await prisma.transaction.update({
+            where: { id: item.id },
+            data: {
+              amount: updateData.amount,
+              categoryId: updateData.categoryId,
+              accountId: updateData.accountId,
+              type: updateData.type,
+              description: itemDesc,
+            },
+          });
+        }
+        revalidatePath("/transactions");
+        revalidatePath("/");
+        return { success: true, transaction: target };
+      }
+    }
+
     const transaction = await prisma.transaction.update({
       where: { id },
       data: updateData,
@@ -169,8 +215,28 @@ export async function deleteAllTransactions() {
   }
 }
 
-export async function deleteTransaction(id: string) {
+export async function deleteTransaction(id: string, deleteAllInSeries?: boolean) {
   try {
+    if (deleteAllInSeries) {
+      const target = await prisma.transaction.findUnique({ where: { id } });
+      if (target) {
+        let baseDescription = target.description;
+        const match = target.description.match(/^(.*?)\s*\(\d+\/\d+\)$/);
+        if (match) baseDescription = match[1].trim();
+        
+        await prisma.transaction.deleteMany({
+          where: {
+            accountId: target.accountId,
+            categoryId: target.categoryId,
+            description: { startsWith: baseDescription },
+          },
+        });
+        revalidatePath("/transactions");
+        revalidatePath("/");
+        return { success: true };
+      }
+    }
+
     await prisma.transaction.delete({
       where: { id },
     });

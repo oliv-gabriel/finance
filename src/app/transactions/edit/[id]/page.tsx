@@ -8,10 +8,13 @@ import { notFound } from "next/navigation";
 
 export default async function EditTransactionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   const { id } = await params;
+  const { mode } = await searchParams;
   const categories = await getCategories();
   const accounts = await getAccounts();
   
@@ -35,7 +38,8 @@ export default async function EditTransactionPage({
       <TransactionForm 
         categories={categories} 
         accounts={accounts}
-        initialData={transaction} 
+        initialData={transaction}
+        initialEditMode={mode as any}
       />
     </div>
   );

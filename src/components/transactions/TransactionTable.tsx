@@ -10,6 +10,7 @@ import {
   ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toggleTransactionPaid, deleteTransaction } from "@/app/actions/transactions";
 
 interface Transaction {
@@ -26,6 +27,7 @@ interface Transaction {
   };
   account?: {
     name: string;
+    type?: string;
   };
 }
 
@@ -69,10 +71,20 @@ const getCategoryIconComponent = (name: string) => {
 };
 
 export default function TransactionTable({ transactions, summary }: TransactionTableProps) {
+  const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "pending">("all");
+  
+  // Modais e Estados de Ação
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [deleteModalTx, setDeleteModalTx] = useState<Transaction | null>(null);
+  const [editModalTx, setEditModalTx] = useState<Transaction | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isSeries = (tx: Transaction) => {
+    return Boolean((tx as any).seriesId || /\(\d+\/\d+\)/.test(tx.description));
+  };
 
   const handleTogglePaid = async (id: string, currentStatus: boolean) => {
     setLoadingId(id);
@@ -86,15 +98,16 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta transação?")) return;
-    try {
-      await deleteTransaction(id);
-      if (selectedTx?.id === id) setSelectedTx(null);
-    } catch (error) {
-      console.error(error);
-      alert("Falha ao excluir transação");
+  const handleEditClick = (tx: Transaction) => {
+    if (isSeries(tx)) {
+      setEditModalTx(tx);
+    } else {
+      router.push(`/transactions/edit/${tx.id}`);
     }
+  };
+
+  const handleDeleteClick = (tx: Transaction) => {
+    setDeleteModalTx(tx);
   };
 
   const formatCurrency = (value: number) => {
@@ -102,8 +115,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   };
 
   const formatNumberOnly = (value: number) => {
-    const formatted = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
-    return formatted;
+    return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   };
 
   // Filtragem no Desktop
@@ -123,7 +135,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     const groups: { [key: string]: Transaction[] } = {};
     list.forEach((t) => {
       const d = typeof t.date === "string" ? new Date(t.date) : t.date;
-      // Normalizar para YYYY-MM-DD mantendo data local
       const year = d.getUTCFullYear();
       const month = String(d.getUTCMonth() + 1).padStart(2, '0');
       const day = String(d.getUTCDate()).padStart(2, '0');
@@ -163,7 +174,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   const groupedMobile = groupTransactionsByDate(transactions);
   const groupedDesktop = groupTransactionsByDate(filteredTransactions);
 
-  // Cálculos para Desktop Cards
   const calcIncome = summary?.income ?? transactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
   const calcExpense = summary?.expenses ?? transactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
   const calcBalance = summary?.balance ?? (calcIncome - calcExpense);
@@ -171,29 +181,27 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   return (
     <div>
       {/* ========================================================================= */}
-      {/* 1. VERSÃO MOBILE (LAYOUT EXATO DA REFERÊNCIA)                             */}
+      {/* 1. VERSÃO MOBILE                                                          */}
       {/* ========================================================================= */}
       <div className="md:hidden flex flex-col space-y-4">
         {groupedMobile.length > 0 ? (
           <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm divide-y divide-border/30">
             {groupedMobile.map((group) => (
               <div key={group.dateKey} className="flex flex-col">
-                {/* Cabeçalho de Data Mobile */}
                 <div className="bg-[#18181b] text-[#9e9ea3] text-[13px] font-semibold px-4 py-2.5 border-y border-border/40 select-none">
                   {formatGroupHeader(group.dateKey)}
                 </div>
 
-                {/* Lista do Dia */}
                 <div className="divide-y divide-border/30">
                   {group.items.map((t) => {
                     const IconComponent = getCategoryIconComponent(t.category.name);
+                    const seriesBadge = isSeries(t) ? "Parcelado" : "Único";
                     return (
                       <div
                         key={t.id}
                         onClick={() => setSelectedTx(t)}
                         className="group/item flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer select-none"
                       >
-                        {/* Ícone Circular e Descrição */}
                         <div className="flex items-center min-w-0 pr-3">
                           <div
                             className="size-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-transform duration-200 group-hover/item:scale-105"
@@ -210,12 +218,13 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                               <span className="truncate max-w-[130px]">
                                 {t.account?.name || "Carteira"}
                               </span>
-                              <CreditCardIcon className="w-3.5 h-3.5 text-[#84848a]/90 inline shrink-0 ml-0.5" />
+                              {t.account?.type === "CARTAO" && (
+                                <CreditCardIcon className="w-3.5 h-3.5 text-[#84848a]/90 inline shrink-0 ml-0.5" />
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Valor e Recorrência/Status */}
                         <div className="flex flex-col items-end shrink-0">
                           <span
                             className={`font-extrabold tabular-nums text-base whitespace-nowrap tracking-tight ${
@@ -228,7 +237,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="text-[#84848a] text-xs font-medium">
-                              Único
+                              {seriesBadge}
                             </span>
                             <span
                               onClick={(e) => {
@@ -257,7 +266,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
         )}
 
-        {/* Barra Inferior Fixada - Balanço Total */}
         <div className="fixed bottom-16 left-0 right-0 z-30 bg-[#18181b]/95 backdrop-blur-md border-t border-border/70 px-5 py-3 shadow-2xl shadow-black/90 flex flex-col justify-between">
           <div className="w-full flex items-center justify-center pb-1">
             <ChevronUp className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
@@ -323,14 +331,23 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 )}
               </button>
 
-              <Link href={`/transactions/edit/${selectedTx.id}`} className="w-full block">
-                <button className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border flex items-center justify-center gap-2 transition-colors cursor-pointer">
-                  <Edit2 className="w-4 h-4 text-[#b300e4]" /> Editar Transação
-                </button>
-              </Link>
+              <button 
+                onClick={() => {
+                  const target = selectedTx;
+                  setSelectedTx(null);
+                  handleEditClick(target);
+                }}
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <Edit2 className="w-4 h-4 text-[#b300e4]" /> Editar Transação
+              </button>
 
               <button
-                onClick={() => handleDelete(selectedTx.id)}
+                onClick={() => {
+                  const target = selectedTx;
+                  setSelectedTx(null);
+                  handleDeleteClick(target);
+                }}
                 className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" /> Excluir Lançamento
@@ -342,10 +359,9 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
 
       {/* ========================================================================= */}
-      {/* 2. VERSÃO DESKTOP (COMPUTador - DASHBOARD E TABELA MODERNA)               */}
+      {/* 2. VERSÃO DESKTOP                                                         */}
       {/* ========================================================================= */}
       <div className="hidden md:flex flex-col space-y-6">
-        {/* Strip de Cards Resumidos do Período */}
         <div className="grid grid-cols-3 gap-6">
           <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between">
             <div>
@@ -380,7 +396,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
         </div>
 
-        {/* Barra de Filtros e Pesquisa Desktop */}
         <div className="flex items-center justify-between bg-card border border-border/70 rounded-2xl p-3 px-4 shadow-2xs gap-4">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -401,9 +416,9 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
             {[
               { id: "all", label: "Todas" },
-              { id: "income", label: "Entradas", text: "text-emerald-400" },
-              { id: "expense", label: "Saídas", text: "text-rose-400" },
-              { id: "pending", label: "Pendentes", text: "text-amber-400" },
+              { id: "income", label: "Entradas" },
+              { id: "expense", label: "Saídas" },
+              { id: "pending", label: "Pendentes" },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -420,7 +435,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
         </div>
 
-        {/* Tabela Desktop Agrupada por Data */}
         <div className="overflow-hidden border border-border/70 bg-card rounded-2xl shadow-xs">
           {groupedDesktop.length > 0 ? (
             <div className="w-full overflow-x-auto">
@@ -438,16 +452,15 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 <tbody className="divide-y divide-border/40">
                   {groupedDesktop.map((group) => (
                     <React.Fragment key={group.dateKey}>
-                      {/* Linha de Cabeçalho da Data no Desktop */}
                       <tr className="bg-[#18181b]/90 text-[#a0a0a5] font-bold text-xs border-y border-border/40">
                         <td colSpan={6} className="px-6 py-2.5 tracking-wide uppercase">
                           {formatGroupHeader(group.dateKey)}
                         </td>
                       </tr>
 
-                      {/* Transações daquela data */}
                       {group.items.map((t) => {
                         const IconComponent = getCategoryIconComponent(t.category.name);
+                        const seriesBadge = isSeries(t) ? "Parcelado/Série" : "Único";
                         return (
                           <tr key={t.id} className="group hover:bg-muted/30 transition-colors">
                             <td className="px-6 py-4 align-middle">
@@ -483,8 +496,10 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                             </td>
 
                             <td className="px-6 py-4 align-middle">
-                              <span className="text-muted-foreground text-xs font-semibold">
-                                Único
+                              <span className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                                isSeries(t) ? "bg-[#b300e4]/15 text-[#b300e4] border border-[#b300e4]/30" : "text-muted-foreground"
+                              }`}>
+                                {seriesBadge}
                               </span>
                             </td>
 
@@ -520,15 +535,17 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                             <td className="px-6 py-4 align-middle text-right">
                               <div className="flex items-center justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
-                                <Link href={`/transactions/edit/${t.id}`}>
-                                  <button title="Editar transação" className="p-2 hover:bg-muted/80 rounded-xl text-muted-foreground hover:text-foreground transition-colors">
-                                    <Edit2 size={16} />
-                                  </button>
-                                </Link>
+                                <button 
+                                  title="Editar transação" 
+                                  onClick={() => handleEditClick(t)}
+                                  className="p-2 hover:bg-muted/80 rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
                                 <button
                                   title="Excluir transação"
-                                  onClick={() => handleDelete(t.id)}
-                                  className="p-2 hover:bg-rose-500/15 rounded-xl text-muted-foreground hover:text-rose-500 transition-colors"
+                                  onClick={() => handleDeleteClick(t)}
+                                  className="p-2 hover:bg-rose-500/15 rounded-xl text-muted-foreground hover:text-rose-500 transition-colors cursor-pointer"
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -551,6 +568,140 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           )}
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* 3. MODAIS DE EXCLUSÃO E EDIÇÃO EM SÉRIE                                   */}
+      {/* ========================================================================= */}
+
+      {/* Modal de Exclusão (Única vs Todas as Parcelas) */}
+      {deleteModalTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
+          <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
+            <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
+              <div className="size-11 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-lg leading-tight">Excluir Lançamento</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{deleteModalTx.description}</p>
+              </div>
+            </div>
+
+            {isSeries(deleteModalTx) ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  Este lançamento faz parte de um <strong>parcelamento ou série recorrente</strong>. Como deseja realizar a exclusão?
+                </p>
+                <div className="space-y-2.5 pt-2">
+                  <button
+                    disabled={isDeleting}
+                    onClick={async () => {
+                      setIsDeleting(true);
+                      await deleteTransaction(deleteModalTx.id, false);
+                      setIsDeleting(false);
+                      setDeleteModalTx(null);
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    🗑️ Excluir apenas esta parcela (Mês atual)
+                  </button>
+
+                  <button
+                    disabled={isDeleting}
+                    onClick={async () => {
+                      setIsDeleting(true);
+                      await deleteTransaction(deleteModalTx.id, true);
+                      setIsDeleting(false);
+                      setDeleteModalTx(null);
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    💥 Excluir TODAS as parcelas desta série
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+                  Tem certeza que deseja excluir permanentemente esta transação do sistema? Esta ação não poderá ser desfeita.
+                </p>
+                <button
+                  disabled={isDeleting}
+                  onClick={async () => {
+                    setIsDeleting(true);
+                    await deleteTransaction(deleteModalTx.id, false);
+                    setIsDeleting(false);
+                    setDeleteModalTx(null);
+                  }}
+                  className="w-full py-3 px-4 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  Confirmar Exclusão
+                </button>
+              </div>
+            )}
+
+            <button
+              disabled={isDeleting}
+              onClick={() => setDeleteModalTx(null)}
+              className="w-full py-2.5 rounded-xl font-bold text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              Cancelar e Voltar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição (Única vs Todas as Parcelas) */}
+      {editModalTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
+          <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
+            <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
+              <div className="size-11 rounded-2xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shrink-0">
+                <Edit2 className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-lg leading-tight">Editar Lançamento em Série</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{editModalTx.description}</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+              Esta transação faz parte de uma <strong>série parcelada ou recorrente</strong>. Deseja alterar apenas as informações desta parcela específica ou aplicar a alteração para todas?
+            </p>
+
+            <div className="space-y-2.5 pt-1">
+              <button
+                onClick={() => {
+                  router.push(`/transactions/edit/${editModalTx.id}?mode=single`);
+                  setEditModalTx(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer"
+              >
+                <span>✏️ Editar apenas esta parcela</span>
+                <span className="text-[11px] font-normal text-muted-foreground">Altera somente o registro deste mês</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  router.push(`/transactions/edit/${editModalTx.id}?mode=series`);
+                  setEditModalTx(null);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm bg-[#b300e4] hover:bg-[#b300e4]/90 text-white shadow-lg shadow-[#b300e4]/25 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer"
+              >
+                <span>🚀 Editar TODAS as parcelas da série</span>
+                <span className="text-[11px] font-medium text-white/80">Aplica novo valor, categoria e conta a todos os meses</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setEditModalTx(null)}
+              className="w-full py-2 rounded-xl font-bold text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
