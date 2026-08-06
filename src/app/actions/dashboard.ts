@@ -95,71 +95,78 @@ export async function getDashboardData(month?: number, year?: number) {
       },
       dailyExpenses,
       categoryDistribution,
-      accounts: await Promise.all((await prisma.account.findMany({
-        where: { type: "CONTA" }
-      })).map(async (acc) => {
-        const accTransactions = await prisma.transaction.findMany({
-          where: { accountId: acc.id, paid: true }
+      accounts: await (async () => {
+        const contas = await prisma.account.findMany({ where: { type: "CONTA" } });
+        if (contas.length === 0) return [];
+        const balances = await prisma.transaction.groupBy({
+          by: ['accountId', 'type'],
+          where: { paid: true, accountId: { in: contas.map(c => c.id) } },
+          _sum: { amount: true }
         });
-        const accBalance = accTransactions.reduce((total, t) => {
-          return t.type === "INCOME" ? total + t.amount : total - t.amount;
-        }, 0);
-        return {
-          id: acc.id,
-          name: acc.name,
-          balance: accBalance,
-          type: acc.type,
-          includeInTotal: acc.includeInTotal,
-        };
-      })),
-      creditCards: await Promise.all((await prisma.account.findMany({
-        where: { type: "CARTAO" }
-      })).map(async (card) => {
-        const { startDate: cardStart, endDate: cardEnd } = getAccountBillingCycle(card, targetMonth, targetYear);
-        const cardTransactions = await prisma.transaction.findMany({
-          where: { 
-            accountId: card.id,
-            date: {
-              gte: cardStart,
-              lte: cardEnd,
-            }
+        return contas.map(acc => {
+          const inc = balances.find(b => b.accountId === acc.id && b.type === "INCOME")?._sum.amount || 0;
+          const exp = balances.find(b => b.accountId === acc.id && b.type === "EXPENSE")?._sum.amount || 0;
+          return {
+            id: acc.id,
+            name: acc.name,
+            balance: inc - exp,
+            type: acc.type,
+            includeInTotal: acc.includeInTotal,
+          };
+        });
+      })(),
+      creditCards: await (async () => {
+        const cartoes = await prisma.account.findMany({ where: { type: "CARTAO" } });
+        if (cartoes.length === 0) return [];
+        const allUnpaid = await prisma.transaction.groupBy({
+          by: ['accountId'],
+          where: { paid: false, type: "EXPENSE", accountId: { in: cartoes.map(c => c.id) } },
+          _sum: { amount: true }
+        });
+        return Promise.all(cartoes.map(async (card) => {
+          const { startDate: cardStart, endDate: cardEnd } = getAccountBillingCycle(card, targetMonth, targetYear);
+          const currentInvoice = await prisma.transaction.aggregate({
+            where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd }, type: "EXPENSE" },
+            _sum: { amount: true }
+          });
+          const faturaAtual = currentInvoice._sum.amount || 0;
+          
+          const unpaidCount = await prisma.transaction.count({
+            where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd }, type: "EXPENSE", paid: false }
+          });
+          const hasUnpaid = unpaidCount > 0;
+          
+          const totalTransactionsCount = await prisma.transaction.count({
+            where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd } }
+          });
+          
+          const allUnpaidExpenses = allUnpaid.find(u => u.accountId === card.id)?._sum.amount || 0;
+          const limiteDisponivel = (card.limit || 0) - allUnpaidExpenses;
+          
+          const isCurrentMonth = targetMonth === (now.getMonth() + 1) && targetYear === now.getFullYear();
+          let status = "Fechado";
+          
+          if (!hasUnpaid && totalTransactionsCount > 0) {
+            status = "Fechado";
+          } else if (isCurrentMonth) {
+            const today = now.getDate();
+            status = today <= (card.closingDay || 31) ? "Aberto" : "Fechado";
+          } else if (targetYear > now.getFullYear() || (targetYear === now.getFullYear() && targetMonth > now.getMonth() + 1)) {
+            status = "Aberto";
           }
-        });
-        
-        const faturaAtual = cardTransactions
-          .filter(t => t.type === "EXPENSE")
-          .reduce((total, t) => total + t.amount, 0);
-        
-        const allUnpaidExpenses = (await prisma.transaction.findMany({
-          where: { accountId: card.id, paid: false, type: "EXPENSE" }
-        })).reduce((total, t) => total + t.amount, 0);
 
-        const limiteDisponivel = (card.limit || 0) - allUnpaidExpenses;
-        
-        const hasUnpaid = cardTransactions.some(t => t.type === "EXPENSE" && !t.paid);
-        const isCurrentMonth = targetMonth === (now.getMonth() + 1) && targetYear === now.getFullYear();
-        let status = "Fechado";
-        
-        if (!hasUnpaid && cardTransactions.length > 0) {
-          status = "Fechado";
-        } else if (isCurrentMonth) {
-          const today = now.getDate();
-          status = today <= (card.closingDay || 31) ? "Aberto" : "Fechado";
-        } else if (targetYear > now.getFullYear() || (targetYear === now.getFullYear() && targetMonth > now.getMonth() + 1)) {
-          status = "Aberto";
-        }
-
-        return {
-          id: card.id,
-          name: card.name,
-          faturaAtual,
-          limiteDisponivel,
-          closingDay: card.closingDay,
-          dueDay: card.dueDay,
-          status,
-          includeInTotal: card.includeInTotal,
-        };
-      }))
+          return {
+            id: card.id,
+            name: card.name,
+            faturaAtual,
+            limiteDisponivel,
+            closingDay: card.closingDay,
+            dueDay: card.dueDay,
+            status,
+            includeInTotal: card.includeInTotal,
+          };
+        }));
+      })()
     };
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
