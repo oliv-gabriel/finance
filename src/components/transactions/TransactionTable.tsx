@@ -176,7 +176,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
   const calcIncome = summary?.income ?? transactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
   const calcExpense = summary?.expenses ?? transactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
-  const calcBalance = summary?.balance ?? (calcIncome - calcExpense);
+  const calcBalance = calcIncome - calcExpense;
 
   return (
     <div>

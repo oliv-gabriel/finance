@@ -83,6 +83,7 @@ export default function DraggableDashboard({ data, recentTransactions }: Draggab
   const [mounted, setMounted] = useState(false);
   const [layouts, setLayouts] = useState<{ [key: string]: any[] }>({ lg: defaultLayout });
   const carouselRef = useRef<HTMLDivElement>(null);
+  const accountsCarouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -107,6 +108,19 @@ export default function DraggableDashboard({ data, recentTransactions }: Draggab
       carouselRef.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
     }
   };
+
+  const scrollAccountsCarousel = (direction: "left" | "right") => {
+    if (accountsCarouselRef.current) {
+      const scrollAmount = accountsCarouselRef.current.clientWidth;
+      accountsCarouselRef.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const sortedAccounts = [...data.accounts].sort((a, b) => b.balance - a.balance);
+  const accountChunks = [];
+  for (let i = 0; i < sortedAccounts.length; i += 3) {
+    accountChunks.push(sortedAccounts.slice(i, i + 3));
+  }
 
   if (!mounted) return <div className="p-8">Carregando layout...</div>;
 
@@ -167,20 +181,41 @@ export default function DraggableDashboard({ data, recentTransactions }: Draggab
         <div key="accounts-balance">
           <Card className="h-full flex flex-col shadow-sm bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-slate-200 dark:border-slate-800">
             <CardHeader className="bg-transparent py-3 drag-handle cursor-move rounded-t-lg">
-              <CardTitle className="text-lg font-bold">Minha Conta</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold">Minha Conta</CardTitle>
+                {accountChunks.length > 1 && (
+                  <div className="flex gap-1">
+                    <button onClick={() => scrollAccountsCarousel("left")} className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => scrollAccountsCarousel("right")} className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors">
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-3">
-                {data.accounts.map((acc) => (
-                  <div key={acc.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                    <span className="text-sm font-medium">{acc.name}</span>
-                    <span className={`text-sm font-bold ${acc.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      (Saldo: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(acc.balance)})
-                    </span>
+            <CardContent className="flex-1 overflow-hidden p-0 relative">
+              <div 
+                ref={accountsCarouselRef}
+                className="flex overflow-x-auto snap-x snap-mandatory h-full w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              >
+                {accountChunks.map((chunk, index) => (
+                  <div key={index} className="min-w-full snap-center flex-shrink-0 flex flex-col p-4 space-y-3">
+                    {chunk.map((acc) => (
+                      <div key={acc.id} className="flex items-center justify-between border-b border-border/50 pb-2 last:border-0 last:pb-0">
+                        <span className="text-sm font-medium truncate pr-2">{acc.name}</span>
+                        <span className={`text-sm font-bold whitespace-nowrap ${acc.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(acc.balance)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 ))}
                 {data.accounts.length === 0 && (
-                  <p className="text-center text-xs text-muted-foreground py-2">Nenhuma conta cadastrada.</p>
+                  <div className="min-w-full flex items-center justify-center p-4">
+                    <p className="text-center text-xs text-muted-foreground py-2">Nenhuma conta cadastrada.</p>
+                  </div>
                 )}
               </div>
             </CardContent>

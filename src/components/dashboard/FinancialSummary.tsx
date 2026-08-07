@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { payCardBill } from "@/app/actions/transactions";
 import CardInvoiceModal from "@/components/accounts/CardInvoiceModal";
 
@@ -46,6 +46,22 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
   const [payingId, setPayingId] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
+  const accountsRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  const scrollContainer = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
+    if (ref.current) {
+      const scrollAmount = ref.current.clientWidth;
+      ref.current.scrollBy({ left: direction === "left" ? -scrollAmount : scrollAmount, behavior: "smooth" });
+    }
+  };
+
+  const sortedAccounts = [...accounts].sort((a, b) => b.balance - a.balance);
+  const accountChunks: AccountData[][] = [];
+  for (let i = 0; i < sortedAccounts.length; i += 3) {
+    accountChunks.push(sortedAccounts.slice(i, i + 3));
+  }
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -89,15 +105,29 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 Minhas <span className="font-extrabold">contas</span>
               </h2>
             </div>
-            <button title="Adicionar conta" className="text-[#b300e4] hover:bg-[#b300e4]/15 p-1.5 rounded-xl transition-all cursor-pointer">
-              <Plus className="h-6 w-6 stroke-[2.5]" />
-            </button>
+            <div className="flex items-center gap-1">
+              {accountChunks.length > 1 && (
+                <div className="flex bg-muted/50 rounded-lg p-0.5 mr-2">
+                  <button onClick={() => scrollContainer(accountsRef, "left")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => scrollContainer(accountsRef, "right")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              <button title="Adicionar conta" className="text-[#b300e4] hover:bg-[#b300e4]/15 p-1.5 rounded-xl transition-all cursor-pointer">
+                <Plus className="h-6 w-6 stroke-[2.5]" />
+              </button>
+            </div>
           </div>
           
-          <ul className="flex w-full flex-col gap-2 divide-y divide-border/30">
-            {accounts.length > 0 ? (
-              accounts.map((acc) => (
-                <li key={acc.id} className="hover:bg-muted/40 flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 transition-colors">
+          <div ref={accountsRef} className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            {accountChunks.length > 0 ? (
+              accountChunks.map((chunk, chunkIndex) => (
+                <ul key={chunkIndex} className="min-w-full snap-center shrink-0 flex flex-col gap-2 divide-y divide-border/30">
+                  {chunk.map((acc) => (
+                    <li key={acc.id} className="hover:bg-muted/40 flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 transition-colors">
                   <div className="flex items-center gap-3.5">
                     <img
                       alt={acc.name}
@@ -125,11 +155,15 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     </p>
                   </div>
                 </li>
+                  ))}
+                </ul>
               ))
             ) : (
-              <p className="text-center text-sm text-muted-foreground py-6">Nenhuma conta cadastrada.</p>
+              <div className="min-w-full flex justify-center">
+                <p className="text-center text-sm text-muted-foreground py-6">Nenhuma conta cadastrada.</p>
+              </div>
             )}
-          </ul>
+          </div>
         </div>
       </div>
 
@@ -145,18 +179,30 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 Meus <span className="font-extrabold">cartões</span>
               </h2>
             </div>
-            <button title="Adicionar cartão" className="text-[#b300e4] hover:bg-[#b300e4]/15 p-1.5 rounded-xl transition-all cursor-pointer">
-              <Plus className="h-6 w-6 stroke-[2.5]" />
-            </button>
+            <div className="flex items-center gap-1">
+              {creditCards.length > 1 && (
+                <div className="flex bg-muted/50 rounded-lg p-0.5 mr-2">
+                  <button onClick={() => scrollContainer(cardsRef, "left")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => scrollContainer(cardsRef, "right")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+              <button title="Adicionar cartão" className="text-[#b300e4] hover:bg-[#b300e4]/15 p-1.5 rounded-xl transition-all cursor-pointer">
+                <Plus className="h-6 w-6 stroke-[2.5]" />
+              </button>
+            </div>
           </div>
           
-          <div className="flex w-full flex-col gap-3">
+          <div ref={cardsRef} className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {creditCards.length > 0 ? (
               creditCards.map((card) => (
                 <div 
                   key={card.id} 
                   onClick={() => setSelectedCardId(card.id)}
-                  className="group relative flex w-full cursor-pointer flex-col rounded-xl p-4 transition-all duration-200 bg-muted/30 hover:bg-muted/60 hover:border-[#b300e4]/40 border border-transparent shadow-2xs hover:shadow-md hover:scale-[1.01]"
+                  className="min-w-full snap-center shrink-0 group relative flex cursor-pointer flex-col rounded-xl p-4 transition-all duration-200 bg-muted/30 hover:bg-muted/60 hover:border-[#b300e4]/40 border border-transparent shadow-2xs hover:shadow-md hover:scale-[1.01]"
                 >
                   <div className="absolute top-3 right-3 z-10">
                     <button 
