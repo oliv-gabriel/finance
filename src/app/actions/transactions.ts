@@ -62,11 +62,15 @@ export async function createTransaction(data: {
       where: { id: transactionData.accountId },
     });
 
-    if (account && entryType && entryType !== "unico" && quantity && quantity > 1) {
+    const isFixed = entryType === "fixa";
+    const actualQuantity = isFixed ? 120 : (quantity || 1);
+
+    if (account && entryType && entryType !== "unico" && actualQuantity > 1) {
       const transactionsToCreate = [];
       const baseDate = new Date(transactionData.date);
+      const seriesId = crypto.randomUUID();
 
-      for (let i = 0; i < quantity; i++) {
+      for (let i = 0; i < actualQuantity; i++) {
         let newDate = new Date(baseDate);
         if (recurrenceFreq === "Mensal") {
           newDate.setMonth(newDate.getMonth() + i);
@@ -80,16 +84,17 @@ export async function createTransaction(data: {
         let description = transactionData.description;
 
         if (entryType === "parcelado") {
-          amount = installmentValueType === "parcela" ? transactionData.amount : (transactionData.amount / quantity);
-          description = `${transactionData.description} (${i + 1}/${quantity})`;
+          amount = installmentValueType === "parcela" ? transactionData.amount : (transactionData.amount / actualQuantity);
+          description = `${transactionData.description} (${i + 1}/${actualQuantity})`;
         } else if (entryType === "recorrente") {
-          description = `${transactionData.description} (${i + 1}/${quantity})`;
-        }
+          description = `${transactionData.description} (${i + 1}/${actualQuantity})`;
+        } // Se for fixa, a descrição continua igual
 
         transactionsToCreate.push({
           ...transactionData,
           amount,
           description,
+          seriesId,
           date: newDate,
           paid: i === 0 ? transactionData.paid : false,
         });
@@ -147,7 +152,7 @@ export async function updateTransaction(
         if (match) baseDescription = match[1].trim();
         
         const related = await prisma.transaction.findMany({
-          where: {
+          where: target.seriesId ? { seriesId: target.seriesId } : {
             accountId: target.accountId,
             categoryId: target.categoryId,
             description: { startsWith: baseDescription },
@@ -232,7 +237,7 @@ export async function deleteTransaction(id: string, deleteAllInSeries?: boolean)
         if (match) baseDescription = match[1].trim();
         
         await prisma.transaction.deleteMany({
-          where: {
+          where: target.seriesId ? { seriesId: target.seriesId } : {
             accountId: target.accountId,
             categoryId: target.categoryId,
             description: { startsWith: baseDescription },

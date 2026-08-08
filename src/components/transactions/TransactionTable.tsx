@@ -292,83 +292,137 @@ export default function TransactionTable({ transactions, summary }: TransactionT
         </div>
       </div>
 
-      {/* Modal / Action Sheet Mobile ao tocar numa transação */}
-      {selectedTx && (
-        <div className="md:hidden fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
-          <div 
-            className="w-full bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-4 text-foreground animate-in slide-in-from-bottom-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-border/40">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="size-10 rounded-full flex items-center justify-center text-white font-bold shrink-0"
-                  style={{ backgroundColor: selectedTx.category.color }}
-                >
-                  <Tag className="w-5 h-5" />
+      {/* Modal / Pop-up de Detalhes da Transação */}
+      {selectedTx && (() => {
+        const match = selectedTx.description.match(/\((\d+)\/(\d+)\)/);
+        const isInstallment = !!match;
+        const currentInstallment = isInstallment ? parseInt(match[1]) : 0;
+        const totalInstallments = isInstallment ? parseInt(match[2]) : 0;
+        const progressPercentage = isInstallment ? Math.round((currentInstallment / totalInstallments) * 100) : 0;
+        const isFixedTransaction = isSeries(selectedTx) && !isInstallment;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
+            <div 
+              className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between pb-2 border-b border-border/40">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="size-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 shadow-sm"
+                    style={{ backgroundColor: selectedTx.category?.color || "#b300e4" }}
+                  >
+                    {(() => {
+                      const IconComp = selectedTx.category ? getCategoryIconComponent(selectedTx.category.name) : Tag;
+                      return <IconComp className="w-5 h-5" />;
+                    })()}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-lg leading-tight">
+                      {isInstallment ? selectedTx.description.replace(/\s*\(\d+\/\d+\)$/, "") : selectedTx.description}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">{selectedTx.category?.name || "Sem categoria"} • {selectedTx.account?.name || "Carteira"}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-extrabold text-base leading-tight">{selectedTx.description}</h3>
-                  <p className="text-xs text-muted-foreground">{selectedTx.category.name} • {selectedTx.account?.name || "Carteira"}</p>
-                </div>
+                <button onClick={() => setSelectedTx(null)} className="p-1.5 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors rounded-full cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button onClick={() => setSelectedTx(null)} className="p-1 text-muted-foreground hover:text-foreground rounded-full">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="text-center py-2 bg-muted/20 rounded-2xl border border-border/40">
-              <span className="text-xs text-muted-foreground block uppercase font-semibold">Valor Registrado</span>
-              <span className={`text-2xl font-black tabular-nums ${selectedTx.type === "INCOME" ? "text-emerald-400" : "text-rose-500"}`}>
-                {selectedTx.type === "INCOME" ? "+ " : "- "}
-                {formatCurrency(selectedTx.amount)}
-              </span>
-            </div>
+              {isFixedTransaction && (
+                <div className="flex items-center justify-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 py-1.5 px-3 rounded-lg w-fit mx-auto shadow-inner shadow-emerald-500/10">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Assinatura Ativa (Fixa)</span>
+                </div>
+              )}
 
-            <div className="space-y-2 pt-2">
-              <button
-                onClick={() => {
-                  handleTogglePaid(selectedTx.id, selectedTx.paid);
-                  setSelectedTx(null);
-                }}
-                className={`w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all cursor-pointer ${
-                  selectedTx.paid 
-                    ? "bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
-                    : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
-                }`}
-              >
-                {selectedTx.paid ? (
-                  <><Clock className="w-4 h-4" /> Alterar para Em Aberto (Pendente)</>
-                ) : (
-                  <><CheckCircle2 className="w-4 h-4" /> Confirmar Pagamento (Pago)</>
+              {isInstallment && (
+                <div className="px-2 space-y-2">
+                  <div className="flex justify-between text-xs font-semibold text-muted-foreground">
+                    <span>Parcela {currentInstallment} de {totalInstallments}</span>
+                    <span>{progressPercentage}% Pago</span>
+                  </div>
+                  <div className="h-2.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
+                    <div 
+                      className="h-full bg-[#b300e4] rounded-full transition-all duration-500 shadow-[0_0_10px_#b300e4]" 
+                      style={{ width: `${progressPercentage}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="text-center py-4 bg-muted/20 rounded-2xl border border-border/40 shadow-inner">
+                <span className="text-xs text-muted-foreground block uppercase font-semibold mb-1">Valor Registrado</span>
+                <span className={`text-4xl font-black tabular-nums tracking-tight ${selectedTx.type === "INCOME" ? "text-emerald-400" : "text-rose-500"}`}>
+                  {selectedTx.type === "INCOME" ? "+ " : "- "}
+                  {formatCurrency(selectedTx.amount)}
+                </span>
+              </div>
+
+              <div className="space-y-2.5 pt-2">
+                <button
+                  onClick={() => {
+                    handleTogglePaid(selectedTx.id, selectedTx.paid);
+                    setSelectedTx(null);
+                  }}
+                  className={`w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm ${
+                    selectedTx.paid 
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                      : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                  }`}
+                >
+                  {selectedTx.paid ? (
+                    <><Clock className="w-4 h-4" /> Alterar para Pendente</>
+                  ) : (
+                    <><CheckCircle2 className="w-4 h-4" /> Confirmar Pagamento</>
+                  )}
+                </button>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button 
+                    onClick={() => {
+                      const target = selectedTx;
+                      setSelectedTx(null);
+                      handleEditClick(target);
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                  >
+                    <Edit2 className="w-4 h-4 text-[#b300e4]" /> Editar
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const target = selectedTx;
+                      setSelectedTx(null);
+                      handleDeleteClick(target);
+                    }}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
+                  >
+                    <Trash2 className="w-4 h-4" /> Excluir
+                  </button>
+                </div>
+
+                {(isFixedTransaction || isInstallment) && (
+                  <button
+                    onClick={async () => {
+                      if(confirm(isFixedTransaction ? "Deseja realmente cancelar esta Assinatura Fixa? Isso irá apagar todas as cobranças futuras que ainda não foram pagas." : "Deseja realmente apagar esta e todas as outras parcelas vinculadas?")) {
+                        setIsDeleting(true);
+                        await deleteTransaction(selectedTx.id, true);
+                        setIsDeleting(false);
+                        setSelectedTx(null);
+                      }
+                    }}
+                    className="w-full py-3.5 px-4 mt-2 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer"
+                  >
+                    <span>{isFixedTransaction ? "🚫 Cancelar Conta Fixa (Excluir Futuras)" : "💥 Cancelar Série de Parcelas"}</span>
+                  </button>
                 )}
-              </button>
-
-              <button 
-                onClick={() => {
-                  const target = selectedTx;
-                  setSelectedTx(null);
-                  handleEditClick(target);
-                }}
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <Edit2 className="w-4 h-4 text-[#b300e4]" /> Editar Transação
-              </button>
-
-              <button
-                onClick={() => {
-                  const target = selectedTx;
-                  setSelectedTx(null);
-                  handleDeleteClick(target);
-                }}
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              >
-                <Trash2 className="w-4 h-4" /> Excluir Lançamento
-              </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
       {/* ========================================================================= */}
@@ -476,7 +530,11 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                         const IconComponent = isTransfer ? ArrowRightLeft : (t.category ? getCategoryIconComponent(t.category.name) : Tag);
                         const seriesBadge = isSeries(t) ? "Parcelado/Série" : "Único";
                         return (
-                          <tr key={t.id} className="group hover:bg-muted/30 transition-colors">
+                          <tr 
+                            key={t.id} 
+                            onClick={() => setSelectedTx(t)}
+                            className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                          >
                             <td className="px-6 py-4 align-middle">
                               <div className="flex items-center gap-3.5">
                                 <div
@@ -528,7 +586,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                             <td className="px-6 py-4 align-middle text-center">
                               <button
-                                onClick={() => handleTogglePaid(t.id, t.paid)}
+                                onClick={(e) => { e.stopPropagation(); handleTogglePaid(t.id, t.paid); }}
                                 disabled={loadingId === t.id}
                                 className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border transition-all duration-200 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 disabled:opacity-50 ${
                                   t.paid
@@ -560,14 +618,14 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                               <div className="flex items-center justify-end gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
                                 <button 
                                   title="Editar transação" 
-                                  onClick={() => handleEditClick(t)}
+                                  onClick={(e) => { e.stopPropagation(); handleEditClick(t); }}
                                   className="p-2 hover:bg-muted/80 rounded-xl text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                                 >
                                   <Edit2 size={16} />
                                 </button>
                                 <button
                                   title="Excluir transação"
-                                  onClick={() => handleDeleteClick(t)}
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteClick(t); }}
                                   className="p-2 hover:bg-rose-500/15 rounded-xl text-muted-foreground hover:text-rose-500 transition-colors cursor-pointer"
                                 >
                                   <Trash2 size={16} />

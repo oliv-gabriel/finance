@@ -47,14 +47,14 @@ export default function MobileNav() {
         <Plus className="h-7 w-7 stroke-[2.5] text-white" />
       </Link>
 
-      {/* 4. Orçamentos / Gráficos */}
+      {/* 4. Categorias */}
       <Link 
-        href="/budgets"
+        href="/categories"
         className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 ${
-          pathname === "/budgets" ? "text-[#b300e4] font-semibold" : "text-muted-foreground hover:text-foreground"
+          pathname === "/categories" ? "text-[#b300e4] font-semibold" : "text-muted-foreground hover:text-foreground"
         }`}
       >
-        <BarChart3 className="h-6 w-6 stroke-[2.2]" />
+        <Tags className="h-6 w-6 stroke-[2.2]" />
       </Link>
 
       {/* 5. Contas e Cartões / Perfil */}

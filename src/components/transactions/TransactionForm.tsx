@@ -290,11 +290,11 @@ export default function TransactionForm({ categories, accounts, initialData, ini
             <div className="space-y-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-900/50">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground">Lançamento</label>
-                <div className="flex bg-muted p-1 rounded-xl gap-1.5 border border-border/50">
+                <div className="grid grid-cols-2 sm:grid-cols-4 bg-muted p-1 rounded-xl gap-1.5 border border-border/50">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, entryType: "unico", quantity: 1 })}
-                    className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       formData.entryType === "unico" ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                     }`}
                   >
@@ -302,8 +302,17 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                   </button>
                   <button
                     type="button"
+                    onClick={() => setFormData({ ...formData, entryType: "fixa", quantity: 120 })}
+                    className={`flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      formData.entryType === "fixa" ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                    }`}
+                  >
+                    Fixa
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setFormData({ ...formData, entryType: "recorrente", quantity: 2 })}
-                    className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       formData.entryType === "recorrente" ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                     }`}
                   >
@@ -312,7 +321,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, entryType: "parcelado", quantity: 2 })}
-                    className={`flex-1 flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex items-center justify-center py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       formData.entryType === "parcelado" ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]" : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
                     }`}
                   >
@@ -321,7 +330,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                 </div>
               </div>
 
-              {formData.entryType !== "unico" && (
+              {formData.entryType !== "unico" && formData.entryType !== "fixa" && (
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

@@ -28,7 +28,6 @@ const menuItems = [
   { name: "Transações", href: "/transactions", icon: ArrowLeftRight },
   { name: "Contas e Cartões", href: "/accounts", icon: Landmark },
   { name: "Categorias", href: "/categories", icon: Tags },
-  { name: "Orçamentos", href: "/budgets", icon: Wallet },
 ];
 
 export default function Sidebar() {
