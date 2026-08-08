@@ -32,9 +32,10 @@ interface TransactionFormProps {
     amount: number;
     date: Date;
     type: string;
-    categoryId: string;
+    categoryId?: string | null;
     paid: boolean;
     accountId?: string | null;
+    destinationAccountId?: string | null;
   };
   initialEditMode?: "single" | "series";
 }
