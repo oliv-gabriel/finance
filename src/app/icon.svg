@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="110" fill="#121212" />
+  <!-- Efeito de brilho fundo -->
+  <circle cx="256" cy="256" r="160" fill="#b300e4" opacity="0.15" filter="blur(20px)" />
+  
+  <g transform="translate(100, 120)">
+    <!-- Carteira -->
+    <path d="M50 70h212c22.1 0 40 17.9 40 40v92c0 22.1-17.9 40-40 40H50c-22.1 0-40-17.9-40-40V110c0-22.1 17.9-40 40-40z" fill="none" stroke="#b300e4" stroke-width="32" stroke-linejoin="round"/>
+    <!-- Aba de cima -->
+    <path d="M20 70V40c0-22.1 17.9-40 40-40h192" fill="none" stroke="#b300e4" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Botão/Moeda -->
+    <circle cx="240" cy="156" r="28" fill="#b300e4" />
+  </g>
+</svg>

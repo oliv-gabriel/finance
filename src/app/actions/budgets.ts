@@ -68,7 +68,9 @@ export async function getBudgetSummary(month: number, year: number) {
 
     // Calculate totals per category
     const categoryExpenses = transactions.reduce((acc, curr) => {
-      acc[curr.categoryId] = (acc[curr.categoryId] || 0) + curr.amount;
+      if (curr.categoryId) {
+        acc[curr.categoryId] = (acc[curr.categoryId] || 0) + curr.amount;
+      }
       return acc;
     }, {} as Record<string, number>);
 
