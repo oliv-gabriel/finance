@@ -20,7 +20,7 @@ export default function ExportPage() {
         Data: new Date(t.date).toLocaleDateString("pt-BR"),
         Descricao: t.description,
         Tipo: t.type === "INCOME" ? "Receita" : "Despesa",
-        Categoria: t.category.name,
+        Categoria: t.category?.name || "Sem categoria",
         Valor: t.amount,
       }));
 
