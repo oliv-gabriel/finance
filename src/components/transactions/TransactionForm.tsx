@@ -6,7 +6,7 @@ import { createTransaction, updateTransaction } from "@/app/actions/transactions
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
-import { Save, ArrowUpCircle, ArrowDownCircle, Calendar as CalendarIcon } from "lucide-react";
+import { Save, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import { format, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -55,6 +55,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
     categoryId: initialData?.categoryId || categories[0]?.id || "",
     paid: initialData?.paid ?? true,
     accountId: initialData?.accountId || "",
+    destinationAccountId: (initialData as any)?.destinationAccountId || "",
     entryType: "unico",
     recurrenceFreq: "Mensal",
     quantity: 1,
@@ -161,6 +162,18 @@ export default function TransactionForm({ categories, accounts, initialData, ini
               <ArrowUpCircle className="mr-2 h-4 w-4" />
               Receita
             </button>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, type: "TRANSFER", paid: true })}
+              className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-colors ${
+                formData.type === "TRANSFER" 
+                  ? "bg-white shadow text-blue-600" 
+                  : "text-muted-foreground hover:bg-white/50"
+              }`}
+            >
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              Transferência
+            </button>
           </div>
 
           <div className="space-y-2">
@@ -215,21 +228,23 @@ export default function TransactionForm({ categories, accounts, initialData, ini
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 py-2">
-            <input
-              type="checkbox"
-              id="paid"
-              checked={formData.paid}
-              onChange={(e) => setFormData({ ...formData, paid: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-            />
-            <label htmlFor="paid" className="text-sm font-medium cursor-pointer">
-              Esta transação já foi {formData.type === "EXPENSE" ? "paga" : "recebida"}
-            </label>
-          </div>
+          {formData.type !== "TRANSFER" && (
+            <div className="flex items-center space-x-2 py-2">
+              <input
+                type="checkbox"
+                id="paid"
+                checked={formData.paid}
+                onChange={(e) => setFormData({ ...formData, paid: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
+              />
+              <label htmlFor="paid" className="text-sm font-medium cursor-pointer">
+                Esta transação já foi {formData.type === "EXPENSE" ? "paga" : "recebida"}
+              </label>
+            </div>
+          )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Conta ou Cartão</label>
+            <label className="text-sm font-medium">{formData.type === "TRANSFER" ? "Conta de Origem" : "Conta ou Cartão"}</label>
             <select
               required
               className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
@@ -254,7 +269,24 @@ export default function TransactionForm({ categories, accounts, initialData, ini
             </select>
           </div>
 
-          {showRecurrence && (
+          {formData.type === "TRANSFER" && (
+            <div className="space-y-2 mt-4">
+              <label className="text-sm font-medium">Conta de Destino</label>
+              <select
+                required
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                value={formData.destinationAccountId}
+                onChange={(e) => setFormData({ ...formData, destinationAccountId: e.target.value })}
+              >
+                <option value="" disabled>Selecione a conta de destino</option>
+                {accounts.filter(a => a.type === "CONTA" && a.id !== formData.accountId).map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {showRecurrence && formData.type !== "TRANSFER" && (
             <div className="space-y-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-900/50">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-foreground">Lançamento</label>
@@ -377,20 +409,22 @@ export default function TransactionForm({ categories, accounts, initialData, ini
             </div>
           )}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Categoria</label>
-            <select
-              required
-              className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-              value={formData.categoryId}
-              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-            >
-              <option value="" disabled>Selecione uma categoria</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>{category.name}</option>
-              ))}
-            </select>
-          </div>
+          {formData.type !== "TRANSFER" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Categoria</label>
+              <select
+                required
+                className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              >
+                <option value="" disabled>Selecione uma categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {initialData && Boolean((initialData as any).seriesId || /\(\d+\/\d+\)/.test(initialData.description)) && (
             <div className="p-4 rounded-2xl bg-[#b300e4]/10 border border-[#b300e4]/30 space-y-3 pt-4 my-4">

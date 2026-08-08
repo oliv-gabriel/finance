@@ -34,7 +34,8 @@ model Account {
   bank         Account?      @relation("BankToCards", fields: [bankId], references: [id], onDelete: SetNull)
   cards        Account[]     @relation("BankToCards")
 
-  transactions Transaction[]
+  transactions Transaction[] @relation("AccountTransactions")
+  destinationTransactions Transaction[] @relation("TransferDest")
   includeInTotal Boolean     @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -47,12 +48,17 @@ model Transaction {
   amount              Float
   description         String
   date                DateTime @default(now())
-  type                String   // INCOME or EXPENSE
+  type                String   // INCOME, EXPENSE, TRANSFER
   paid                Boolean  @default(true)
+  
   accountId           String?
-  account             Account? @relation(fields: [accountId], references: [id])
-  categoryId          String
-  category            Category @relation(fields: [categoryId], references: [id])
+  account             Account? @relation("AccountTransactions", fields: [accountId], references: [id])
+  
+  destinationAccountId String?
+  destinationAccount   Account? @relation("TransferDest", fields: [destinationAccountId], references: [id])
+
+  categoryId          String?
+  category            Category? @relation(fields: [categoryId], references: [id])
   seriesId            String?
 
   // External Reference (e.g., from Email or Open Finance)

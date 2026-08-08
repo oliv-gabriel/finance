@@ -7,6 +7,7 @@ import Notepad from "@/components/dashboard/Notepad";
 import { ExpensesBarChart, CategoriesPieChart } from "@/components/dashboard/DashboardCharts";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
+import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 
 export default async function Dashboard({
   searchParams,
@@ -27,66 +28,7 @@ export default async function Dashboard({
       
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6 md:space-y-8 flex-1 overflow-auto">
         {/* Row de Métricas Centrais */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-4">
-          {/* Saldo Geral - Ocupa linha toda no mobile */}
-          <div className="col-span-2 lg:col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors relative flex items-center justify-between">
-            <div className="flex items-start gap-3.5">
-              <div className="size-10 rounded-full bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shrink-0 shadow-2xs">
-                <Wallet className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-muted-foreground tracking-wide flex items-center gap-1">
-                  Saldo atual
-                </span>
-                <div className={`text-xl md:text-2xl lg:text-3xl font-bold tracking-tight mt-1 ${data.summary.balance >= 0 ? "text-foreground" : "text-red-500"}`}>
-                  {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.balance)}
-                </div>
-              </div>
-            </div>
-            <span title="Ocultar valores" className="text-muted-foreground/70 hover:text-foreground cursor-pointer transition-colors shrink-0 mr-1">
-              <Eye className="h-5 w-5" />
-            </span>
-          </div>
-
-          {/* Receitas - Metade no mobile */}
-          <div className="col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
-              <ArrowUpCircle className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-xs font-semibold text-muted-foreground truncate block">Receitas</span>
-              <div className="text-base md:text-2xl font-bold tracking-tight text-foreground mt-0.5 truncate">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.income)}
-              </div>
-            </div>
-          </div>
-
-          {/* Despesas - Metade no mobile */}
-          <div className="col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center shrink-0">
-              <ArrowDownCircle className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-xs font-semibold text-muted-foreground truncate block">Despesas</span>
-              <div className="text-base md:text-2xl font-bold tracking-tight text-foreground mt-0.5 truncate">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.expenses)}
-              </div>
-            </div>
-          </div>
-
-          {/* Total Pago */}
-          <div className="col-span-2 lg:col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="text-xs font-semibold text-muted-foreground truncate block">Total Pago</span>
-              <div className="text-xl md:text-2xl font-bold tracking-tight text-foreground mt-0.5 truncate">
-                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(data.summary.paidExpenses)}
-              </div>
-            </div>
-          </div>
-        </div>
+        <DashboardMetrics summary={data.summary} />
 
         {/* Novo Dashboard Summary */}
         <FinancialSummary 

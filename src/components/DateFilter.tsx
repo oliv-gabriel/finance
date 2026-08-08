@@ -52,7 +52,7 @@ export default function DateFilter() {
         className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-[#b300e4] transition-colors text-foreground"
       >
         {months.map((m) => (
-          <option key={m.value} value={m.value}>
+          <option key={m.value} value={m.value} className="bg-card text-foreground">
             {m.label}
           </option>
         ))}
@@ -64,7 +64,7 @@ export default function DateFilter() {
         className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer hover:text-[#b300e4] transition-colors text-foreground"
       >
         {years.map((y) => (
-          <option key={y} value={y}>
+          <option key={y} value={y} className="bg-card text-foreground">
             {y}
           </option>
         ))}

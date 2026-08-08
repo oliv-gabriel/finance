@@ -7,7 +7,7 @@ import {
   MoreVertical, CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag, 
   ChevronUp, Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone, 
   Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon, 
-  ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle
+  ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle, ArrowRightLeft
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -20,12 +20,16 @@ interface Transaction {
   date: Date | string;
   type: string;
   paid: boolean;
-  category: {
+  category?: {
     name: string;
     color: string;
     icon: string;
-  };
+  } | null;
   account?: {
+    name: string;
+    type?: string;
+  };
+  destinationAccount?: {
     name: string;
     type?: string;
   };
@@ -121,7 +125,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   // Filtragem no Desktop
   const filteredTransactions = transactions.filter((t) => {
     const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          t.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (t.category?.name || "Transferência").toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (t.account?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
     if (filterType === "income") return t.type === "INCOME";
@@ -194,7 +198,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                 <div className="divide-y divide-border/30">
                   {group.items.map((t) => {
-                    const IconComponent = getCategoryIconComponent(t.category.name);
+                    const isTransfer = t.type === "TRANSFER";
+                    const IconComponent = isTransfer ? ArrowRightLeft : (t.category ? getCategoryIconComponent(t.category.name) : Tag);
                     const seriesBadge = isSeries(t) ? "Parcelado" : "Único";
                     return (
                       <div
@@ -205,21 +210,29 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                         <div className="flex items-center min-w-0 pr-3">
                           <div
                             className="size-12 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-transform duration-200 group-hover/item:scale-105"
-                            style={{ backgroundColor: t.category.color || "#b300e4" }}
+                            style={{ backgroundColor: isTransfer ? "#3b82f6" : (t.category?.color || "#b300e4") }}
                           >
                             <IconComponent className="w-6 h-6 stroke-[2.2]" />
                           </div>
 
                           <div className="flex flex-col pl-3.5 min-w-0">
                             <p className="text-foreground font-bold text-base leading-tight truncate max-w-[170px] sm:max-w-[240px]">
-                              {t.description || "Transação"}
+                              {t.description || (isTransfer ? "Transferência" : "Transação")}
                             </p>
                             <div className="flex items-center gap-1 text-[#84848a] text-xs font-medium mt-1">
-                              <span className="truncate max-w-[130px]">
-                                {t.account?.name || "Carteira"}
-                              </span>
-                              {t.account?.type === "CARTAO" && (
-                                <CreditCardIcon className="w-3.5 h-3.5 text-[#84848a]/90 inline shrink-0 ml-0.5" />
+                              {isTransfer ? (
+                                <span className="truncate max-w-[150px]">
+                                  {t.account?.name} → {t.destinationAccount?.name}
+                                </span>
+                              ) : (
+                                <>
+                                  <span className="truncate max-w-[130px]">
+                                    {t.account?.name || "Carteira"}
+                                  </span>
+                                  {t.account?.type === "CARTAO" && (
+                                    <CreditCardIcon className="w-3.5 h-3.5 text-[#84848a]/90 inline shrink-0 ml-0.5" />
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -228,10 +241,10 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                         <div className="flex flex-col items-end shrink-0">
                           <span
                             className={`font-extrabold tabular-nums text-base whitespace-nowrap tracking-tight ${
-                              t.type === "INCOME" ? "text-emerald-400" : "text-rose-500"
+                              t.type === "INCOME" ? "text-emerald-400" : (isTransfer ? "text-blue-400" : "text-rose-500")
                             }`}
                           >
-                            {t.type === "INCOME" ? "R$ " : "-R$ "}
+                            {t.type === "INCOME" ? "R$ " : (isTransfer ? "R$ " : "-R$ ")}
                             {formatNumberOnly(t.amount)}
                           </span>
 
@@ -459,7 +472,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                       </tr>
 
                       {group.items.map((t) => {
-                        const IconComponent = getCategoryIconComponent(t.category.name);
+                        const isTransfer = t.type === "TRANSFER";
+                        const IconComponent = isTransfer ? ArrowRightLeft : (t.category ? getCategoryIconComponent(t.category.name) : Tag);
                         const seriesBadge = isSeries(t) ? "Parcelado/Série" : "Único";
                         return (
                           <tr key={t.id} className="group hover:bg-muted/30 transition-colors">
@@ -467,32 +481,41 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                               <div className="flex items-center gap-3.5">
                                 <div
                                   className="size-10 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105"
-                                  style={{ backgroundColor: t.category.color || "#b300e4" }}
+                                  style={{ backgroundColor: isTransfer ? "#3b82f6" : (t.category?.color || "#b300e4") }}
                                 >
                                   <IconComponent size={18} className="stroke-[2.5]" />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="text-foreground font-extrabold text-sm truncate max-w-[250px] group-hover:text-[#b300e4] transition-colors">
-                                    {t.description}
+                                    {t.description || (isTransfer ? "Transferência" : "Transação")}
                                   </p>
                                   <p className="text-muted-foreground text-xs font-semibold mt-0.5">
-                                    {t.category.name}
+                                    {isTransfer ? "Transferência" : (t.category?.name || "Sem categoria")}
                                   </p>
                                 </div>
                               </div>
                             </td>
 
                             <td className="px-6 py-4 align-middle">
-                              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
-                                <img
-                                  src={getBankIcon(t.account?.name || "")}
-                                  alt={t.account?.name}
-                                  className="h-4 w-4 object-contain rounded-full"
-                                />
-                                <span className="text-foreground font-semibold text-xs truncate max-w-[130px]">
-                                  {t.account?.name || "Carteira"}
-                                </span>
-                              </div>
+                              {isTransfer ? (
+                                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
+                                  <ArrowRightLeft className="w-3.5 h-3.5 text-blue-500" />
+                                  <span className="text-foreground font-semibold text-xs truncate max-w-[130px]" title={`${t.account?.name} para ${t.destinationAccount?.name}`}>
+                                    {t.account?.name} → {t.destinationAccount?.name}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-muted/40 border border-border/60">
+                                  <img
+                                    src={getBankIcon(t.account?.name || "")}
+                                    alt={t.account?.name}
+                                    className="h-4 w-4 object-contain rounded-full"
+                                  />
+                                  <span className="text-foreground font-semibold text-xs truncate max-w-[130px]">
+                                    {t.account?.name || "Carteira"}
+                                  </span>
+                                </div>
+                              )}
                             </td>
 
                             <td className="px-6 py-4 align-middle">
@@ -526,10 +549,10 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                             <td className="px-6 py-4 align-middle text-right">
                               <span
                                 className={`font-black tabular-nums text-base whitespace-nowrap ${
-                                  t.type === "INCOME" ? "text-emerald-400" : "text-rose-500"
+                                  t.type === "INCOME" ? "text-emerald-400" : (t.type === "TRANSFER" ? "text-blue-400" : "text-rose-500")
                                 }`}
                               >
-                                {t.type === "INCOME" ? "R$ " : "-R$ "}{formatNumberOnly(t.amount)}
+                                {t.type === "INCOME" ? "R$ " : (t.type === "TRANSFER" ? "R$ " : "-R$ ")}{formatNumberOnly(t.amount)}
                               </span>
                             </td>
 

@@ -50,8 +50,36 @@ export async function getDashboardData(month?: number, year?: number) {
       .filter((t) => t.type === "EXPENSE" && !t.paid)
       .reduce((acc, curr) => acc + curr.amount, 0);
 
-    const balance = paidIncome - paidExpenses;
-    const effectiveBalance = paidIncome - paidExpenses;
+    const contas = await prisma.account.findMany({ where: { type: "CONTA" } });
+    const balances = await prisma.transaction.groupBy({
+      by: ['accountId', 'type'],
+      where: { paid: true, accountId: { in: contas.map(c => c.id) } },
+      _sum: { amount: true }
+    });
+    const transfersIn = await prisma.transaction.groupBy({
+      by: ['destinationAccountId'],
+      where: { paid: true, type: "TRANSFER", destinationAccountId: { in: contas.map(c => c.id) } },
+      _sum: { amount: true }
+    });
+    const accountsData = contas.map(acc => {
+      const inc = balances.find(b => b.accountId === acc.id && b.type === "INCOME")?._sum.amount || 0;
+      const exp = balances.find(b => b.accountId === acc.id && b.type === "EXPENSE")?._sum.amount || 0;
+      const tOut = balances.find(b => b.accountId === acc.id && b.type === "TRANSFER")?._sum.amount || 0;
+      const tIn = transfersIn.find(t => t.destinationAccountId === acc.id)?._sum.amount || 0;
+      return {
+        id: acc.id,
+        name: acc.name,
+        balance: inc - exp - tOut + tIn,
+        type: acc.type,
+        includeInTotal: acc.includeInTotal,
+      };
+    });
+
+    const balance = accountsData
+      .filter(a => a.includeInTotal !== false)
+      .reduce((sum, acc) => sum + acc.balance, 0);
+
+    const effectiveBalance = balance;
     const liquidationDiff = paidExpenses - pendingExpenses;
 
     // Daily expenses for chart
@@ -95,26 +123,7 @@ export async function getDashboardData(month?: number, year?: number) {
       },
       dailyExpenses,
       categoryDistribution,
-      accounts: await (async () => {
-        const contas = await prisma.account.findMany({ where: { type: "CONTA" } });
-        if (contas.length === 0) return [];
-        const balances = await prisma.transaction.groupBy({
-          by: ['accountId', 'type'],
-          where: { paid: true, accountId: { in: contas.map(c => c.id) } },
-          _sum: { amount: true }
-        });
-        return contas.map(acc => {
-          const inc = balances.find(b => b.accountId === acc.id && b.type === "INCOME")?._sum.amount || 0;
-          const exp = balances.find(b => b.accountId === acc.id && b.type === "EXPENSE")?._sum.amount || 0;
-          return {
-            id: acc.id,
-            name: acc.name,
-            balance: inc - exp,
-            type: acc.type,
-            includeInTotal: acc.includeInTotal,
-          };
-        });
-      })(),
+      accounts: accountsData,
       creditCards: await (async () => {
         const cartoes = await prisma.account.findMany({ where: { type: "CARTAO" } });
         if (cartoes.length === 0) return [];

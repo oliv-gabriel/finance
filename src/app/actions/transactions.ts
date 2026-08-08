@@ -27,6 +27,7 @@ export async function getTransactions(options?: {
       include: {
         category: true,
         account: true,
+        destinationAccount: true,
       },
       orderBy: { date: "desc" },
       take: options?.limit,
@@ -43,9 +44,10 @@ export async function createTransaction(data: {
   description: string;
   date: Date;
   type: string;
-  categoryId: string;
+  categoryId?: string;
   paid: boolean;
   accountId: string;
+  destinationAccountId?: string;
   entryType?: string;
   recurrenceFreq?: string;
   quantity?: number;
@@ -53,6 +55,8 @@ export async function createTransaction(data: {
 }) {
   try {
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = data;
+    if (!transactionData.categoryId) (transactionData as any).categoryId = null;
+    if (!transactionData.destinationAccountId) (transactionData as any).destinationAccountId = null;
 
     const account = await prisma.account.findUnique({
       where: { id: transactionData.accountId },
@@ -119,9 +123,10 @@ export async function updateTransaction(
     description: string;
     date: Date;
     type: string;
-    categoryId: string;
+    categoryId?: string;
     paid: boolean;
     accountId: string;
+    destinationAccountId?: string;
     entryType?: string;
     recurrenceFreq?: string;
     quantity?: number;
@@ -131,6 +136,8 @@ export async function updateTransaction(
 ) {
   try {
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = data;
+    if (!updateData.categoryId) (updateData as any).categoryId = null;
+    if (!updateData.destinationAccountId) (updateData as any).destinationAccountId = null;
     
     if (updateAllInSeries) {
       const target = await prisma.transaction.findUnique({ where: { id } });
