@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { 
@@ -82,6 +83,9 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   
   // Modais e Estados de Ação
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
   const [deleteModalTx, setDeleteModalTx] = useState<Transaction | null>(null);
   const [editModalTx, setEditModalTx] = useState<Transaction | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -301,8 +305,10 @@ export default function TransactionTable({ transactions, summary }: TransactionT
         const progressPercentage = isInstallment ? Math.round((currentInstallment / totalInstallments) * 100) : 0;
         const isFixedTransaction = isSeries(selectedTx) && !isInstallment;
 
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
+        if (!mounted) return null;
+
+        return createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
             <div 
               className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
               onClick={(e) => e.stopPropagation()}
@@ -420,7 +426,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 )}
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         );
       })()}
 
