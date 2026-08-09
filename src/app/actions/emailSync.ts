@@ -35,33 +35,34 @@ export async function syncEmails() {
 
     try {
         // FASE 1: Download Rápido
+        console.log("-> [Sync] Tentando conectar no servidor IMAP...");
         await client.connect();
+        console.log("-> [Sync] Conectado! Buscando a caixa de entrada (INBOX)...");
         let lock = await client.getMailboxLock("INBOX");
         try {
-            await client.mailboxOpen("INBOX");
+            console.log("-> [Sync] Caixa aberta. Buscando APENAS e-mails não lidos...");
             
-            // Busca APENAS e-mails não lidos
             const uids = await client.search({ seen: false });
 
             if (uids && uids.length > 0) {
-                // Pega no máximo os 50 mais recentes para não estourar a memória
                 const recentUids = uids.slice(-50);
-                console.log(`Baixando ${recentUids.length} e-mails (de ${uids.length} não lidos)...`);
+                console.log(`-> [Sync] Baixando ${recentUids.length} e-mails (de ${uids.length} não lidos)...`);
 
-                // Baixa apenas o texto bruto o mais rápido possível para não dar timeout
                 for await (let message of client.fetch(recentUids, { source: true, flags: true })) {
                     rawMessages.push({
                         uid: message.uid,
                         source: message.source
                     });
                 }
+                console.log(`-> [Sync] ${rawMessages.length} e-mails baixados com sucesso.`);
+            } else {
+                console.log("-> [Sync] Nenhum e-mail não lido encontrado.");
             }
         } finally {
             lock.release();
         }
         await client.logout();
-        
-        console.log(`Download concluído. Processando ${rawMessages.length} e-mails offline...`);
+        console.log("-> [Sync] Desconectado do IMAP. Iniciando processamento offline...");
 
         // Busca ou cria a Conta "99 Pay"
         const allAccounts = await prisma.account.findMany();

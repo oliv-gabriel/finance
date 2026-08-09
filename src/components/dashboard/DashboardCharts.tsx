@@ -31,7 +31,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function ExpensesBarChart({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10}>
       <BarChart data={data} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#242424" />
         <XAxis 
@@ -62,7 +62,7 @@ export function ExpensesBarChart({ data }: { data: any[] }) {
 
 export function CategoriesPieChart({ data }: { data: any[] }) {
   return (
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10}>
       <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
         <Pie
           data={data}
