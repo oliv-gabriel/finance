@@ -308,7 +308,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
         if (!mounted) return null;
 
         return createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
+          <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
             <div 
               className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
               onClick={(e) => e.stopPropagation()}
@@ -662,8 +662,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
       {/* ========================================================================= */}
 
       {/* Modal de Exclusão (Única vs Todas as Parcelas) */}
-      {deleteModalTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
+      {deleteModalTx && mounted && createPortal(
+        <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
           <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
             <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
               <div className="size-11 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0">
@@ -736,12 +736,13 @@ export default function TransactionTable({ transactions, summary }: TransactionT
               Cancelar e Voltar
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal de Edição (Única vs Todas as Parcelas) */}
-      {editModalTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
+      {editModalTx && mounted && createPortal(
+        <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
           <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
             <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
               <div className="size-11 rounded-2xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shrink-0">
@@ -788,7 +789,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
               Cancelar
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
