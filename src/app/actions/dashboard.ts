@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
+import { toNumber } from "@/lib/money";
 
 export async function getDashboardData(month?: number, year?: number) {
   try {
@@ -28,27 +29,27 @@ export async function getDashboardData(month?: number, year?: number) {
 
     const income = includedTransactions
       .filter((t) => t.type === "INCOME")
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const expenses = includedTransactions
       .filter((t) => t.type === "EXPENSE")
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const paidIncome = includedTransactions
       .filter((t) => t.type === "INCOME" && t.paid)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const pendingIncome = includedTransactions
       .filter((t) => t.type === "INCOME" && !t.paid)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const paidExpenses = includedTransactions
       .filter((t) => t.type === "EXPENSE" && t.paid)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const pendingExpenses = includedTransactions
       .filter((t) => t.type === "EXPENSE" && !t.paid)
-      .reduce((acc, curr) => acc + curr.amount, 0);
+      .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
 
     const contas = await prisma.account.findMany({ where: { type: "CONTA" } });
     const balances = await prisma.transaction.groupBy({
@@ -62,10 +63,10 @@ export async function getDashboardData(month?: number, year?: number) {
       _sum: { amount: true }
     });
     const accountsData = contas.map(acc => {
-      const inc = balances.find(b => b.accountId === acc.id && b.type === "INCOME")?._sum.amount || 0;
-      const exp = balances.find(b => b.accountId === acc.id && b.type === "EXPENSE")?._sum.amount || 0;
-      const tOut = balances.find(b => b.accountId === acc.id && b.type === "TRANSFER")?._sum.amount || 0;
-      const tIn = transfersIn.find(t => t.destinationAccountId === acc.id)?._sum.amount || 0;
+      const inc = toNumber(balances.find(b => b.accountId === acc.id && b.type === "INCOME")?._sum.amount);
+      const exp = toNumber(balances.find(b => b.accountId === acc.id && b.type === "EXPENSE")?._sum.amount);
+      const tOut = toNumber(balances.find(b => b.accountId === acc.id && b.type === "TRANSFER")?._sum.amount);
+      const tIn = toNumber(transfersIn.find(t => t.destinationAccountId === acc.id)?._sum.amount);
       return {
         id: acc.id,
         name: acc.name,
@@ -92,7 +93,7 @@ export async function getDashboardData(month?: number, year?: number) {
       .filter((t) => t.type === "EXPENSE")
       .forEach((t) => {
         const day = new Date(t.date).getDate();
-        dailyExpenses[day - 1].amount += t.amount;
+        dailyExpenses[day - 1].amount += toNumber(t.amount);
       });
 
     // Category distribution
@@ -100,7 +101,7 @@ export async function getDashboardData(month?: number, year?: number) {
     const categoryDistribution = categories.map((cat) => {
       const amount = includedTransactions
         .filter((t) => t.categoryId === cat.id && t.type === "EXPENSE")
-        .reduce((acc, curr) => acc + curr.amount, 0);
+        .reduce((acc, curr) => acc + toNumber(curr.amount), 0);
       
       return {
         name: cat.name,
@@ -138,7 +139,7 @@ export async function getDashboardData(month?: number, year?: number) {
             where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd }, type: "EXPENSE" },
             _sum: { amount: true }
           });
-          const faturaAtual = currentInvoice._sum.amount || 0;
+          const faturaAtual = toNumber(currentInvoice._sum.amount);
           
           const unpaidCount = await prisma.transaction.count({
             where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd }, type: "EXPENSE", paid: false }
@@ -149,8 +150,8 @@ export async function getDashboardData(month?: number, year?: number) {
             where: { accountId: card.id, date: { gte: cardStart, lte: cardEnd } }
           });
           
-          const allUnpaidExpenses = allUnpaid.find(u => u.accountId === card.id)?._sum.amount || 0;
-          const limiteDisponivel = (card.limit || 0) - allUnpaidExpenses;
+          const allUnpaidExpenses = toNumber(allUnpaid.find(u => u.accountId === card.id)?._sum.amount);
+          const limiteDisponivel = toNumber(card.limit) - allUnpaidExpenses;
           
           const isCurrentMonth = targetMonth === (now.getMonth() + 1) && targetYear === now.getFullYear();
           let status = "Fechado";

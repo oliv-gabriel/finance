@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
+import { toCents, toNumber } from "@/lib/money";
+import { validateId, validatePeriod, validateTransactionInput } from "@/lib/validation";
 
 export async function getTransactions(options?: {
   categoryId?: string;
@@ -16,6 +18,9 @@ export async function getTransactions(options?: {
     if (options?.month && options?.year) {
       const allAccounts = await prisma.account.findMany();
       monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
+      if (!validatePeriod(options.month, options.year)) {
+        return [];
+      }
     }
 
     const transactions = await prisma.transaction.findMany({
@@ -32,7 +37,12 @@ export async function getTransactions(options?: {
       orderBy: { date: "desc" },
       take: options?.limit,
     });
-    return transactions;
+    return transactions.map((transaction) => ({
+      ...transaction,
+      amount: toNumber(transaction.amount),
+      account: transaction.account ? { ...transaction.account, limit: toNumber(transaction.account.limit) } : null,
+      destinationAccount: transaction.destinationAccount ? { ...transaction.destinationAccount, limit: toNumber(transaction.destinationAccount.limit) } : null,
+    }));
   } catch (error) {
     console.error("Error fetching transactions:", error);
     return [];
@@ -54,9 +64,14 @@ export async function createTransaction(data: {
   installmentValueType?: string;
 }) {
   try {
-    const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = data;
+    const validatedData = validateTransactionInput(data);
+    if (!validatedData) {
+      return { success: false, error: "Dados da transacao invalidos" };
+    }
+    const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = validatedData;
     if (!transactionData.categoryId) (transactionData as any).categoryId = null;
     if (!transactionData.destinationAccountId) (transactionData as any).destinationAccountId = null;
+    transactionData.amount = toCents(transactionData.amount);
 
     const account = await prisma.account.findUnique({
       where: { id: transactionData.accountId },
@@ -92,7 +107,7 @@ export async function createTransaction(data: {
 
         transactionsToCreate.push({
           ...transactionData,
-          amount,
+          amount: toCents(amount),
           description,
           seriesId,
           date: newDate,
@@ -139,11 +154,16 @@ export async function updateTransaction(
   },
   updateAllInSeries?: boolean
 ) {
+    const validatedData = validateTransactionInput(data);
+    if (!validatedData || !validateId(id)) {
+      return { success: false, error: "Dados da transacao invalidos" };
+    }
   try {
-    const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = data;
+    const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = validatedData;
     if (!updateData.categoryId) (updateData as any).categoryId = null;
     if (!updateData.destinationAccountId) (updateData as any).destinationAccountId = null;
     
+    updateData.amount = toCents(updateData.amount);
     if (updateAllInSeries) {
       const target = await prisma.transaction.findUnique({ where: { id } });
       if (target) {
@@ -202,6 +222,9 @@ export async function updateTransaction(
 // Action updated to use standard Prisma Client
 export async function toggleTransactionPaid(id: string, paid: boolean) {
   try {
+    if (!validateId(id) || typeof paid !== "boolean") {
+      return { success: false, error: "Dados invalidos" };
+    }
     await prisma.transaction.update({
       where: { id },
       data: { paid },
@@ -229,6 +252,9 @@ export async function deleteAllTransactions() {
 
 export async function deleteTransaction(id: string, deleteAllInSeries?: boolean) {
   try {
+    if (!validateId(id)) {
+      return { success: false, error: "Identificador invalido" };
+    }
     if (deleteAllInSeries) {
       const target = await prisma.transaction.findUnique({ where: { id } });
       if (target) {
@@ -266,6 +292,10 @@ export async function payCardBill(cardId: string, month: number, year: number) {
     const card = await prisma.account.findUnique({ where: { id: cardId } });
     const { startDate, endDate } = getAccountBillingCycle(card || { type: "" }, month, year);
 
+    const period = validatePeriod(month, year);
+    if (!validateId(cardId) || !period) {
+      return { success: false, error: "Dados da fatura invalidos" };
+    }
     await prisma.transaction.updateMany({
       where: {
         accountId: cardId,

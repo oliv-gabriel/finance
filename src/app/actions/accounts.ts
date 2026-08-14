@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccountBillingCycle } from "@/lib/billingCycles";
+import { toNumber } from "@/lib/money";
 
 export async function getAccounts() {
   try {
@@ -12,7 +13,11 @@ export async function getAccounts() {
       },
       orderBy: { name: "asc" },
     });
-    return accounts;
+    return accounts.map((account) => ({
+      ...account,
+      limit: toNumber(account.limit),
+      bank: account.bank ? { ...account.bank, limit: toNumber(account.bank.limit) } : null,
+    }));
   } catch (error) {
     console.error("Error fetching accounts:", error);
     return [];
@@ -104,9 +109,9 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
     });
 
     const expenses = transactions.filter((t) => t.type === "EXPENSE");
-    const totalSpent = expenses.reduce((sum, t) => sum + t.amount, 0);
-    const totalPaid = expenses.filter((t) => t.paid).reduce((sum, t) => sum + t.amount, 0);
-    const limit = card.limit || 0;
+    const totalSpent = expenses.reduce((sum, t) => sum + toNumber(t.amount), 0);
+    const totalPaid = expenses.filter((t) => t.paid).reduce((sum, t) => sum + toNumber(t.amount), 0);
+    const limit = toNumber(card.limit);
     
     // Calcular a porcentagem utilizada do limite
     const percentageUsed = limit > 0 ? Math.min(100, Math.round((totalSpent / limit) * 100)) : 0;
@@ -131,7 +136,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
         transactions: transactions.map(t => ({
           id: t.id,
           description: t.description,
-          amount: t.amount,
+          amount: toNumber(t.amount),
           date: t.date.toISOString(),
           type: t.type,
           paid: t.paid,

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getTransactionWhereForMonth } from "@/lib/billingCycles";
+import { toCents, toNumber } from "@/lib/money";
 
 export async function getBudgets(month: number, year: number) {
   try {
@@ -12,7 +13,7 @@ export async function getBudgets(month: number, year: number) {
         category: true,
       },
     });
-    return budgets;
+    return budgets.map((budget) => ({ ...budget, amount: toNumber(budget.amount) }));
   } catch (error) {
     console.error("Error fetching budgets:", error);
     return [];
@@ -35,9 +36,9 @@ export async function upsertBudget(data: {
         },
       },
       update: {
-        amount: data.amount,
+        amount: toCents(data.amount),
       },
-      create: data,
+      create: { ...data, amount: toCents(data.amount) },
     });
     revalidatePath("/budgets");
     revalidatePath("/");
@@ -69,13 +70,13 @@ export async function getBudgetSummary(month: number, year: number) {
     // Calculate totals per category
     const categoryExpenses = transactions.reduce((acc, curr) => {
       if (curr.categoryId) {
-        acc[curr.categoryId] = (acc[curr.categoryId] || 0) + curr.amount;
+        acc[curr.categoryId] = (acc[curr.categoryId] || 0) + toNumber(curr.amount);
       }
       return acc;
     }, {} as Record<string, number>);
 
     return budgets.map((budget) => ({
-      ...budget,
+      ...budget, amount: toNumber(budget.amount),
       spent: categoryExpenses[budget.categoryId] || 0,
     }));
   } catch (error) {

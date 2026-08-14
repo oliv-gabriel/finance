@@ -4,6 +4,7 @@ import TransactionForm from "@/components/transactions/TransactionForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { toNumber } from "@/lib/money";
 import { notFound } from "next/navigation";
 
 export default async function EditTransactionPage({
@@ -38,7 +39,7 @@ export default async function EditTransactionPage({
       <TransactionForm 
         categories={categories} 
         accounts={accounts}
-        initialData={transaction}
+        initialData={{ ...transaction, amount: toNumber(transaction.amount) }}
         initialEditMode={mode as any}
       />
     </div>

@@ -5,6 +5,8 @@ import Sidebar from "@/components/Sidebar";
 import { SidebarProvider } from "@/components/SidebarProvider";
 import ClientMainContent from "@/components/ClientMainContent";
 
+export const dynamic = "force-dynamic";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
