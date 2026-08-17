@@ -117,6 +117,8 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
     const percentageUsed = limit > 0 ? Math.min(100, Math.round((totalSpent / limit) * 100)) : 0;
     const isPaid = expenses.length > 0 && expenses.every(t => t.paid);
 
+    const contas = await prisma.account.findMany({ where: { type: "CONTA" }, select: { id: true, name: true } });
+
     return {
       card: {
         id: card.id,
@@ -126,6 +128,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
         dueDay: card.dueDay || null,
         bankName: card.bank?.name || card.name,
       },
+      availableAccounts: contas,
       invoice: {
         totalSpent,
         totalPaid,

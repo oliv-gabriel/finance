@@ -287,15 +287,47 @@ export async function deleteTransaction(id: string, deleteAllInSeries?: boolean)
   }
 }
 
-export async function payCardBill(cardId: string, month: number, year: number) {
+export async function payCardBill(cardId: string, month: number, year: number, paymentAccountId?: string) {
   try {
     const card = await prisma.account.findUnique({ where: { id: cardId } });
-    const { startDate, endDate } = getAccountBillingCycle(card || { type: "" }, month, year);
+    if (!card) return { success: false, error: "Cartão não encontrado" };
+
+    const { startDate, endDate } = getAccountBillingCycle(card, month, year);
 
     const period = validatePeriod(month, year);
     if (!validateId(cardId) || !period) {
       return { success: false, error: "Dados da fatura invalidos" };
     }
+
+    // Calcular o total da fatura que será paga
+    const pendingTransactions = await prisma.transaction.findMany({
+      where: {
+        accountId: cardId,
+        date: { gte: startDate, lte: endDate },
+        type: "EXPENSE",
+        paid: false,
+      }
+    });
+
+    const invoiceTotal = pendingTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+
+    // Se um paymentAccountId foi selecionado e há um valor a pagar, criamos a transação
+    if (paymentAccountId && invoiceTotal > 0) {
+      // Usamos type "TRANSFER" com destinationAccountId sendo o cartão
+      // para descontar o saldo da conta origem mas não contabilizar como despesa dupla
+      await prisma.transaction.create({
+        data: {
+          description: `Pagamento Fatura ${card.name}`,
+          amount: invoiceTotal,
+          date: new Date(),
+          type: "TRANSFER",
+          paid: true,
+          accountId: paymentAccountId,
+          destinationAccountId: cardId,
+        }
+      });
+    }
+
     await prisma.transaction.updateMany({
       where: {
         accountId: cardId,

@@ -25,6 +25,7 @@ interface InvoiceData {
     dueDay: number | null;
     bankName: string;
   };
+  availableAccounts: { id: string; name: string }[];
   invoice: {
     totalSpent: number;
     totalPaid: number;
@@ -70,6 +71,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
 
   useEffect(() => {
     if (isOpen && cardId) {
@@ -111,11 +113,18 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
 
   const handlePayBill = async () => {
     if (!cardId || !data) return;
+    
+    const amountToPay = Math.max(0, data.invoice.totalSpent - data.invoice.totalPaid);
+    if (amountToPay > 0 && !selectedAccountId) {
+      alert("Por favor, selecione a conta de onde o dinheiro sairá.");
+      return;
+    }
+
     if (!confirm(`Confirmar o pagamento da fatura de ${MONTH_NAMES[month - 1]}?`)) return;
 
     setPaying(true);
     try {
-      await payCardBill(cardId, month, year);
+      await payCardBill(cardId, month, year, selectedAccountId);
       await loadData(cardId, month, year);
     } catch (err) {
       console.error(err);
@@ -372,19 +381,37 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
               </p>
             </div>
             
-            <button
-              onClick={handlePayBill}
-              disabled={paying || data.invoice.totalSpent === 0 || data.invoice.isPaid}
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl font-extrabold text-sm text-white transition-all duration-300 shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-[#b300e4]/30 hover:shadow-[#b300e4]/50 hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {paying ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Registrando pagamento...</>
-              ) : data.invoice.isPaid ? (
-                <><CheckCircle2 className="w-4 h-4 text-white" /> Fatura Paga</>
-              ) : (
-                <>Pagar Fatura Completa</>
+            <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center gap-3">
+              {Math.max(0, data.invoice.totalSpent - data.invoice.totalPaid) > 0 && (
+                <div className="w-full sm:w-auto">
+                  <select
+                    value={selectedAccountId}
+                    onChange={(e) => setSelectedAccountId(e.target.value)}
+                    className="w-full sm:w-auto bg-card text-sm text-foreground border border-border/80 rounded-xl px-3 py-3 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer appearance-none"
+                    style={{ backgroundImage: 'none' }}
+                  >
+                    <option value="" disabled>Selecione a conta</option>
+                    {data.availableAccounts?.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    ))}
+                  </select>
+                </div>
               )}
-            </button>
+
+              <button
+                onClick={handlePayBill}
+                disabled={paying || data.invoice.totalSpent === 0 || data.invoice.isPaid}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl font-extrabold text-sm text-white transition-all duration-300 shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-[#b300e4]/30 hover:shadow-[#b300e4]/50 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {paying ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Registrando...</>
+                ) : data.invoice.isPaid ? (
+                  <><CheckCircle2 className="w-4 h-4 text-white" /> Fatura Paga</>
+                ) : (
+                  <>Pagar Fatura Completa</>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
