@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark" style={{ backgroundColor: "#121212" }}>
       <body className="antialiased bg-[#121212] text-foreground" style={{ backgroundColor: "#121212" }}>
         <SidebarProvider>
-          <div className="flex min-h-screen bg-[#121212] text-foreground">
+          <div className="flex min-h-screen w-full min-w-0 overflow-x-clip bg-[#121212] text-foreground">
             <Sidebar />
             <ClientMainContent>
               {children}

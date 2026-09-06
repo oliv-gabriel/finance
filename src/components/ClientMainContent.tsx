@@ -16,7 +16,7 @@ export default function ClientMainContent({ children }: { children: React.ReactN
 
   return (
     <main className={cn(
-      "flex-1 transition-all duration-300 min-h-screen flex flex-col w-full pb-22 md:pb-0",
+      "flex min-h-screen min-w-0 flex-1 flex-col pb-22 transition-all duration-300 md:pb-0",
       isCollapsed ? "md:ml-20" : "md:ml-64"
     )}>
       {children}
