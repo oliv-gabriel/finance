@@ -4,6 +4,8 @@ import { useSidebar } from "./SidebarProvider";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import MobileNav from "./MobileNav";
+import TransactionSlideOver from "./transactions/TransactionSlideOver";
+import { Suspense } from "react";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -19,6 +21,9 @@ export default function ClientMainContent({ children }: { children: React.ReactN
     )}>
       {children}
       <MobileNav />
+      <Suspense fallback={null}>
+        <TransactionSlideOver />
+      </Suspense>
     </main>
   );
 }

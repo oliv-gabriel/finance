@@ -16,12 +16,11 @@ export default async function EditTransactionPage({
 }) {
   const { id } = await params;
   const { mode } = await searchParams;
-  const categories = await getCategories();
-  const accounts = await getAccounts();
-  
-  const transaction = await prisma.transaction.findUnique({
-    where: { id },
-  });
+  const [categories, accounts, transaction] = await Promise.all([
+    getCategories(),
+    getAccounts(),
+    prisma.transaction.findUnique({ where: { id } }),
+  ]);
 
   if (!transaction) {
     notFound();

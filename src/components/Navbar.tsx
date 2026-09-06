@@ -45,7 +45,11 @@ export default function Navbar({ summary }: NavbarProps) {
         </div>
         {!pathname.startsWith("/transactions") && (
           <div className="flex items-center">
-            <Link href="/transactions/new">
+            <Link href={`?${(() => {
+              const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+              params.set("newTransaction", "true");
+              return params.toString();
+            })()}`}>
               <Button className="rounded-full font-bold bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-md shadow-[#b300e4]/20 transition-all text-white cursor-pointer px-4 h-9">
                 <Plus className="sm:mr-1.5 h-4 w-4 stroke-[3]" />
                 <span className="hidden sm:inline">Nova Transação</span>

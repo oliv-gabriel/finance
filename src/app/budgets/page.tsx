@@ -14,9 +14,11 @@ export default async function BudgetsPage({
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const categories = await getCategories();
-  const budgetSummary = await getBudgetSummary(month, year);
-  const data = await getDashboardData(month, year);
+  const [categories, budgetSummary, data] = await Promise.all([
+    getCategories(),
+    getBudgetSummary(month, year),
+    getDashboardData(month, year),
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">

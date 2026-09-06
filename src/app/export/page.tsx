@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { getTransactions } from "@/app/actions/transactions";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Download, FileSpreadsheet, Loader2 } from "lucide-react";
-import { stringify } from "csv-stringify/sync";
+
+function escapeCsvCell(value: string | number) {
+  return `"${String(value).replaceAll('"', '""')}"`;
+}
 
 export default function ExportPage() {
   const [isExporting, setIsExporting] = useState(false);
@@ -24,10 +26,11 @@ export default function ExportPage() {
         Valor: t.amount,
       }));
 
-      const csvContent = stringify(data, {
-        header: true,
-        delimiter: ";",
-      });
+      const headers = ["ID", "Data", "Descricao", "Tipo", "Categoria", "Valor"] as const;
+      const csvContent = `\uFEFF${[
+        headers.map(escapeCsvCell).join(";"),
+        ...data.map((row) => headers.map((header) => escapeCsvCell(row[header])).join(";")),
+      ].join("\r\n")}`;
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);

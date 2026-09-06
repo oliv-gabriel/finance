@@ -15,8 +15,10 @@ export default async function AccountsPage({
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const accounts = await getAccounts();
-  const data = await getDashboardData(month, year);
+  const [accounts, data] = await Promise.all([
+    getAccounts(),
+    getDashboardData(month, year),
+  ]);
   
   const bankAccounts = accounts.filter(a => a.type === "CONTA");
   const creditCards = accounts.filter(a => a.type === "CARTAO");

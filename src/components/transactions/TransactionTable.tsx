@@ -182,8 +182,8 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   const groupedMobile = groupTransactionsByDate(transactions);
   const groupedDesktop = groupTransactionsByDate(filteredTransactions);
 
-  const calcIncome = summary?.income ?? transactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
-  const calcExpense = summary?.expenses ?? transactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
+  const calcIncome = filteredTransactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
+  const calcExpense = filteredTransactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
   const calcBalance = calcIncome - calcExpense;
 
   return (
@@ -283,17 +283,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
         )}
 
-        <div className="fixed bottom-16 left-0 right-0 z-30 bg-[#18181b]/95 backdrop-blur-md border-t border-border/70 px-5 py-3 shadow-2xl shadow-black/90 flex flex-col justify-between">
-          <div className="w-full flex items-center justify-center pb-1">
-            <ChevronUp className="w-4 h-4 text-muted-foreground/50 hover:text-foreground transition-colors" />
-          </div>
-          <div className="flex items-center justify-between w-full">
-            <span className="text-sm font-semibold text-[#a0a0a5]">Balanço total</span>
-            <span className="text-base font-extrabold tabular-nums text-foreground">
-              {formatCurrency(calcBalance)}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* Modal / Pop-up de Detalhes da Transação */}
@@ -435,37 +424,37 @@ export default function TransactionTable({ transactions, summary }: TransactionT
       {/* ========================================================================= */}
       {/* 2. VERSÃO DESKTOP                                                         */}
       {/* ========================================================================= */}
-      <div className="hidden md:flex flex-col space-y-6">
-        <div className="grid grid-cols-3 gap-6">
-          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+      <div className="hidden md:flex flex-col space-y-4">
+        <div className="sticky top-[56px] z-20 bg-[#121212]/95 backdrop-blur-md pt-2 pb-3 -mx-2 px-2 grid grid-cols-3 gap-4 shadow-sm">
+          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total de Entradas</span>
-              <p className="text-2xl font-black text-emerald-400 mt-1 tabular-nums">{formatCurrency(calcIncome)}</p>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Entradas</span>
+              <p className="text-lg font-black text-emerald-400 mt-0.5 tabular-nums">{formatCurrency(calcIncome)}</p>
             </div>
-            <div className="size-12 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-inner">
-              <ArrowUpRight className="h-6 w-6 stroke-[2.5]" />
+            <div className="size-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-inner">
+              <ArrowUpRight className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
 
-          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between">
+          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Total de Saídas</span>
-              <p className="text-2xl font-black text-rose-500 mt-1 tabular-nums">{formatCurrency(calcExpense)}</p>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Saídas</span>
+              <p className="text-lg font-black text-rose-500 mt-0.5 tabular-nums">{formatCurrency(calcExpense)}</p>
             </div>
-            <div className="size-12 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center shadow-inner">
-              <ArrowDownLeft className="h-6 w-6 stroke-[2.5]" />
+            <div className="size-9 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shadow-inner">
+              <ArrowDownLeft className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
 
-          <div className="bg-card border border-border/70 rounded-2xl p-5 shadow-xs flex items-center justify-between border-l-4 border-l-[#b300e4]">
+          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between border-l-4 border-l-[#b300e4]">
             <div>
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Balanço do Período</span>
-              <p className={`text-2xl font-black mt-1 tabular-nums ${calcBalance >= 0 ? "text-foreground" : "text-red-500"}`}>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Balanço</span>
+              <p className={`text-lg font-black mt-0.5 tabular-nums ${calcBalance >= 0 ? "text-foreground" : "text-red-500"}`}>
                 {formatCurrency(calcBalance)}
               </p>
             </div>
-            <div className="size-12 rounded-2xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-inner">
-              <TrendingUp className="h-6 w-6 stroke-[2.5]" />
+            <div className="size-9 rounded-xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-inner">
+              <TrendingUp className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
         </div>
@@ -792,6 +781,34 @@ export default function TransactionTable({ transactions, summary }: TransactionT
         </div>,
         document.body
       )}
+
+      {/* ========================================================================= */}
+      {/* 4. TOTALIZADOR FIXO NA TELA (MOBILE APENAS)                               */}
+      {/* ========================================================================= */}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-[#18181b]/95 backdrop-blur-md border-t border-border/70 px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] transition-all">
+        <div className="w-full flex items-center justify-between gap-2">
+          <div className="flex flex-col flex-1">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Receitas</span>
+            <span className="text-sm font-black tabular-nums text-emerald-400 mt-0.5">
+              {formatCurrency(calcIncome)}
+            </span>
+          </div>
+          
+          <div className="flex flex-col flex-1 items-center border-x border-border/50 px-2">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Despesas</span>
+            <span className="text-sm font-black tabular-nums text-rose-500 mt-0.5">
+              {formatCurrency(calcExpense)}
+            </span>
+          </div>
+          
+          <div className="flex flex-col flex-1 items-end">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Balanço</span>
+            <span className={`text-sm font-black tabular-nums mt-0.5 ${calcBalance >= 0 ? "text-foreground" : "text-rose-500"}`}>
+              {formatCurrency(calcBalance)}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

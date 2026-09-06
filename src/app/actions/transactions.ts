@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
 import { toCents, toNumber } from "@/lib/money";
 import { validateId, validatePeriod, validateTransactionInput } from "@/lib/validation";
+import type { Prisma } from "@prisma/client";
 
 export async function getTransactions(options?: {
   categoryId?: string;
@@ -14,13 +15,13 @@ export async function getTransactions(options?: {
   year?: number;
 }) {
   try {
-    let monthFilter: any = {};
+    let monthFilter: Prisma.TransactionWhereInput = {};
     if (options?.month && options?.year) {
-      const allAccounts = await prisma.account.findMany();
-      monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
       if (!validatePeriod(options.month, options.year)) {
         return [];
       }
+      const allAccounts = await prisma.account.findMany();
+      monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
     }
 
     const transactions = await prisma.transaction.findMany({

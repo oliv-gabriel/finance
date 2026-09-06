@@ -92,12 +92,12 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
   };
 
   return (
-    <div className="flex w-full flex-col gap-5 md:gap-6 md:flex-row md:justify-between">
+    <div className="grid w-full min-w-0 grid-cols-1 gap-5 md:gap-6 xl:grid-cols-2">
       {/* Minhas contas (Primeiro no layout mobile como na referência) */}
-      <div className="bg-card border border-border/70 shadow-xs flex h-auto w-full flex-col rounded-2xl p-5 md:p-6">
-        <div className="flex w-full flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
+      <div className="bg-card border border-border/70 shadow-xs flex h-auto min-w-0 w-full flex-col overflow-hidden rounded-2xl p-5 md:p-6">
+        <div className="flex w-full min-w-0 flex-col">
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <div className="size-8 rounded-xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-2xs">
                 <Wallet className="h-4 w-4" />
               </div>
@@ -105,7 +105,7 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 Minhas <span className="font-extrabold">contas</span>
               </h2>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {accountChunks.length > 1 && (
                 <div className="flex bg-muted/50 rounded-lg p-0.5 mr-2">
                   <button onClick={() => scrollContainer(accountsRef, "left")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
@@ -122,10 +122,10 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
             </div>
           </div>
           
-          <div ref={accountsRef} className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div ref={accountsRef} className="flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {accountChunks.length > 0 ? (
               accountChunks.map((chunk, chunkIndex) => (
-                <ul key={chunkIndex} className="min-w-full snap-center shrink-0 flex flex-col gap-2 divide-y divide-border/30">
+                <ul key={chunkIndex} className="flex w-full min-w-0 flex-none snap-center flex-col gap-2 divide-y divide-border/30">
                   {chunk.map((acc) => (
                     <li key={acc.id} className="hover:bg-muted/40 flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 transition-colors">
                   <div className="flex items-center gap-3.5">
@@ -168,10 +168,10 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
       </div>
 
       {/* Meus cartões */}
-      <div className="bg-card border border-border/70 shadow-xs flex h-auto w-full flex-col rounded-2xl p-5 md:p-6">
-        <div className="flex w-full flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
+      <div className="bg-card border border-border/70 shadow-xs flex h-auto min-w-0 w-full flex-col overflow-hidden rounded-2xl p-5 md:p-6">
+        <div className="flex w-full min-w-0 flex-col">
+          <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               <div className="size-8 rounded-xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-2xs">
                 <CreditCard className="h-4 w-4" />
               </div>
@@ -179,7 +179,7 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 Meus <span className="font-extrabold">cartões</span>
               </h2>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
               {creditCards.length > 1 && (
                 <div className="flex bg-muted/50 rounded-lg p-0.5 mr-2">
                   <button onClick={() => scrollContainer(cardsRef, "left")} className="p-1.5 rounded-md hover:bg-background hover:shadow-xs transition-all cursor-pointer">
@@ -196,13 +196,13 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
             </div>
           </div>
           
-          <div ref={cardsRef} className="flex w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div ref={cardsRef} className="flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {creditCards.length > 0 ? (
               creditCards.map((card) => (
                 <div 
                   key={card.id} 
                   onClick={() => setSelectedCardId(card.id)}
-                  className="min-w-full snap-center shrink-0 group relative flex cursor-pointer flex-col rounded-xl p-4 transition-all duration-200 bg-muted/30 hover:bg-muted/60 hover:border-[#b300e4]/40 border border-transparent shadow-2xs hover:shadow-md hover:scale-[1.01]"
+                  className="group relative flex w-full min-w-0 flex-none snap-center cursor-pointer flex-col rounded-xl border border-transparent bg-muted/30 p-4 shadow-2xs transition-all duration-200 hover:border-[#b300e4]/40 hover:bg-muted/60 hover:shadow-md xl:hover:scale-[1.01]"
                 >
                   <div className="absolute top-3 right-3 z-10">
                     <button 
@@ -231,9 +231,9 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     </div>
                   </div>
                   
-                  <div className="bg-card mt-4 flex items-center justify-between rounded-lg px-4 py-3 border border-border">
+                  <div className="bg-card mt-4 flex min-w-0 items-center justify-between rounded-lg px-4 py-3 border border-border">
                     <span className="text-muted-foreground text-xs font-normal truncate">Fatura de {getMonthName(month)}</span>
-                    <span className="text-foreground text-sm font-medium ml-2">{formatCurrency(card.faturaAtual)}</span>
+                    <span className="text-foreground ml-2 shrink-0 text-sm font-medium tabular-nums">{formatCurrency(card.faturaAtual)}</span>
                   </div>
                   
                   <div className="text-foreground mt-5 flex items-center gap-2 px-1">
@@ -243,12 +243,12 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     </p>
                   </div>
                   
-                  <div className="text-foreground mt-2.5 flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
+                  <div className="text-foreground mt-2.5 flex flex-col items-start justify-between gap-2 px-1 sm:flex-row sm:items-center">
+                    <div className="flex min-w-0 items-center gap-2">
                       <Calendar className="opacity-70 h-4 w-4" />
                       <p className="text-xs font-normal">Fecha em {card.closingDay?.toString().padStart(2, '0')} de {getMonthName(month).slice(0, 3)}</p>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       <span className={`size-2.5 rounded-full ${card.status === "Aberto" ? "bg-green-500" : "bg-red-500"}`}></span>
                       <span className={`text-xs font-normal ${card.status === "Aberto" ? "text-green-500" : "text-red-500"}`}>
                         {card.status === "Aberto" ? "Em aberto" : "Fechado"}

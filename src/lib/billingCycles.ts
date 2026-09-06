@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 interface AccountLike {
     id?: string;
     type?: string | null;
@@ -33,9 +35,13 @@ export function getAccountBillingCycle(account: AccountLike, month: number, year
     return { startDate, endDate };
 }
 
-export function getTransactionWhereForMonth(month: number, year: number, accounts: AccountLike[]) {
+export function getTransactionWhereForMonth(
+    month: number,
+    year: number,
+    accounts: AccountLike[]
+): Prisma.TransactionWhereInput {
     const cardAccountIds: string[] = [];
-    const orConditions: any[] = [];
+    const orConditions: Prisma.TransactionWhereInput[] = [];
 
     const defaultStart = new Date(year, month - 1, 1, 0, 0, 0, 0);
     const defaultEnd = new Date(year, month, 0, 23, 59, 59, 999);

@@ -94,19 +94,25 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
 
     const { startDate, endDate } = getAccountBillingCycle(card, month, year);
 
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        accountId: cardId,
-        date: {
-          gte: startDate,
-          lte: endDate,
+    const [transactions, contas] = await Promise.all([
+      prisma.transaction.findMany({
+        where: {
+          accountId: cardId,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
-      },
-      include: {
-        category: true,
-      },
-      orderBy: { date: "desc" },
-    });
+        include: {
+          category: true,
+        },
+        orderBy: { date: "desc" },
+      }),
+      prisma.account.findMany({
+        where: { type: "CONTA" },
+        select: { id: true, name: true },
+      }),
+    ]);
 
     const expenses = transactions.filter((t) => t.type === "EXPENSE");
     const totalSpent = expenses.reduce((sum, t) => sum + toNumber(t.amount), 0);
@@ -116,8 +122,6 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
     // Calcular a porcentagem utilizada do limite
     const percentageUsed = limit > 0 ? Math.min(100, Math.round((totalSpent / limit) * 100)) : 0;
     const isPaid = expenses.length > 0 && expenses.every(t => t.paid);
-
-    const contas = await prisma.account.findMany({ where: { type: "CONTA" }, select: { id: true, name: true } });
 
     return {
       card: {

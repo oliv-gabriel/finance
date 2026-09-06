@@ -71,10 +71,11 @@ export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] 
                 <label className="text-sm font-medium">Vincular ao Banco</label>
                 <select 
                   name="bankId" 
-                  required 
+                  required
+                  defaultValue="" 
                   className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
                 >
-                  <option value="" disabled selected>Selecione o banco</option>
+                  <option value="" disabled>Selecione o banco</option>
                   {bankAccounts.map(bank => (
                     <option key={bank.id} value={bank.id}>{bank.name}</option>
                   ))}

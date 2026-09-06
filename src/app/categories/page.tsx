@@ -31,8 +31,10 @@ export default async function CategoriesPage({
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const categories = await getCategories();
-  const data = await getDashboardData(month, year);
+  const [categories, data] = await Promise.all([
+    getCategories(),
+    getDashboardData(month, year),
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">

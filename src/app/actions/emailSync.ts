@@ -76,19 +76,6 @@ export async function syncEmails() {
             });
         }
 
-        // Garante que todas as transações já sincronizadas anteriormente fiquem atreladas à conta 99
-        await prisma.transaction.updateMany({
-            where: {
-                OR: [
-                    { externalId: { not: null } },
-                    { categoryId: category.id }
-                ]
-            },
-            data: {
-                accountId: account99.id
-            }
-        });
-
         // FASE 2: Processamento Offline (Sem risco de Timeout do E-mail)
         if (rawMessages.length > 0) {
             for (const rawMsg of rawMessages) {
@@ -155,10 +142,7 @@ export async function syncEmails() {
                         try {
                             await prisma.transaction.upsert({
                                 where: { externalId },
-                                update: {
-                                    accountId: account99.id,
-                                    categoryId: category.id,
-                                }, 
+                                update: {}, 
                                 create: payload
                             });
                             syncedCount++;

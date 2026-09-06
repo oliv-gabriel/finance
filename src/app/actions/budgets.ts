@@ -52,12 +52,12 @@ export async function upsertBudget(data: {
 export async function getBudgetSummary(month: number, year: number) {
   try {
     // Get all budgets for the month
-    const budgets = await prisma.budget.findMany({
-      where: { month, year },
-    });
+    const [budgets, allAccounts] = await Promise.all([
+      prisma.budget.findMany({ where: { month, year } }),
+      prisma.account.findMany(),
+    ]);
 
     // Get all expense transactions for the month respecting credit card closing days
-    const allAccounts = await prisma.account.findMany();
     const whereClause = getTransactionWhereForMonth(month, year, allAccounts);
 
     const transactions = await prisma.transaction.findMany({

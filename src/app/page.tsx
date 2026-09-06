@@ -19,8 +19,10 @@ export default async function Dashboard({
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const data = await getDashboardData(month, year);
-  const recentTransactions = await getTransactions({ limit: 5, month, year });
+  const [data, recentTransactions] = await Promise.all([
+    getDashboardData(month, year),
+    getTransactions({ limit: 5, month, year }),
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">

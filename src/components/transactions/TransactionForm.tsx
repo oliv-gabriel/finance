@@ -38,9 +38,12 @@ interface TransactionFormProps {
     destinationAccountId?: string | null;
   };
   initialEditMode?: "single" | "series";
+  onSuccess?: () => void;
+  onCancel?: () => void;
+  isModal?: boolean;
 }
 
-export default function TransactionForm({ categories, accounts, initialData, initialEditMode }: TransactionFormProps) {
+export default function TransactionForm({ categories, accounts, initialData, initialEditMode, onSuccess, onCancel, isModal = false }: TransactionFormProps) {
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [updateAllInSeries, setUpdateAllInSeries] = useState(initialEditMode === "series");
@@ -120,7 +123,11 @@ export default function TransactionForm({ categories, accounts, initialData, ini
         : await createTransaction(payload);
       
       if (result.success) {
-        router.push("/transactions");
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/transactions");
+        }
       } else {
         alert(result.error);
         setIsPending(false);
@@ -130,15 +137,15 @@ export default function TransactionForm({ categories, accounts, initialData, ini
       setIsPending(false);
     }
   }
-
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{initialData ? "Editar Transação" : "Nova Transação"}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex bg-muted p-1 rounded-lg gap-1">
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <div className={`flex-1 space-y-5 overflow-y-auto custom-scrollbar ${isModal ? "px-6 py-4" : ""}`}>
+        {!isModal && (
+          <div className="mb-6">
+            <h2 className="text-xl font-bold">{initialData ? "Editar Transação" : "Nova Transação"}</h2>
+          </div>
+        )}
+        <div className="flex bg-muted p-1 rounded-lg gap-1">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: "EXPENSE" })}
@@ -482,17 +489,25 @@ export default function TransactionForm({ categories, accounts, initialData, ini
               </div>
             </div>
           )}
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-2 border-t p-6">
-          <Link href="/transactions">
-            <Button variant="outline" type="button">Cancelar</Button>
-          </Link>
-          <Button type="submit" disabled={isPending}>
-            <Save className="mr-2 h-4 w-4" />
-            {isPending ? "Salvando..." : "Salvar Transação"}
+        </div>
+      
+      {/* Footer / Botões */}
+      <div className={`mt-auto ${isModal ? "p-6 border-t border-border/40 bg-background/50 backdrop-blur-sm" : "p-6 border-t"}`}>
+        <div className={`flex ${isModal ? "justify-between" : "justify-end"} space-x-3`}>
+          {onCancel ? (
+            <Button variant="outline" type="button" onClick={onCancel} className={isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}>
+              Cancelar
+            </Button>
+          ) : (
+            <Link href="/transactions">
+              <Button variant="outline" type="button">Cancelar</Button>
+            </Link>
+          )}
+          <Button type="submit" disabled={isPending} className={`bg-foreground text-background hover:bg-foreground/90 ${isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}`}>
+            {isPending ? "Salvando..." : (initialData ? "Salvar" : "Criar")}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </form>
   );
 }
