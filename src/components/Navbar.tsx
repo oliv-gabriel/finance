@@ -6,6 +6,7 @@ import SyncEmailsButton from "./SyncEmailsButton";
 import Link from "next/link";
 import { Button } from "./ui/Button";
 import { usePathname } from "next/navigation";
+import { signIn, signOut } from "next-auth/react";
 
 interface NavbarProps {
   summary: {
@@ -45,7 +46,6 @@ export default function Navbar({ summary }: NavbarProps) {
               <button 
                 onClick={async () => {
                   try {
-                    const { signIn } = await import("next-auth/react");
                     const res = await signIn("passkey", { action: "register", redirect: false });
                     if (res?.error) {
                       alert("Erro ao cadastrar: " + res.error);
@@ -62,7 +62,6 @@ export default function Navbar({ summary }: NavbarProps) {
               </button>
               <button 
                 onClick={async () => {
-                  const { signOut } = await import("next-auth/react");
                   signOut({ callbackUrl: "/login" });
                 }}
                 className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 transition-colors"
