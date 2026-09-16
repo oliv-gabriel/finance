@@ -15,7 +15,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   providers: [
     Passkey({
-      // We can customize the passkey provider if needed
+      relayingParty: {
+        id: process.env.AUTH_URL ? new URL(process.env.AUTH_URL).hostname : "localhost",
+        name: "Finance App",
+        origin: process.env.AUTH_URL || "http://localhost:3000",
+      }
     }),
     Credentials({
       name: "Credentials",
