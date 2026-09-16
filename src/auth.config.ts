@@ -2,6 +2,10 @@ import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
   secret: process.env.AUTH_SECRET || "minha-chave-secreta-finance-app-dev",
+  session: {
+    strategy: "jwt",
+    maxAge: 15 * 60, // 15 minutos
+  },
   pages: {
     signIn: '/login',
   },

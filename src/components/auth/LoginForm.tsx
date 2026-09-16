@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import { signIn as signInWebAuthn } from "next-auth/webauthn";
 import { useState } from "react";
 import { Button } from "../ui/Button";
 import { Fingerprint, User, Lock } from "lucide-react";
@@ -19,7 +20,7 @@ export default function LoginForm() {
     setLoading(true);
     setError("");
     try {
-      const result = await signIn("passkey", {
+      const result = await signInWebAuthn("passkey", {
         redirect: false,
         action: "authenticate",
         callbackUrl

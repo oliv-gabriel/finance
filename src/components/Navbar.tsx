@@ -6,7 +6,8 @@ import SyncEmailsButton from "./SyncEmailsButton";
 import Link from "next/link";
 import { Button } from "./ui/Button";
 import { usePathname } from "next/navigation";
-import { signIn, signOut } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { signIn as signInWebAuthn } from "next-auth/webauthn";
 
 interface NavbarProps {
   summary: {
@@ -46,7 +47,7 @@ export default function Navbar({ summary }: NavbarProps) {
               <button 
                 onClick={async () => {
                   try {
-                    const res = await signIn("passkey", { action: "register", redirect: false });
+                    const res = await signInWebAuthn("passkey", { action: "register", redirect: false });
                     if (res?.error) {
                       alert("Erro ao cadastrar: " + res.error);
                     } else {
