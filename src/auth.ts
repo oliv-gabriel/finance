@@ -15,11 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   providers: [
     Passkey({
-      relayingParty: {
-        id: process.env.NODE_ENV === "production" ? "finance-gamma-umber.vercel.app" : "localhost",
-        name: "Finance App",
-        origin: process.env.NODE_ENV === "production" ? "https://finance-gamma-umber.vercel.app" : "http://localhost:3000",
-      }
+      // Confiaremos no x-forwarded-host da Vercel
     }),
     Credentials({
       name: "Credentials",
