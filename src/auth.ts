@@ -15,7 +15,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   providers: [
     Passkey({
-      // Confiaremos no x-forwarded-host da Vercel
+      relayingParty: {
+        id: "finance-gamma-umber.vercel.app",
+        name: "Finance App",
+        origin: "https://finance-gamma-umber.vercel.app",
+      }
     }),
     Credentials({
       name: "Credentials",
