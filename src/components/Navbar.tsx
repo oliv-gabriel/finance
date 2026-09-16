@@ -26,6 +26,7 @@ export default function Navbar({ summary }: NavbarProps) {
       {/* Mobile Top Header (Perfil e Ações Rápidas) */}
       <div className="md:hidden flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
+          <div className="text-xs text-muted-foreground mr-2 font-mono">v1.0.1</div>
           <div className="w-11 h-11 rounded-full bg-[#b300e4] text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-[#b300e4]/30">
             J
           </div>
