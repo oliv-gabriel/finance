@@ -86,3 +86,41 @@ model Budget {
 
   @@unique([categoryId, month, year])
 }
+
+// --- Auth.js Models ---
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  password      String?
+  image         String?
+  sessions      Session[]
+  Authenticator Authenticator[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}

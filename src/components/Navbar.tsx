@@ -27,11 +27,39 @@ export default function Navbar({ summary }: NavbarProps) {
           <div className="w-11 h-11 rounded-full bg-[#b300e4] text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-[#b300e4]/30">
             J
           </div>
-          <div>
-            <h2 className="text-foreground text-base font-semibold leading-tight">João</h2>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors">
-              <span>Perfil Principal</span>
+          <div className="relative">
+            <h2 className="text-foreground text-base font-semibold leading-tight">Perfil</h2>
+            <div 
+              className="flex items-center gap-1 text-xs text-muted-foreground font-medium cursor-pointer hover:text-foreground transition-colors"
+              onClick={() => {
+                const menu = document.getElementById("profile-menu");
+                if (menu) menu.classList.toggle("hidden");
+              }}
+            >
+              <span>Gerenciar Acesso</span>
               <ChevronDown className="h-3 w-3 opacity-70" />
+            </div>
+            
+            {/* Dropdown Menu */}
+            <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+              <button 
+                onClick={async () => {
+                  const { signIn } = await import("next-auth/react");
+                  signIn("passkey", { action: "register" });
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-2"
+              >
+                Cadastrar Passkey
+              </button>
+              <button 
+                onClick={async () => {
+                  const { signOut } = await import("next-auth/react");
+                  signOut({ callbackUrl: "/login" });
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 transition-colors"
+              >
+                Sair
+              </button>
             </div>
           </div>
         </div>
