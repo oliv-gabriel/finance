@@ -8,6 +8,8 @@ import { Button } from "./ui/Button";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { signIn as signInWebAuthn } from "next-auth/webauthn";
+import { useState } from "react";
+import { assertPasskeySupport, passkeyErrorMessage } from "@/lib/passkeyClient";
 
 interface NavbarProps {
   summary: {
@@ -20,6 +22,33 @@ interface NavbarProps {
 
 export default function Navbar({ summary }: NavbarProps) {
   const pathname = usePathname();
+  const [registeringPasskey, setRegisteringPasskey] = useState(false);
+
+  const registerPasskey = async () => {
+    setRegisteringPasskey(true);
+
+    try {
+      assertPasskeySupport();
+      const result = await signInWebAuthn("passkey", {
+        action: "register",
+        redirect: false,
+      });
+
+      if (!result || result.error || !result.ok) {
+        throw new Error(
+          "O servidor não conseguiu cadastrar a passkey. Entre novamente com a senha e tente de novo."
+        );
+      }
+
+      alert("Passkey cadastrada com sucesso!");
+    } catch (error: unknown) {
+      alert(
+        passkeyErrorMessage(error, "Não foi possível cadastrar a passkey.")
+      );
+    } finally {
+      setRegisteringPasskey(false);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 w-full bg-[#121212]/95 backdrop-blur supports-[backdrop-filter]:bg-[#121212]/80">
@@ -46,21 +75,11 @@ export default function Navbar({ summary }: NavbarProps) {
             {/* Dropdown Menu */}
             <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
               <button 
-                onClick={async () => {
-                  try {
-                    const res = await signInWebAuthn("passkey", { action: "register", redirect: false });
-                    if (res?.error) {
-                      alert("Erro ao cadastrar: " + res.error);
-                    } else {
-                      alert("Passkey cadastrada com sucesso!");
-                    }
-                  } catch (e: any) {
-                    alert("Erro inesperado: " + e.message);
-                  }
-                }}
+                onClick={registerPasskey}
+                disabled={registeringPasskey}
                 className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-2"
               >
-                Cadastrar Passkey
+                {registeringPasskey ? "Cadastrando..." : "Cadastrar Passkey"}
               </button>
               <button 
                 onClick={async () => {

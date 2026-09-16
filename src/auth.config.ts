@@ -1,7 +1,11 @@
 import type { NextAuthConfig } from 'next-auth';
 
 export const authConfig = {
-  secret: process.env.AUTH_SECRET || "minha-chave-secreta-finance-app-dev",
+  secret:
+    process.env.AUTH_SECRET ??
+    (process.env.NODE_ENV === "development"
+      ? "finance-app-local-development-secret"
+      : undefined),
   session: {
     strategy: "jwt",
     maxAge: 15 * 60, // 15 minutos
@@ -22,7 +26,7 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
-        token.email = user.email; // EXPLICITLY set email!
+        token.email = user.email;
       }
       return token;
     },

@@ -1,16 +1,16 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Passkey from "next-auth/providers/passkey"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
+import { authAdapter } from "@/lib/authAdapter"
 import bcrypt from "bcryptjs"
 import { authConfig } from "./auth.config"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma),
+  adapter: authAdapter,
   session: { strategy: "jwt" },
-  debug: true,
+  debug: process.env.AUTH_DEBUG === "true",
   logger: {
     error(error) { console.error("NEXTAUTH_ERROR", error); },
     warn(code) { console.warn("NEXTAUTH_WARN", code); },
@@ -20,12 +20,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     enableWebAuthn: true,
   },
   providers: [
+    // Auth.js derives the RP ID and origin from AUTH_URL (or the request URL).
+    // Keeping these values dynamic makes localhost and Vercel use the same flow.
     Passkey({
-      relayingParty: {
-        id: "finance-gamma-umber.vercel.app",
-        name: "Finance App",
-        origin: "https://finance-gamma-umber.vercel.app",
-      }
+      name: "Finance App",
+      relayingParty: { name: "Finance App" },
     }),
     Credentials({
       name: "Credentials",

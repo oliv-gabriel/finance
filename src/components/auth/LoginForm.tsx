@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "../ui/Button";
 import { Fingerprint, User, Lock } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { assertPasskeySupport, passkeyErrorMessage } from "@/lib/passkeyClient";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -20,20 +21,23 @@ export default function LoginForm() {
     setLoading(true);
     setError("");
     try {
+      assertPasskeySupport();
       const result = await signInWebAuthn("passkey", {
         redirect: false,
         action: "authenticate",
         callbackUrl
       });
-      if (result?.error) {
+      if (!result || result.error || !result.ok) {
         setError("Erro ao autenticar com Passkey. Tente novamente ou use usuário/senha.");
-      } else if (result?.url) {
-        router.push(result.url);
+      } else {
+        router.push(result.url ?? callbackUrl);
+        router.refresh();
       }
-    } catch (err) {
-      setError("Erro inesperado com Passkey.");
+    } catch (err: unknown) {
+      setError(passkeyErrorMessage(err, "Erro inesperado com Passkey."));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleUsernameLogin = async (e: React.FormEvent) => {
@@ -52,10 +56,11 @@ export default function LoginForm() {
       } else if (result?.url) {
         router.push(result.url);
       }
-    } catch (err) {
+    } catch {
       setError("Erro inesperado no login.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

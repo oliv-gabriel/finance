@@ -96,10 +96,33 @@ model User {
   password      String?
   image         String?
   sessions      Session[]
+  authAccounts  AuthAccount[]
   Authenticator Authenticator[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+}
+
+// Auth.js also calls its provider links "accounts". Keep them in a separate
+// model so they cannot collide with the financial Account model above.
+model AuthAccount {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {

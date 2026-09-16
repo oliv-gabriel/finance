@@ -32,6 +32,8 @@ Variáveis obrigatórias:
 | --- | --- |
 | `DATABASE_URL` | URL PostgreSQL usada pela aplicação. Prefira a URL com pool de conexões do provedor. |
 | `DIRECT_URL` | URL direta, usada apenas por operações de schema/migração. |
+| `AUTH_SECRET` | Segredo aleatório usado para assinar a sessão. Gere com `npx auth secret`. |
+| `AUTH_URL` | Origem pública exata, por exemplo `https://finance-gamma-umber.vercel.app`, sem `/api/auth`. |
 
 Variáveis opcionais para sincronização de e-mail:
 
@@ -41,7 +43,7 @@ Variáveis opcionais para sincronização de e-mail:
 | `EMAIL_USER` | Usuário da conta de e-mail. |
 | `EMAIL_PASS` | Senha de app/credencial IMAP. |
 
-Não execute `prisma db push` automaticamente a cada build. Prepare o banco antes do primeiro deploy e aplique mudanças de schema de forma controlada.
+Não execute `prisma db push` automaticamente a cada build. Prepare o banco antes do primeiro deploy e aplique mudanças de schema de forma controlada. O login com passkey exige os modelos `AuthAccount` e `Authenticator` no banco.
 
 Para menor latência, configure a região das Functions próxima à região do PostgreSQL no painel da Vercel. O projeto fixa Node.js 22 pelo campo `engines` do `package.json`.
 
@@ -57,4 +59,4 @@ O build e o TypeScript devem passar antes do deploy. O lint ainda registra débi
 
 ## Segurança antes de produção
 
-Este repositório ainda não possui autenticação/autorização. Não publique dados financeiros reais até proteger as páginas e todas as Server Actions, especialmente as ações de exclusão e sincronização de e-mail.
+As páginas usam Auth.js com senha ou passkey e sessões JWT de 15 minutos. Antes de publicar dados reais, confira também a autorização de cada Server Action, especialmente exclusão e sincronização de e-mail.
