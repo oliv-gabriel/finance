@@ -16,9 +16,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Passkey({
       relayingParty: {
-        id: process.env.AUTH_URL ? new URL(process.env.AUTH_URL).hostname : (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL || "localhost"),
+        id: process.env.NODE_ENV === "production" ? "finance-gamma-umber.vercel.app" : "localhost",
         name: "Finance App",
-        origin: process.env.AUTH_URL ? process.env.AUTH_URL : (process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}` : "http://localhost:3000"),
+        origin: process.env.NODE_ENV === "production" ? "https://finance-gamma-umber.vercel.app" : "http://localhost:3000",
       }
     }),
     Credentials({
