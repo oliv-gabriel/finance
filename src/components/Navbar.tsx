@@ -44,8 +44,17 @@ export default function Navbar({ summary }: NavbarProps) {
             <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
               <button 
                 onClick={async () => {
-                  const { signIn } = await import("next-auth/react");
-                  signIn("passkey", { action: "register" });
+                  try {
+                    const { signIn } = await import("next-auth/react");
+                    const res = await signIn("passkey", { action: "register", redirect: false });
+                    if (res?.error) {
+                      alert("Erro ao cadastrar: " + res.error);
+                    } else {
+                      alert("Passkey cadastrada com sucesso!");
+                    }
+                  } catch (e: any) {
+                    alert("Erro inesperado: " + e.message);
+                  }
                 }}
                 className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-2"
               >
