@@ -6,6 +6,9 @@ export const authConfig = {
     strategy: "jwt",
     maxAge: 15 * 60, // 15 minutos
   },
+  experimental: {
+    enableWebAuthn: true,
+  },
   pages: {
     signIn: '/login',
   },
@@ -19,6 +22,7 @@ export const authConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        token.email = user.email; // EXPLICITLY set email!
       }
       return token;
     },

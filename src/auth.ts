@@ -10,6 +10,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
+  debug: true,
+  logger: {
+    error(error) { console.error("NEXTAUTH_ERROR", error); },
+    warn(code) { console.warn("NEXTAUTH_WARN", code); },
+    debug(code, metadata) { console.log("NEXTAUTH_DEBUG", code, metadata); }
+  },
   experimental: {
     enableWebAuthn: true,
   },
