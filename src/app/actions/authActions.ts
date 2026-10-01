@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword } from "@/lib/password";
 
 export async function registerUser(formData: FormData) {
   const username = formData.get("username") as string;
@@ -20,7 +20,7 @@ export async function registerUser(formData: FormData) {
       return { error: "Nome de usuário já está em uso." };
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = hashPassword(password);
 
     await prisma.user.create({
       data: {

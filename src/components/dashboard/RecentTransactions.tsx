@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { format } from "date-fns";
 import { History, CheckCircle, Tag } from "lucide-react";
 import Link from "next/link";
 import { toggleTransactionPaid } from "@/app/actions/transactions";
@@ -78,7 +77,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                 {t.type === "INCOME" ? "+" : "-"} {formatCurrency(t.amount)}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {format(new Date(t.date), "dd/MM")}
+                {new Date(t.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
               </p>
             </div>
           </div>

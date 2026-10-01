@@ -1,9 +1,8 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
-import Passkey from "next-auth/providers/passkey"
 import { prisma } from "@/lib/prisma"
 import { authAdapter } from "@/lib/authAdapter"
-import bcrypt from "bcryptjs"
+import { verifyPassword } from "@/lib/password"
 import { authConfig } from "./auth.config"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -16,16 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     warn(code) { console.warn("NEXTAUTH_WARN", code); },
     debug(code, metadata) { console.log("NEXTAUTH_DEBUG", code, metadata); }
   },
-  experimental: {
-    enableWebAuthn: true,
-  },
   providers: [
-    // Auth.js derives the RP ID and origin from AUTH_URL (or the request URL).
-    // Keeping these values dynamic makes localhost and Vercel use the same flow.
-    Passkey({
-      name: "Finance App",
-      relayingParty: { name: "Finance App" },
-    }),
     Credentials({
       name: "Credentials",
       credentials: {
@@ -41,7 +31,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user || !user.password) return null
 
-        const passwordsMatch = await bcrypt.compare(
+        const passwordsMatch = verifyPassword(
           credentials.password as string,
           user.password
         )

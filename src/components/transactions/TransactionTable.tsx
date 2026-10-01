@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { 
   MoreVertical, CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag, 
   ChevronUp, Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone, 
@@ -140,22 +138,17 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
   // Agrupamento por Data
   const groupTransactionsByDate = (list: Transaction[]) => {
-    const groups: { [key: string]: Transaction[] } = {};
-    list.forEach((t) => {
-      const d = typeof t.date === "string" ? new Date(t.date) : t.date;
-      const year = d.getUTCFullYear();
-      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(d.getUTCDate()).padStart(2, '0');
-      const dateKey = `${year}-${month}-${day}`;
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(t);
+    const groups = Object.groupBy(list, (t) => {
+      const d = typeof t.date === "string" ? new Date(t.date) : (t.date as Date);
+      return d.toISOString().split('T')[0];
     });
 
-    const sortedKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
-    return sortedKeys.map((key) => ({
-      dateKey: key,
-      items: groups[key],
-    }));
+    return Object.keys(groups || {})
+      .sort((a, b) => b.localeCompare(a))
+      .map((key) => ({
+        dateKey: key,
+        items: groups![key]!,
+      }));
   };
 
   const formatGroupHeader = (dateStr: string) => {
@@ -166,7 +159,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 86400000);
 
-    const dayMonth = format(d, "dd 'de' MMMM", { locale: ptBR });
+    const dayMonth = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long' }).format(d);
 
     if (d.getTime() === today.getTime()) {
       return `Hoje, dia ${dayMonth}`;
@@ -174,7 +167,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     if (d.getTime() === yesterday.getTime()) {
       return `Ontem, dia ${dayMonth}`;
     }
-    const dow = format(d, "EEE.", { locale: ptBR });
+    const dow = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d).replace('.', '') + '.';
     const dowCap = dow.charAt(0).toUpperCase() + dow.slice(1);
     return `${dowCap}, ${dayMonth}`;
   };
@@ -182,8 +175,12 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   const groupedMobile = groupTransactionsByDate(transactions);
   const groupedDesktop = groupTransactionsByDate(filteredTransactions);
 
-  const calcIncome = filteredTransactions.filter(t => t.type === "INCOME").reduce((acc, curr) => acc + curr.amount, 0);
-  const calcExpense = filteredTransactions.filter(t => t.type === "EXPENSE").reduce((acc, curr) => acc + curr.amount, 0);
+  let calcIncome = 0;
+  let calcExpense = 0;
+  filteredTransactions.forEach(t => {
+    if (t.type === "INCOME") calcIncome += t.amount;
+    else if (t.type === "EXPENSE") calcExpense += t.amount;
+  });
   const calcBalance = calcIncome - calcExpense;
 
   return (
@@ -767,7 +764,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 className="w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm bg-[#b300e4] hover:bg-[#b300e4]/90 text-white shadow-lg shadow-[#b300e4]/25 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer"
               >
                 <span>🚀 Editar TODAS as parcelas da série</span>
-                <span className="text-[11px] font-medium text-white/80">Aplica novo valor, categoria e conta a todos os meses</span>
+                <span className="text-[11px] font-medium text-white/80">Aplica novo valor a todas parcelas pendentes</span>
               </button>
             </div>
 

@@ -5,11 +5,8 @@ import DateFilter from "./DateFilter";
 import SyncEmailsButton from "./SyncEmailsButton";
 import Link from "next/link";
 import { Button } from "./ui/Button";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { signIn as signInWebAuthn } from "next-auth/webauthn";
-import { useState } from "react";
-import { assertPasskeySupport, passkeyErrorMessage } from "@/lib/passkeyClient";
 
 interface NavbarProps {
   summary: {
@@ -22,40 +19,14 @@ interface NavbarProps {
 
 export default function Navbar({ summary }: NavbarProps) {
   const pathname = usePathname();
-  const [registeringPasskey, setRegisteringPasskey] = useState(false);
-
-  const registerPasskey = async () => {
-    setRegisteringPasskey(true);
-
-    try {
-      assertPasskeySupport();
-      const result = await signInWebAuthn("passkey", {
-        action: "register",
-        redirect: false,
-      });
-
-      if (!result || result.error || !result.ok) {
-        throw new Error(
-          "O servidor não conseguiu cadastrar a passkey. Entre novamente com a senha e tente de novo."
-        );
-      }
-
-      alert("Passkey cadastrada com sucesso!");
-    } catch (error: unknown) {
-      alert(
-        passkeyErrorMessage(error, "Não foi possível cadastrar a passkey.")
-      );
-    } finally {
-      setRegisteringPasskey(false);
-    }
-  };
+  const router = useRouter();
 
   return (
     <header className="sticky top-0 z-30 w-full bg-[#121212]/95 backdrop-blur supports-[backdrop-filter]:bg-[#121212]/80">
       {/* Mobile Top Header (Perfil e Ações Rápidas) */}
       <div className="md:hidden flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <div className="text-xs text-muted-foreground mr-2 font-mono">v1.0.1</div>
+          <div className="text-xs text-muted-foreground mr-2 font-mono">v1.0.2</div>
           <div className="w-11 h-11 rounded-full bg-[#b300e4] text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-[#b300e4]/30">
             J
           </div>
@@ -74,13 +45,6 @@ export default function Navbar({ summary }: NavbarProps) {
             
             {/* Dropdown Menu */}
             <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
-              <button 
-                onClick={registerPasskey}
-                disabled={registeringPasskey}
-                className="w-full text-left px-4 py-3 text-sm text-white hover:bg-white/5 transition-colors border-b border-white/5 flex items-center gap-2"
-              >
-                {registeringPasskey ? "Cadastrando..." : "Cadastrar Passkey"}
-              </button>
               <button 
                 onClick={async () => {
                   signOut({ callbackUrl: "/login" });
@@ -102,16 +66,17 @@ export default function Navbar({ summary }: NavbarProps) {
         </div>
         {!pathname.startsWith("/transactions") && (
           <div className="flex items-center">
-            <Link href={`?${(() => {
-              const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-              params.set("newTransaction", "true");
-              return params.toString();
-            })()}`}>
-              <Button className="rounded-full font-bold bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-md shadow-[#b300e4]/20 transition-all text-white cursor-pointer px-4 h-9">
-                <Plus className="sm:mr-1.5 h-4 w-4 stroke-[3]" />
-                <span className="hidden sm:inline">Nova Transação</span>
-              </Button>
-            </Link>
+            <Button 
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set("newTransaction", "true");
+                router.push(`?${params.toString()}`);
+              }}
+              className="rounded-full font-bold bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-md shadow-[#b300e4]/20 transition-all text-white cursor-pointer px-4 h-9"
+            >
+              <Plus className="sm:mr-1.5 h-4 w-4 stroke-[3]" />
+              <span className="hidden sm:inline">Nova Transação</span>
+            </Button>
           </div>
         )}
       </div>

@@ -39,13 +39,18 @@ export default function MobileNav() {
       </Link>
 
       {/* 3. Botão Central Flutuante (+) */}
-      <Link
-        href="/transactions"
+      <button
+        type="button"
+        onClick={() => {
+          const params = new URLSearchParams(window.location.search);
+          params.set("newTransaction", "true");
+          router.push(`?${params.toString()}`);
+        }}
         className="w-12 h-12 rounded-2xl bg-[#b300e4] hover:bg-[#b300e4]/90 text-white flex items-center justify-center -translate-y-2 shadow-lg shadow-[#b300e4]/30 transition-transform active:scale-95 cursor-pointer"
         title="Nova transação"
       >
         <Plus className="h-7 w-7 stroke-[2.5] text-white" />
-      </Link>
+      </button>
 
       {/* 4. Categorias */}
       <Link 

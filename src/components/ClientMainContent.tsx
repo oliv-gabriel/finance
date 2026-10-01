@@ -1,15 +1,10 @@
 "use client";
 
 import { useSidebar } from "./SidebarProvider";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import MobileNav from "./MobileNav";
 import TransactionSlideOver from "./transactions/TransactionSlideOver";
 import { Suspense } from "react";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export default function ClientMainContent({ children }: { children: React.ReactNode }) {
   const { isCollapsed } = useSidebar();

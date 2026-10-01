@@ -8,20 +8,14 @@ import {
   Tags, 
   Wallet, 
   Download,
-  Settings,
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
   Landmark
 } from "lucide-react";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
 import { useSidebar } from "./SidebarProvider";
 import { Button } from "./ui/Button";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -32,10 +26,13 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { isCollapsed, toggleSidebar } = useSidebar();
+  const { isCollapsed, setIsCollapsed } = useSidebar();
 
   return (
-    <aside className={cn(
+    <aside 
+      onMouseEnter={() => setIsCollapsed(false)}
+      onMouseLeave={() => setIsCollapsed(true)}
+      className={cn(
       "fixed left-0 top-0 z-40 h-screen bg-[#121212] transition-all duration-300 ease-in-out hidden md:block",
       isCollapsed ? "w-20" : "w-64"
     )}>
@@ -48,14 +45,7 @@ export default function Sidebar() {
           {isCollapsed && <CircleDollarSign className="h-8 w-8 text-[#b300e4]" />}
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleSidebar}
-          className="absolute -right-3 top-20 h-6 w-6 rounded-full border bg-background p-0 hover:bg-muted shadow-sm z-50"
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+
         
         <nav className="flex-1 space-y-1 font-medium">
           {menuItems.map((item) => {
@@ -93,17 +83,6 @@ export default function Sidebar() {
           >
             <Download className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
             {!isCollapsed && <span className="truncate">Exportar Dados</span>}
-          </Link>
-          <Link
-            href="/settings"
-            title={isCollapsed ? "Configurações" : undefined}
-            className={cn(
-              "flex items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted",
-              isCollapsed && "justify-center px-2"
-            )}
-          >
-            <Settings className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
-            {!isCollapsed && <span className="truncate">Configurações</span>}
           </Link>
         </div>
       </div>

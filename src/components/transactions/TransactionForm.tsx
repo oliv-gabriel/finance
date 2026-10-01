@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
 import { Save, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
-import { format, parse } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface Category {
   id: string;
@@ -54,7 +52,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
     amount: initialData 
       ? new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2 }).format(initialData.amount)
       : "0,00",
-    date: format(initialData?.date || new Date(), "dd/MM/yyyy"),
+    date: initialData?.date ? new Date(initialData.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
     type: initialData?.type || "EXPENSE",
     categoryId: initialData?.categoryId || categories[0]?.id || "",
     paid: initialData?.paid ?? true,
@@ -98,7 +96,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
     const dateValue = e.target.value;
     if (dateValue) {
       const parsedDate = new Date(dateValue + "T12:00:00");
-      setFormData({ ...formData, date: format(parsedDate, "dd/MM/yyyy") });
+      setFormData({ ...formData, date: parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) });
     }
   };
 
@@ -107,7 +105,8 @@ export default function TransactionForm({ categories, accounts, initialData, ini
     setIsPending(true);
     
     try {
-      const parsedDate = parse(formData.date, "dd/MM/yyyy", new Date());
+      const [day, month, year] = formData.date.split("/");
+      const parsedDate = new Date(`${year}-${month}-${day}T12:00:00`);
       const numericAmount = parseFloat(
         formData.amount.replace(/\./g, "").replace(",", ".")
       );
@@ -138,7 +137,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
     }
   }
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+    <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
       <div className={`flex-1 space-y-5 overflow-y-auto custom-scrollbar ${isModal ? "px-6 py-4" : ""}`}>
         {!isModal && (
           <div className="mb-6">
@@ -466,7 +465,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                     {!updateAllInSeries && <span className="size-2 rounded-full bg-white animate-ping" />}
                   </div>
                   <div className={`text-[11px] mt-1 leading-snug ${!updateAllInSeries ? "text-white/90 font-medium" : "text-muted-foreground"}`}>
-                    Altera somente o registro do mês de <strong>{format(new Date(initialData.date), "MMMM", { locale: ptBR })}</strong>.
+                    Altera somente o registro do mês de <strong>{new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(new Date(initialData.date))}</strong>.
                   </div>
                 </button>
                 <button
@@ -483,7 +482,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                     {updateAllInSeries && <span className="size-2 rounded-full bg-white animate-ping" />}
                   </div>
                   <div className={`text-[11px] mt-1 leading-snug ${updateAllInSeries ? "text-white/90 font-medium" : "text-muted-foreground"}`}>
-                    Atualiza o novo valor, conta e categoria em <strong>todos os meses</strong> desta série.
+                    Atualiza o novo valor, conta e categoria em <strong>todas as parcelas pendentes</strong>. As antigas já pagas serão mantidas.
                   </div>
                 </button>
               </div>
@@ -503,7 +502,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
               <Button variant="outline" type="button">Cancelar</Button>
             </Link>
           )}
-          <Button type="submit" disabled={isPending} className={`bg-foreground text-background hover:bg-foreground/90 ${isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}`}>
+          <Button type="submit" disabled={isPending} className={`bg-[#b300e4] text-white hover:bg-[#b300e4]/90 ${isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}`}>
             {isPending ? "Salvando..." : (initialData ? "Salvar" : "Criar")}
           </Button>
         </div>

@@ -65,10 +65,11 @@ export async function createTransaction(data: {
   installmentValueType?: string;
 }) {
   try {
-    const validatedData = validateTransactionInput(data);
-    if (!validatedData) {
-      return { success: false, error: "Dados da transacao invalidos" };
+    const validationResult = validateTransactionInput(data);
+    if (!validationResult.success) {
+      return { success: false, error: `Dados inválidos: ${validationResult.error}` };
     }
+    const validatedData = validationResult.data;
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = validatedData;
     if (!transactionData.categoryId) (transactionData as any).categoryId = null;
     if (!transactionData.destinationAccountId) (transactionData as any).destinationAccountId = null;
@@ -129,7 +130,7 @@ export async function createTransaction(data: {
       });
       revalidatePath("/transactions");
       revalidatePath("/");
-      return { success: true, transaction };
+      return { success: true };
     }
   } catch (error) {
     console.error("Error creating transaction:", error);
@@ -155,11 +156,12 @@ export async function updateTransaction(
   },
   updateAllInSeries?: boolean
 ) {
-    const validatedData = validateTransactionInput(data);
-    if (!validatedData || !validateId(id)) {
-      return { success: false, error: "Dados da transacao invalidos" };
+    const validationResult = validateTransactionInput(data);
+    if (!validationResult.success || !validateId(id)) {
+      return { success: false, error: validationResult.success ? "ID inválido" : `Dados inválidos: ${validationResult.error}` };
     }
   try {
+    const validatedData = validationResult.data;
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = validatedData;
     if (!updateData.categoryId) (updateData as any).categoryId = null;
     if (!updateData.destinationAccountId) (updateData as any).destinationAccountId = null;
@@ -187,6 +189,12 @@ export async function updateTransaction(
 
         for (let i = 0; i < related.length; i++) {
           const item = related[i];
+          
+          // Pula a atualização se a parcela já estiver paga e não for a parcela atual que estamos editando
+          if (item.id !== id && item.paid) {
+            continue;
+          }
+
           const hasSuffix = /\(\d+\/\d+\)$/.test(item.description);
           const itemDesc = hasSuffix ? `${newBaseDesc} (${i + 1}/${related.length})` : updateData.description;
           
@@ -203,7 +211,7 @@ export async function updateTransaction(
         }
         revalidatePath("/transactions");
         revalidatePath("/");
-        return { success: true, transaction: target };
+        return { success: true };
       }
     }
 
@@ -213,7 +221,7 @@ export async function updateTransaction(
     });
     revalidatePath("/transactions");
     revalidatePath("/");
-    return { success: true, transaction };
+    return { success: true };
   } catch (error) {
     console.error("Error updating transaction:", error);
     return { success: false, error: "Falha ao atualizar transação" };

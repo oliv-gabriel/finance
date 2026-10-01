@@ -1,12 +1,10 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { signIn as signInWebAuthn } from "next-auth/webauthn";
 import { useState } from "react";
 import { Button } from "../ui/Button";
-import { Fingerprint, User, Lock } from "lucide-react";
+import { User, Lock } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { assertPasskeySupport, passkeyErrorMessage } from "@/lib/passkeyClient";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -17,28 +15,6 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("from") || "/";
 
-  const handlePasskeyLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      assertPasskeySupport();
-      const result = await signInWebAuthn("passkey", {
-        redirect: false,
-        action: "authenticate",
-        callbackUrl
-      });
-      if (!result || result.error || !result.ok) {
-        setError("Erro ao autenticar com Passkey. Tente novamente ou use usuário/senha.");
-      } else {
-        router.push(result.url ?? callbackUrl);
-        router.refresh();
-      }
-    } catch (err: unknown) {
-      setError(passkeyErrorMessage(err, "Erro inesperado com Passkey."));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleUsernameLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,24 +55,6 @@ export default function LoginForm() {
         </div>
       )}
 
-      <Button 
-        type="button" 
-        disabled={loading} 
-        onClick={handlePasskeyLogin}
-        className="w-full bg-[#b300e4] hover:bg-[#b300e4]/90 text-white font-bold h-12 text-base shadow-[0_4px_15px_rgba(179,0,228,0.3)] hover:shadow-[0_6px_20px_rgba(179,0,228,0.4)] transition-all flex items-center justify-center gap-2 mb-8"
-      >
-        <Fingerprint className="w-5 h-5" />
-        {loading ? "Aguardando..." : "Entrar com Digital ou Face ID"}
-      </Button>
-
-      <div className="relative mb-8">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-white/10"></div>
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-[#1a1a1a] px-3 text-gray-500 font-medium uppercase tracking-wider">ou use sua senha</span>
-        </div>
-      </div>
 
       <form onSubmit={handleUsernameLogin} className="space-y-4">
         <div>

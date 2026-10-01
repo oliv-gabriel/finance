@@ -2,8 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Calendar } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+
 
 export default function DateFilter() {
   const router = useRouter();

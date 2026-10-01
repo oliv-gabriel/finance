@@ -1,36 +1,24 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 
 interface SidebarContextType {
   isCollapsed: boolean;
   toggleSidebar: () => void;
+  setIsCollapsed: (value: boolean) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("sidebar_collapsed");
-    if (saved !== null) {
-      setIsCollapsed(saved === "true");
-    }
-    setMounted(true);
-  }, []);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const toggleSidebar = () => {
-    setIsCollapsed((prev) => {
-      const newState = !prev;
-      localStorage.setItem("sidebar_collapsed", String(newState));
-      return newState;
-    });
+    setIsCollapsed((prev) => !prev);
   };
 
   return (
-    <SidebarContext.Provider value={{ isCollapsed, toggleSidebar }}>
+    <SidebarContext.Provider value={{ isCollapsed, toggleSidebar, setIsCollapsed }}>
       {children}
     </SidebarContext.Provider>
   );
