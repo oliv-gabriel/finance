@@ -1,14 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { 
-  MoreVertical, CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag, 
-  ChevronUp, Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone, 
-  Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon, 
+import React, { useEffect, useRef, useState } from "react";
+import {
+  CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag,
+  Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone,
+  Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon,
   ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle, ArrowRightLeft
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toggleTransactionPaid, deleteTransaction } from "@/app/actions/transactions";
 
@@ -19,6 +17,7 @@ interface Transaction {
   date: Date | string;
   type: string;
   paid: boolean;
+  seriesId?: string | null;
   category?: {
     name: string;
     color: string;
@@ -79,17 +78,30 @@ export default function TransactionTable({ transactions, summary }: TransactionT
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "pending">("all");
   
-  // Modais e Estados de Ação
-  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-  const [deleteModalTx, setDeleteModalTx] = useState<Transaction | null>(null);
-  const [editModalTx, setEditModalTx] = useState<Transaction | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [dialogTx, setDialogTx] = useState<Transaction | null>(null);
+  const [dialogMode, setDialogMode] = useState<"details" | "delete" | "edit">("details");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (dialogTx && dialog && !dialog.open) dialog.showModal();
+    if (!dialogTx && dialog?.open) dialog.close();
+  }, [dialogTx]);
+
+  const openDialog = (tx: Transaction, mode: "details" | "delete" | "edit") => {
+    setDialogMode(mode);
+    setDialogTx(tx);
+  };
+
+  const closeDialog = () => {
+    dialogRef.current?.close();
+    setDialogTx(null);
+    setIsDeleting(false);
+  };
+
   const isSeries = (tx: Transaction) => {
-    return Boolean((tx as any).seriesId || /\(\d+\/\d+\)/.test(tx.description));
+    return Boolean(tx.seriesId || /\(\d+\/\d+\)/.test(tx.description));
   };
 
   const handleTogglePaid = async (id: string, currentStatus: boolean) => {
@@ -106,14 +118,21 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
   const handleEditClick = (tx: Transaction) => {
     if (isSeries(tx)) {
-      setEditModalTx(tx);
+      openDialog(tx, "edit");
     } else {
       router.push(`/transactions/edit/${tx.id}`);
     }
   };
 
   const handleDeleteClick = (tx: Transaction) => {
-    setDeleteModalTx(tx);
+    openDialog(tx, "delete");
+  };
+
+  const confirmDelete = async (deleteAllInSeries: boolean) => {
+    if (!dialogTx) return;
+    setIsDeleting(true);
+    await deleteTransaction(dialogTx.id, deleteAllInSeries);
+    closeDialog();
   };
 
   const formatCurrency = (value: number) => {
@@ -182,6 +201,9 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     else if (t.type === "EXPENSE") calcExpense += t.amount;
   });
   const calcBalance = calcIncome - calcExpense;
+  const selectedTx = dialogMode === "details" ? dialogTx : null;
+  const deleteModalTx = dialogMode === "delete" ? dialogTx : null;
+  const editModalTx = dialogMode === "edit" ? dialogTx : null;
 
   return (
     <div>
@@ -205,7 +227,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                     return (
                       <div
                         key={t.id}
-                        onClick={() => setSelectedTx(t)}
+                        onClick={() => openDialog(t, "details")}
                         className="group/item flex items-center justify-between p-4 hover:bg-muted/40 transition-colors cursor-pointer select-none"
                       >
                         <div className="flex items-center min-w-0 pr-3">
@@ -282,7 +304,16 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
       </div>
 
-      {/* Modal / Pop-up de Detalhes da Transação */}
+      <dialog
+        ref={dialogRef}
+        onClose={() => setDialogTx(null)}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeDialog();
+        }}
+        className="m-0 h-full max-h-none w-full max-w-none bg-transparent p-0 text-foreground backdrop:bg-black/80 backdrop:backdrop-blur-sm"
+      >
+      {/* Detalhes da transação */}
       {selectedTx && (() => {
         const match = selectedTx.description.match(/\((\d+)\/(\d+)\)/);
         const isInstallment = !!match;
@@ -291,9 +322,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
         const progressPercentage = isInstallment ? Math.round((currentInstallment / totalInstallments) * 100) : 0;
         const isFixedTransaction = isSeries(selectedTx) && !isInstallment;
 
-        if (!mounted) return null;
-
-        return createPortal(
+        return (
           <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
             <div 
               className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
@@ -317,7 +346,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                     <p className="text-xs text-muted-foreground">{selectedTx.category?.name || "Sem categoria"} • {selectedTx.account?.name || "Carteira"}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedTx(null)} className="p-1.5 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors rounded-full cursor-pointer">
+                <button onClick={closeDialog} className="p-1.5 bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors rounded-full cursor-pointer">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -356,7 +385,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 <button
                   onClick={() => {
                     handleTogglePaid(selectedTx.id, selectedTx.paid);
-                    setSelectedTx(null);
+                    closeDialog();
                   }}
                   className={`w-full py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 border transition-all cursor-pointer shadow-sm ${
                     selectedTx.paid 
@@ -374,9 +403,12 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 <div className="grid grid-cols-2 gap-2.5">
                   <button 
                     onClick={() => {
-                      const target = selectedTx;
-                      setSelectedTx(null);
-                      handleEditClick(target);
+                      if (isSeries(selectedTx)) {
+                        setDialogMode("edit");
+                      } else {
+                        closeDialog();
+                        router.push(`/transactions/edit/${selectedTx.id}`);
+                      }
                     }}
                     className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
                   >
@@ -385,9 +417,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                   <button
                     onClick={() => {
-                      const target = selectedTx;
-                      setSelectedTx(null);
-                      handleDeleteClick(target);
+                      setDialogMode("delete");
                     }}
                     className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
                   >
@@ -397,14 +427,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
 
                 {(isFixedTransaction || isInstallment) && (
                   <button
-                    onClick={async () => {
-                      if(confirm(isFixedTransaction ? "Deseja realmente cancelar esta Assinatura Fixa? Isso irá apagar todas as cobranças futuras que ainda não foram pagas." : "Deseja realmente apagar esta e todas as outras parcelas vinculadas?")) {
-                        setIsDeleting(true);
-                        await deleteTransaction(selectedTx.id, true);
-                        setIsDeleting(false);
-                        setSelectedTx(null);
-                      }
-                    }}
+                    onClick={() => setDialogMode("delete")}
                     className="w-full py-3.5 px-4 mt-2 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer"
                   >
                     <span>{isFixedTransaction ? "🚫 Cancelar Conta Fixa (Excluir Futuras)" : "💥 Cancelar Série de Parcelas"}</span>
@@ -412,10 +435,92 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                 )}
               </div>
             </div>
-          </div>,
-          document.body
+          </div>
         );
       })()}
+
+      {deleteModalTx && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in-0">
+          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-[#18181b] p-6 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center gap-3.5 border-b border-border/40 pb-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
+                <Trash2 className="size-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold leading-tight">Excluir lançamento</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{deleteModalTx.description}</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+              {isSeries(deleteModalTx)
+                ? "Este lançamento pertence a uma série. Escolha o alcance da exclusão."
+                : "Esta transação será excluída permanentemente."}
+            </p>
+
+            <div className="space-y-2.5">
+              <button
+                disabled={isDeleting}
+                onClick={() => confirmDelete(false)}
+                className="w-full rounded-xl border border-border/80 bg-card px-4 py-3 text-sm font-bold transition-colors hover:bg-muted disabled:opacity-50"
+              >
+                {isSeries(deleteModalTx) ? "Excluir apenas este lançamento" : "Confirmar exclusão"}
+              </button>
+              {isSeries(deleteModalTx) && (
+                <button
+                  disabled={isDeleting}
+                  onClick={() => confirmDelete(true)}
+                  className="w-full rounded-xl bg-rose-500 px-4 py-3 text-sm font-extrabold text-white transition-colors hover:bg-rose-600 disabled:opacity-50"
+                >
+                  Excluir toda a série
+                </button>
+              )}
+            </div>
+
+            <button disabled={isDeleting} onClick={closeDialog} className="w-full py-2.5 text-sm font-bold text-muted-foreground hover:text-foreground disabled:opacity-50">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {editModalTx && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in-0">
+          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-[#18181b] p-6 shadow-2xl animate-in zoom-in-95">
+            <div className="flex items-center gap-3.5 border-b border-border/40 pb-3">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#b300e4]/15 text-[#b300e4]">
+                <Edit2 className="size-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold leading-tight">Editar lançamento em série</h3>
+                <p className="mt-0.5 text-xs text-muted-foreground">{editModalTx.description}</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium leading-relaxed text-muted-foreground">
+              Escolha se a alteração deve atingir apenas este lançamento ou toda a série pendente.
+            </p>
+
+            {(["single", "series"] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => {
+                  closeDialog();
+                  router.push(`/transactions/edit/${editModalTx.id}?mode=${mode}`);
+                }}
+                className={`w-full rounded-2xl px-4 py-3.5 text-sm font-bold transition-colors ${mode === "series" ? "bg-[#b300e4] text-white hover:bg-[#b300e4]/90" : "border border-border/80 bg-card hover:bg-muted"}`}
+              >
+                {mode === "series" ? "Editar toda a série" : "Editar apenas este lançamento"}
+              </button>
+            ))}
+
+            <button onClick={closeDialog} className="w-full py-2 text-sm font-bold text-muted-foreground hover:text-foreground">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      </dialog>
 
 
       {/* ========================================================================= */}
@@ -474,15 +579,15 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
 
           <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
-            {[
+            {([
               { id: "all", label: "Todas" },
               { id: "income", label: "Entradas" },
               { id: "expense", label: "Saídas" },
               { id: "pending", label: "Pendentes" },
-            ].map((tab) => (
+            ] as const).map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setFilterType(tab.id as any)}
+                onClick={() => setFilterType(tab.id)}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   filterType === tab.id
                     ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]"
@@ -525,7 +630,7 @@ export default function TransactionTable({ transactions, summary }: TransactionT
                         return (
                           <tr 
                             key={t.id} 
-                            onClick={() => setSelectedTx(t)}
+                            onClick={() => openDialog(t, "details")}
                             className="group hover:bg-muted/30 transition-colors cursor-pointer"
                           >
                             <td className="px-6 py-4 align-middle">
@@ -642,142 +747,6 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           )}
         </div>
       </div>
-
-      {/* ========================================================================= */}
-      {/* 3. MODAIS DE EXCLUSÃO E EDIÇÃO EM SÉRIE                                   */}
-      {/* ========================================================================= */}
-
-      {/* Modal de Exclusão (Única vs Todas as Parcelas) */}
-      {deleteModalTx && mounted && createPortal(
-        <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
-          <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
-            <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
-              <div className="size-11 rounded-2xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0">
-                <Trash2 className="w-6 h-6 stroke-[2.2]" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-lg leading-tight">Excluir Lançamento</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{deleteModalTx.description}</p>
-              </div>
-            </div>
-
-            {isSeries(deleteModalTx) ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                  Este lançamento faz parte de um <strong>parcelamento ou série recorrente</strong>. Como deseja realizar a exclusão?
-                </p>
-                <div className="space-y-2.5 pt-2">
-                  <button
-                    disabled={isDeleting}
-                    onClick={async () => {
-                      setIsDeleting(true);
-                      await deleteTransaction(deleteModalTx.id, false);
-                      setIsDeleting(false);
-                      setDeleteModalTx(null);
-                    }}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    🗑️ Excluir apenas esta parcela (Mês atual)
-                  </button>
-
-                  <button
-                    disabled={isDeleting}
-                    onClick={async () => {
-                      setIsDeleting(true);
-                      await deleteTransaction(deleteModalTx.id, true);
-                      setIsDeleting(false);
-                      setDeleteModalTx(null);
-                    }}
-                    className="w-full py-3 px-4 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    💥 Excluir TODAS as parcelas desta série
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-                  Tem certeza que deseja excluir permanentemente esta transação do sistema? Esta ação não poderá ser desfeita.
-                </p>
-                <button
-                  disabled={isDeleting}
-                  onClick={async () => {
-                    setIsDeleting(true);
-                    await deleteTransaction(deleteModalTx.id, false);
-                    setIsDeleting(false);
-                    setDeleteModalTx(null);
-                  }}
-                  className="w-full py-3 px-4 rounded-xl font-extrabold text-sm bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  Confirmar Exclusão
-                </button>
-              </div>
-            )}
-
-            <button
-              disabled={isDeleting}
-              onClick={() => setDeleteModalTx(null)}
-              className="w-full py-2.5 rounded-xl font-bold text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              Cancelar e Voltar
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Modal de Edição (Única vs Todas as Parcelas) */}
-      {editModalTx && mounted && createPortal(
-        <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in-0">
-          <div className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-6 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95">
-            <div className="flex items-center gap-3.5 pb-3 border-b border-border/40">
-              <div className="size-11 rounded-2xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shrink-0">
-                <Edit2 className="w-6 h-6 stroke-[2.2]" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-lg leading-tight">Editar Lançamento em Série</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{editModalTx.description}</p>
-              </div>
-            </div>
-
-            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-              Esta transação faz parte de uma <strong>série parcelada ou recorrente</strong>. Deseja alterar apenas as informações desta parcela específica ou aplicar a alteração para todas?
-            </p>
-
-            <div className="space-y-2.5 pt-1">
-              <button
-                onClick={() => {
-                  router.push(`/transactions/edit/${editModalTx.id}?mode=single`);
-                  setEditModalTx(null);
-                }}
-                className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-card hover:bg-muted text-foreground border border-border/80 flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer"
-              >
-                <span>✏️ Editar apenas esta parcela</span>
-                <span className="text-[11px] font-normal text-muted-foreground">Altera somente o registro deste mês</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  router.push(`/transactions/edit/${editModalTx.id}?mode=series`);
-                  setEditModalTx(null);
-                }}
-                className="w-full py-3.5 px-4 rounded-2xl font-extrabold text-sm bg-[#b300e4] hover:bg-[#b300e4]/90 text-white shadow-lg shadow-[#b300e4]/25 flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer"
-              >
-                <span>🚀 Editar TODAS as parcelas da série</span>
-                <span className="text-[11px] font-medium text-white/80">Aplica novo valor a todas parcelas pendentes</span>
-              </button>
-            </div>
-
-            <button
-              onClick={() => setEditModalTx(null)}
-              className="w-full py-2 rounded-xl font-bold text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
 
       {/* ========================================================================= */}
       {/* 4. TOTALIZADOR FIXO NA TELA (MOBILE APENAS)                               */}

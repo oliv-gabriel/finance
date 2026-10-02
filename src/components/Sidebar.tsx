@@ -84,6 +84,11 @@ export default function Sidebar() {
             <Download className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
             {!isCollapsed && <span className="truncate">Exportar Dados</span>}
           </Link>
+          {!isCollapsed && (
+            <div className="pt-2 px-3">
+              <span className="text-xs text-muted-foreground/60 font-mono">v1.1.0</span>
+            </div>
+          )}
         </div>
       </div>
     </aside>

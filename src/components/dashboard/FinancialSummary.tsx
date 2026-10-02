@@ -3,7 +3,9 @@
 import React, { useState, useRef } from "react";
 import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
 import { payCardBill } from "@/app/actions/transactions";
+import { toggleAccountIncludeInTotal } from "@/app/actions/accounts";
 import CardInvoiceModal from "@/components/accounts/CardInvoiceModal";
+import { useRouter } from "next/navigation";
 
 interface CardData {
   id: string;
@@ -43,7 +45,9 @@ const getBankIcon = (name: string) => {
 };
 
 export default function FinancialSummary({ creditCards, accounts, month, year }: FinancialSummaryProps) {
+  const router = useRouter();
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [togglingAccountId, setTogglingAccountId] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   const accountsRef = useRef<HTMLDivElement>(null);
@@ -83,6 +87,21 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
       alert("Erro ao processar pagamento");
     } finally {
       setPayingId(null);
+    }
+  };
+
+  const toggleAccountVisibility = async (account: AccountData) => {
+    if (togglingAccountId) return;
+
+    setTogglingAccountId(account.id);
+    try {
+      const result = await toggleAccountIncludeInTotal(account.id, account.includeInTotal === false);
+      if (!result.success) alert(result.error || "Não foi possível alterar a visibilidade da conta.");
+      else router.refresh();
+    } catch {
+      alert("Não foi possível alterar a visibilidade da conta.");
+    } finally {
+      setTogglingAccountId(null);
     }
   };
 
@@ -127,34 +146,45 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
               accountChunks.map((chunk, chunkIndex) => (
                 <ul key={chunkIndex} className="flex w-full min-w-0 flex-none snap-center flex-col gap-2 divide-y divide-border/30">
                   {chunk.map((acc) => (
-                    <li key={acc.id} className="hover:bg-muted/40 flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 transition-colors">
-                  <div className="flex items-center gap-3.5">
-                    <img
-                      alt={acc.name}
-                      width={42}
-                      height={42}
-                      className="rounded-full border border-border/40 object-contain p-1 bg-background/50"
-                      src={getBankIcon(acc.name)}
-                    />
-                    <div className="flex flex-col">
-                      <p className="text-foreground text-sm md:text-base font-semibold leading-snug">{acc.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
-                        <span>Pessoal</span>
-                        {acc.includeInTotal === false && (
-                          <span title="Conta oculta do saldo atual" className="inline-flex items-center gap-1 font-medium text-muted-foreground ml-1">
-                            • <EyeOff className="h-3 w-3 inline" /> Oculta
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[11px] font-medium text-muted-foreground uppercase block leading-none mb-1">Saldo de</span>
-                    <p className={`font-bold tabular-nums text-base md:text-lg ${acc.balance >= 0 ? "text-foreground" : "text-red-500"}`}>
-                      {formatCurrency(acc.balance)}
-                    </p>
-                  </div>
-                </li>
+                    <li key={acc.id}>
+                      <button
+                        type="button"
+                        disabled={Boolean(togglingAccountId)}
+                        onClick={() => toggleAccountVisibility(acc)}
+                        title={acc.includeInTotal === false ? "Clique para incluir esta conta no saldo atual" : "Clique para ocultar esta conta do saldo atual"}
+                        className="flex w-full cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 text-left transition-colors hover:bg-muted/40 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        <div className="flex items-center gap-3.5">
+                          <img
+                            alt={acc.name}
+                            width={42}
+                            height={42}
+                            className="rounded-full border border-border/40 object-contain p-1 bg-background/50"
+                            src={getBankIcon(acc.name)}
+                          />
+                          <div className="flex flex-col">
+                            <p className="text-foreground text-sm md:text-base font-semibold leading-snug">{acc.name}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground">
+                              <span>Pessoal</span>
+                              {togglingAccountId === acc.id && acc.includeInTotal !== false && (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              )}
+                              {acc.includeInTotal === false && (
+                                <span title="Conta oculta do saldo atual" className="inline-flex items-center gap-1 font-medium text-muted-foreground ml-1">
+                                  • {togglingAccountId === acc.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <EyeOff className="h-3 w-3 inline" />} Oculta
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[11px] font-medium text-muted-foreground uppercase block leading-none mb-1">Saldo de</span>
+                          <p className={`font-bold tabular-nums text-base md:text-lg ${acc.balance >= 0 ? "text-foreground" : "text-red-500"}`}>
+                            {formatCurrency(acc.balance)}
+                          </p>
+                        </div>
+                      </button>
+                    </li>
                   ))}
                 </ul>
               ))

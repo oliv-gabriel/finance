@@ -3,7 +3,6 @@ import { getTransactions } from "@/app/actions/transactions";
 import Navbar from "@/components/Navbar";
 import { History, CheckCircle2, Wallet, ArrowUpCircle, ArrowDownCircle, Eye } from "lucide-react";
 import Link from "next/link";
-import Notepad from "@/components/dashboard/Notepad";
 import { ExpensesBarChart, CategoriesPieChart } from "@/components/dashboard/DashboardCharts";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
@@ -40,10 +39,6 @@ export default async function Dashboard({
           year={year}
         />
 
-        {/* Row do Bloco de Notas */}
-        <div className="w-full">
-          <Notepad />
-        </div>
 
         <div className="grid gap-6 lg:grid-cols-7">
           <div className="lg:col-span-4 bg-card border border-border/70 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
