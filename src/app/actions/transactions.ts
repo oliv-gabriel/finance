@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccountBillingCycle, getTransactionWhereForMonth } from "@/lib/billingCycles";
 import { toCents, toNumber } from "@/lib/money";
+import { getCurrentUserId } from "@/lib/auth-utils";
 import { validateId, validatePeriod, validateTransactionInput } from "@/lib/validation";
 import type { Prisma } from "@prisma/client";
 
@@ -20,12 +21,16 @@ export async function getTransactions(options?: {
       if (!validatePeriod(options.month, options.year)) {
         return [];
       }
-      const allAccounts = await prisma.account.findMany();
+      const userId = await getCurrentUserId();
+      const allAccounts = await prisma.account.findMany({ where: { userId } });
       monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
     }
 
+    const userId = await getCurrentUserId();
+
     const transactions = await prisma.transaction.findMany({
       where: {
+        userId,
         categoryId: options?.categoryId,
         type: options?.type,
         ...monthFilter,
@@ -71,12 +76,14 @@ export async function createTransaction(data: {
     }
     const validatedData = validationResult.data;
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...transactionData } = validatedData;
+    const userId = await getCurrentUserId();
+    
     if (!transactionData.categoryId) (transactionData as any).categoryId = null;
     if (!transactionData.destinationAccountId) (transactionData as any).destinationAccountId = null;
     transactionData.amount = toCents(transactionData.amount);
 
     const account = await prisma.account.findUnique({
-      where: { id: transactionData.accountId },
+      where: { id: transactionData.accountId, userId },
     });
 
     const isFixed = entryType === "fixa";
@@ -109,6 +116,7 @@ export async function createTransaction(data: {
 
         transactionsToCreate.push({
           ...transactionData,
+          userId,
           amount: toCents(amount),
           description,
           seriesId,
@@ -126,7 +134,7 @@ export async function createTransaction(data: {
       return { success: true };
     } else {
       const transaction = await prisma.transaction.create({
-        data: transactionData,
+        data: { ...transactionData, userId },
       });
       revalidatePath("/transactions");
       revalidatePath("/");
@@ -163,19 +171,21 @@ export async function updateTransaction(
   try {
     const validatedData = validationResult.data;
     const { entryType, recurrenceFreq, quantity, installmentValueType, ...updateData } = validatedData;
+    const userId = await getCurrentUserId();
     if (!updateData.categoryId) (updateData as any).categoryId = null;
     if (!updateData.destinationAccountId) (updateData as any).destinationAccountId = null;
     
     updateData.amount = toCents(updateData.amount);
     if (updateAllInSeries) {
-      const target = await prisma.transaction.findUnique({ where: { id } });
+      const target = await prisma.transaction.findUnique({ where: { id, userId } });
       if (target) {
         let baseDescription = target.description;
         const match = target.description.match(/^(.*?)\s*\(\d+\/\d+\)$/);
         if (match) baseDescription = match[1].trim();
         
         const related = await prisma.transaction.findMany({
-          where: target.seriesId ? { seriesId: target.seriesId } : {
+          where: target.seriesId ? { seriesId: target.seriesId, userId } : {
+            userId,
             accountId: target.accountId,
             categoryId: target.categoryId,
             description: { startsWith: baseDescription },
@@ -199,7 +209,7 @@ export async function updateTransaction(
           const itemDesc = hasSuffix ? `${newBaseDesc} (${i + 1}/${related.length})` : updateData.description;
           
           await prisma.transaction.update({
-            where: { id: item.id },
+            where: { id: item.id, userId },
             data: {
               amount: updateData.amount,
               categoryId: updateData.categoryId,
@@ -216,7 +226,7 @@ export async function updateTransaction(
     }
 
     const transaction = await prisma.transaction.update({
-      where: { id },
+      where: { id, userId },
       data: updateData,
     });
     revalidatePath("/transactions");
@@ -234,8 +244,9 @@ export async function toggleTransactionPaid(id: string, paid: boolean) {
     if (!validateId(id) || typeof paid !== "boolean") {
       return { success: false, error: "Dados invalidos" };
     }
+    const userId = await getCurrentUserId();
     await prisma.transaction.update({
-      where: { id },
+      where: { id, userId },
       data: { paid },
     });
     revalidatePath("/transactions");
@@ -249,7 +260,10 @@ export async function toggleTransactionPaid(id: string, paid: boolean) {
 
 export async function deleteAllTransactions() {
   try {
-    await prisma.transaction.deleteMany();
+    const userId = await getCurrentUserId();
+    await prisma.transaction.deleteMany({
+      where: { userId }
+    });
     revalidatePath("/transactions");
     revalidatePath("/");
     return { success: true };
@@ -264,15 +278,17 @@ export async function deleteTransaction(id: string, deleteAllInSeries?: boolean)
     if (!validateId(id)) {
       return { success: false, error: "Identificador invalido" };
     }
+    const userId = await getCurrentUserId();
     if (deleteAllInSeries) {
-      const target = await prisma.transaction.findUnique({ where: { id } });
+      const target = await prisma.transaction.findUnique({ where: { id, userId } });
       if (target) {
         let baseDescription = target.description;
         const match = target.description.match(/^(.*?)\s*\(\d+\/\d+\)$/);
         if (match) baseDescription = match[1].trim();
         
         await prisma.transaction.deleteMany({
-          where: target.seriesId ? { seriesId: target.seriesId } : {
+          where: target.seriesId ? { seriesId: target.seriesId, userId } : {
+            userId,
             accountId: target.accountId,
             categoryId: target.categoryId,
             description: { startsWith: baseDescription },
@@ -285,7 +301,7 @@ export async function deleteTransaction(id: string, deleteAllInSeries?: boolean)
     }
 
     await prisma.transaction.delete({
-      where: { id },
+      where: { id, userId },
     });
     revalidatePath("/transactions");
     revalidatePath("/");
@@ -298,7 +314,8 @@ export async function deleteTransaction(id: string, deleteAllInSeries?: boolean)
 
 export async function payCardBill(cardId: string, month: number, year: number, paymentAccountId?: string) {
   try {
-    const card = await prisma.account.findUnique({ where: { id: cardId } });
+    const userId = await getCurrentUserId();
+    const card = await prisma.account.findUnique({ where: { id: cardId, userId } });
     if (!card) return { success: false, error: "Cartão não encontrado" };
 
     const { startDate, endDate } = getAccountBillingCycle(card, month, year);
@@ -311,6 +328,7 @@ export async function payCardBill(cardId: string, month: number, year: number, p
     // Calcular o total da fatura que será paga
     const pendingTransactions = await prisma.transaction.findMany({
       where: {
+        userId,
         accountId: cardId,
         date: { gte: startDate, lte: endDate },
         type: "EXPENSE",
@@ -326,6 +344,7 @@ export async function payCardBill(cardId: string, month: number, year: number, p
       // para descontar o saldo da conta origem mas não contabilizar como despesa dupla
       await prisma.transaction.create({
         data: {
+          userId,
           description: `Pagamento Fatura ${card.name}`,
           amount: invoiceTotal,
           date: new Date(),
@@ -339,6 +358,7 @@ export async function payCardBill(cardId: string, month: number, year: number, p
 
     await prisma.transaction.updateMany({
       where: {
+        userId,
         accountId: cardId,
         date: {
           gte: startDate,

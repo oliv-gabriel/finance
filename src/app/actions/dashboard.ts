@@ -3,14 +3,17 @@
 import { prisma } from "@/lib/prisma";
 import { getTransactionWhereForMonth } from "@/lib/billingCycles";
 import { toNumber } from "@/lib/money";
+import { getCurrentUserId } from "@/lib/auth-utils";
 
 export async function getDashboardData(month?: number, year?: number) {
   try {
     const now = new Date();
     const targetMonth = month ?? (now.getMonth() + 1);
     const targetYear = year ?? now.getFullYear();
+    const userId = await getCurrentUserId();
 
     const allAccounts = await prisma.account.findMany({
+      where: { userId },
       select: {
         id: true,
         name: true,
@@ -32,7 +35,7 @@ export async function getDashboardData(month?: number, year?: number) {
     // Once the account list is known, the remaining database work is independent.
     const [transactions, balances, transfersIn, categories, allUnpaid] = await Promise.all([
       prisma.transaction.findMany({
-        where: whereClause,
+        where: { ...whereClause, userId },
         select: {
           amount: true,
           date: true,
@@ -44,12 +47,13 @@ export async function getDashboardData(month?: number, year?: number) {
       }),
       prisma.transaction.groupBy({
         by: ["accountId", "type"],
-        where: { paid: true, accountId: { in: contaIds } },
+        where: { userId, paid: true, accountId: { in: contaIds } },
         _sum: { amount: true },
       }),
       prisma.transaction.groupBy({
         by: ["destinationAccountId"],
         where: {
+          userId,
           paid: true,
           type: "TRANSFER",
           destinationAccountId: { in: contaIds },
@@ -62,6 +66,7 @@ export async function getDashboardData(month?: number, year?: number) {
       prisma.transaction.groupBy({
         by: ["accountId"],
         where: {
+          userId,
           paid: false,
           type: "EXPENSE",
           accountId: { in: cartaoIds },

@@ -1,5 +1,6 @@
 import { getDashboardData } from "@/app/actions/dashboard";
 import { getTransactions } from "@/app/actions/transactions";
+import { isAdmin } from "@/lib/auth-utils";
 import Navbar from "@/components/Navbar";
 import { History, CheckCircle2, Wallet, ArrowUpCircle, ArrowDownCircle, Eye } from "lucide-react";
 import Link from "next/link";
@@ -13,6 +14,7 @@ export default async function Dashboard({
 }: {
   searchParams: Promise<{ month?: string; year?: string }>;
 }) {
+  const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
@@ -25,7 +27,7 @@ export default async function Dashboard({
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">
-      <Navbar summary={data.summary} />
+      <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6 md:space-y-8 flex-1 overflow-auto">
         {/* Row de Métricas Centrais */}

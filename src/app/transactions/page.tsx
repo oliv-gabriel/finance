@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import DeleteAllTransactionsButton from "@/components/transactions/DeleteAllTransactionsButton";
+import { isAdmin } from "@/lib/auth-utils";
 import Navbar from "@/components/Navbar";
 import TransactionTable from "@/components/transactions/TransactionTable";
 
@@ -12,6 +13,7 @@ export default async function TransactionsPage({
 }: {
   searchParams: Promise<{ month?: string; year?: string }>;
 }) {
+  const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
@@ -24,7 +26,7 @@ export default async function TransactionsPage({
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">
-      <Navbar summary={data.summary} />
+      <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1 pb-36 md:pb-10">
         {/* Cabeçalho Desktop vs Mobile */}

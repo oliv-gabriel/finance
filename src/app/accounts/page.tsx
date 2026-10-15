@@ -3,6 +3,7 @@ import { getDashboardData } from "@/app/actions/dashboard";
 import { CreditCard, Landmark, Trash2, Eye, EyeOff } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import AccountForm from "@/components/accounts/AccountForm";
+import { isAdmin } from "@/lib/auth-utils";
 import Navbar from "@/components/Navbar";
 
 export default async function AccountsPage({
@@ -10,6 +11,7 @@ export default async function AccountsPage({
 }: {
   searchParams: Promise<{ month?: string; year?: string }>;
 }) {
+  const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
@@ -38,7 +40,7 @@ export default async function AccountsPage({
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">
-      <Navbar summary={data.summary} />
+      <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-1 overflow-auto">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

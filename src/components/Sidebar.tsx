@@ -11,11 +11,14 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDollarSign,
-  Landmark
+  Landmark,
+  ShieldAlert,
+  LogOut
 } from "lucide-react";
 import { useSidebar } from "./SidebarProvider";
 import { Button } from "./ui/Button";
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
 
 const menuItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -24,7 +27,7 @@ const menuItems = [
   { name: "Categorias", href: "/categories", icon: Tags },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
   const { isCollapsed, setIsCollapsed } = useSidebar();
 
@@ -84,6 +87,33 @@ export default function Sidebar() {
             <Download className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
             {!isCollapsed && <span className="truncate">Exportar Dados</span>}
           </Link>
+
+          {isAdmin && (
+            <Link
+              href="/admin"
+              title={isCollapsed ? "Painel Admin" : undefined}
+              className={cn(
+                "flex items-center rounded-lg px-3 py-2 text-sm font-medium text-rose-500 transition-colors hover:bg-rose-500/10 mt-1",
+                isCollapsed && "justify-center px-2"
+              )}
+            >
+              <ShieldAlert className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
+              {!isCollapsed && <span className="truncate">Painel Admin</span>}
+            </Link>
+          )}
+
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            title={isCollapsed ? "Sair" : undefined}
+            className={cn(
+              "w-full flex items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted mt-1",
+              isCollapsed && "justify-center px-2"
+            )}
+          >
+            <LogOut className={cn("h-5 w-5", !isCollapsed && "mr-3")} />
+            {!isCollapsed && <span className="truncate">Sair</span>}
+          </button>
+
           {!isCollapsed && (
             <div className="pt-2 px-3">
               <span className="text-xs text-muted-foreground/60 font-mono">v1.1.0</span>

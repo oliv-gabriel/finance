@@ -36,11 +36,14 @@ model Account {
 
   transactions Transaction[] @relation("AccountTransactions")
   destinationTransactions Transaction[] @relation("TransferDest")
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   includeInTotal Boolean     @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
   @@index([type])
+  @@index([userId])
 }
 
 model Transaction {
@@ -64,6 +67,9 @@ model Transaction {
   // External Reference (e.g., from Email or Open Finance)
   externalId          String?  @unique
 
+  userId              String?
+  user                User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -72,6 +78,7 @@ model Transaction {
   @@index([categoryId])
   @@index([type, paid])
   @@index([accountId, date, type, paid])
+  @@index([userId])
 }
 
 model Budget {
@@ -81,10 +88,12 @@ model Budget {
   year       Int
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  @@unique([categoryId, month, year])
+  @@unique([categoryId, month, year, userId])
 }
 
 // --- Auth.js Models ---
@@ -98,6 +107,10 @@ model User {
   sessions      Session[]
   authAccounts  AuthAccount[]
   Authenticator Authenticator[]
+
+  accounts      Account[]
+  transactions  Transaction[]
+  budgets       Budget[]
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

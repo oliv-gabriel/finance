@@ -4,10 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getAccountBillingCycle } from "@/lib/billingCycles";
 import { toNumber } from "@/lib/money";
+import { getCurrentUserId } from "@/lib/auth-utils";
 
 export async function getAccounts() {
   try {
+    const userId = await getCurrentUserId();
     const accounts = await prisma.account.findMany({
+      where: { userId },
       include: {
         bank: true,
       },
@@ -35,9 +38,11 @@ export async function createAccount(data: {
 }) {
   try {
     const { bankId, ...rest } = data;
+    const userId = await getCurrentUserId();
     const account = await prisma.account.create({
       data: {
         ...rest,
+        userId,
         includeInTotal: rest.includeInTotal !== undefined ? rest.includeInTotal : true,
         bankId: bankId && bankId.trim() !== "" ? bankId : null,
       },
@@ -56,8 +61,9 @@ export async function createAccount(data: {
 
 export async function deleteAccount(id: string) {
   try {
+    const userId = await getCurrentUserId();
     await prisma.account.delete({
-      where: { id },
+      where: { id, userId },
     });
     revalidatePath("/accounts");
     revalidatePath("/transactions/new");
@@ -71,8 +77,9 @@ export async function deleteAccount(id: string) {
 
 export async function toggleAccountIncludeInTotal(id: string, includeInTotal: boolean) {
   try {
+    const userId = await getCurrentUserId();
     await prisma.account.update({
-      where: { id },
+      where: { id, userId },
       data: { includeInTotal },
     });
     revalidatePath("/accounts");
@@ -86,8 +93,9 @@ export async function toggleAccountIncludeInTotal(id: string, includeInTotal: bo
 
 export async function getCardInvoiceDetails(cardId: string, month: number, year: number) {
   try {
+    const userId = await getCurrentUserId();
     const card = await prisma.account.findUnique({
-      where: { id: cardId },
+      where: { id: cardId, userId },
       include: { bank: true },
     });
     if (!card) return null;
@@ -97,6 +105,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
     const [transactions, contas] = await Promise.all([
       prisma.transaction.findMany({
         where: {
+          userId,
           accountId: cardId,
           date: {
             gte: startDate,
@@ -109,7 +118,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
         orderBy: { date: "desc" },
       }),
       prisma.account.findMany({
-        where: { type: "CONTA" },
+        where: { type: "CONTA", userId },
         select: { id: true, name: true },
       }),
     ]);

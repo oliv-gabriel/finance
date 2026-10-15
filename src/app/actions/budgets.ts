@@ -4,11 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getTransactionWhereForMonth } from "@/lib/billingCycles";
 import { toCents, toNumber } from "@/lib/money";
+import { getCurrentUserId } from "@/lib/auth-utils";
 
 export async function getBudgets(month: number, year: number) {
   try {
+    const userId = await getCurrentUserId();
     const budgets = await prisma.budget.findMany({
-      where: { month, year },
+      where: { month, year, userId },
       include: {
         category: true,
       },
@@ -27,18 +29,20 @@ export async function upsertBudget(data: {
   year: number;
 }) {
   try {
+    const userId = await getCurrentUserId();
     const budget = await prisma.budget.upsert({
       where: {
-        categoryId_month_year: {
+        categoryId_month_year_userId: {
           categoryId: data.categoryId,
           month: data.month,
           year: data.year,
+          userId,
         },
       },
       update: {
         amount: toCents(data.amount),
       },
-      create: { ...data, amount: toCents(data.amount) },
+      create: { ...data, userId, amount: toCents(data.amount) },
     });
     revalidatePath("/budgets");
     revalidatePath("/");
@@ -51,10 +55,11 @@ export async function upsertBudget(data: {
 
 export async function getBudgetSummary(month: number, year: number) {
   try {
+    const userId = await getCurrentUserId();
     // Get all budgets for the month
     const [budgets, allAccounts] = await Promise.all([
-      prisma.budget.findMany({ where: { month, year } }),
-      prisma.account.findMany(),
+      prisma.budget.findMany({ where: { month, year, userId } }),
+      prisma.account.findMany({ where: { userId } }),
     ]);
 
     // Get all expense transactions for the month respecting credit card closing days
@@ -62,6 +67,7 @@ export async function getBudgetSummary(month: number, year: number) {
 
     const transactions = await prisma.transaction.findMany({
       where: {
+        userId,
         type: "EXPENSE",
         ...whereClause,
       },

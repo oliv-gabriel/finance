@@ -9,15 +9,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
 interface NavbarProps {
-  summary: {
+  summary?: {
     income: number;
     expenses: number;
     balance: number;
     paidExpenses: number;
   };
+  isAdmin?: boolean;
 }
 
-export default function Navbar({ summary }: NavbarProps) {
+export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,6 +46,14 @@ export default function Navbar({ summary }: NavbarProps) {
             
             {/* Dropdown Menu */}
             <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50">
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="block w-full text-left px-4 py-3 text-sm text-foreground hover:bg-white/5 transition-colors border-b border-white/5"
+                >
+                  Painel Admin (Novo Usuário)
+                </Link>
+              )}
               <button 
                 onClick={async () => {
                   signOut({ callbackUrl: "/login" });
