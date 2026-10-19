@@ -5,10 +5,12 @@ import {
   CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag,
   Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone,
   Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon,
-  ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle, ArrowRightLeft
+  ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle, ArrowRightLeft,
+  Filter, ArrowUpDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toggleTransactionPaid, deleteTransaction } from "@/app/actions/transactions";
+import TransactionFilterModal, { FilterState, initialFilterState } from "./TransactionFilterModal";
 
 interface Transaction {
   id: string;
@@ -40,6 +42,9 @@ interface TransactionTableProps {
     expenses?: number;
     balance?: number;
   };
+  accounts?: { id: string; name: string; type?: string }[];
+  creditCards?: { id: string; name: string }[];
+  categories?: { name: string; color?: string; icon?: string }[];
 }
 
 const getBankIcon = (name: string) => {
@@ -72,11 +77,23 @@ const getCategoryIconComponent = (name: string) => {
   return Tag;
 };
 
-export default function TransactionTable({ transactions, summary }: TransactionTableProps) {
+export default function TransactionTable({
+  transactions,
+  summary,
+  accounts = [],
+  creditCards = [],
+  categories = [],
+}: TransactionTableProps) {
   const router = useRouter();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense" | "pending">("all");
+  
+  // Estados para o Modal de Filtros Avançados
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState<FilterState>(initialFilterState);
+  const [sortOrder, setSortOrder] = useState<"date-desc" | "date-asc" | "amount-desc" | "amount-asc">("date-desc");
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [dialogTx, setDialogTx] = useState<Transaction | null>(null);
@@ -143,16 +160,90 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     return new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   };
 
-  // Filtragem no Desktop
+  // Contagem de filtros ativos
+  const activeFilterCount = [
+    filters.status !== "all",
+    filters.type !== "all",
+    filters.account !== "all",
+    filters.card !== "all",
+    filters.category !== "all",
+    Boolean(filters.startDate || filters.endDate),
+    Boolean(filters.amount),
+    filters.recurrence !== "all",
+  ].filter(Boolean).length;
+
+  // Filtragem completa (Mobile e Desktop)
   const filteredTransactions = transactions.filter((t) => {
-    const matchesSearch = t.description.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          (t.category?.name || "Transferência").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (t.account?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
-    if (!matchesSearch) return false;
-    if (filterType === "income") return t.type === "INCOME";
-    if (filterType === "expense") return t.type === "EXPENSE";
-    if (filterType === "pending") return !t.paid;
+    // 1. Busca por termo
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const desc = (t.description || "").toLowerCase();
+      const cat = (t.category?.name || "Transferência").toLowerCase();
+      const acc = (t.account?.name || "").toLowerCase();
+      if (!desc.includes(term) && !cat.includes(term) && !acc.includes(term)) {
+        return false;
+      }
+    }
+
+    // 2. Filtro rápido de abas Desktop
+    if (filterType === "income" && t.type !== "INCOME") return false;
+    if (filterType === "expense" && t.type !== "EXPENSE") return false;
+    if (filterType === "pending" && t.paid) return false;
+
+    // 3. Filtros do Modal Avançado
+    if (filters.status === "paid" && !t.paid) return false;
+    if (filters.status === "unpaid" && t.paid) return false;
+
+    if (filters.type === "income" && t.type !== "INCOME") return false;
+    if (filters.type === "expense" && t.type !== "EXPENSE") return false;
+
+    if (filters.account !== "all") {
+      const accMatch = t.account?.name?.toLowerCase() === filters.account.toLowerCase() ||
+                       t.destinationAccount?.name?.toLowerCase() === filters.account.toLowerCase();
+      if (!accMatch) return false;
+    }
+
+    if (filters.card !== "all") {
+      if (t.account?.name?.toLowerCase() !== filters.card.toLowerCase()) return false;
+    }
+
+    if (filters.category !== "all") {
+      if (t.category?.name?.toLowerCase() !== filters.category.toLowerCase()) return false;
+    }
+
+    if (filters.recurrence === "installments" && !isSeries(t)) return false;
+    if (filters.recurrence === "single" && isSeries(t)) return false;
+
+    if (filters.amount.trim()) {
+      const targetVal = parseFloat(filters.amount.replace(",", "."));
+      if (!isNaN(targetVal)) {
+        if (Math.abs(t.amount - targetVal) > 0.01 && !t.amount.toString().includes(filters.amount.trim())) {
+          return false;
+        }
+      }
+    }
+
+    if (filters.startDate) {
+      const txDate = new Date(t.date).toISOString().split("T")[0];
+      if (txDate < filters.startDate) return false;
+    }
+    if (filters.endDate) {
+      const txDate = new Date(t.date).toISOString().split("T")[0];
+      if (txDate > filters.endDate) return false;
+    }
+
     return true;
+  });
+
+  // Ordenação
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    const dateA = new Date(a.date).getTime();
+    const dateB = new Date(b.date).getTime();
+    if (sortOrder === "date-desc") return dateB - dateA;
+    if (sortOrder === "date-asc") return dateA - dateB;
+    if (sortOrder === "amount-desc") return b.amount - a.amount;
+    if (sortOrder === "amount-asc") return a.amount - b.amount;
+    return 0;
   });
 
   // Agrupamento por Data
@@ -191,12 +282,12 @@ export default function TransactionTable({ transactions, summary }: TransactionT
     return `${dowCap}, ${dayMonth}`;
   };
 
-  const groupedMobile = groupTransactionsByDate(transactions);
-  const groupedDesktop = groupTransactionsByDate(filteredTransactions);
+  const groupedMobile = groupTransactionsByDate(sortedTransactions);
+  const groupedDesktop = groupTransactionsByDate(sortedTransactions);
 
   let calcIncome = 0;
   let calcExpense = 0;
-  filteredTransactions.forEach(t => {
+  filteredTransactions.forEach((t) => {
     if (t.type === "INCOME") calcIncome += t.amount;
     else if (t.type === "EXPENSE") calcExpense += t.amount;
   });
@@ -211,6 +302,168 @@ export default function TransactionTable({ transactions, summary }: TransactionT
       {/* 1. VERSÃO MOBILE                                                          */}
       {/* ========================================================================= */}
       <div className="md:hidden flex flex-col space-y-4">
+        {/* Barra Superior Mobile: Botões de Filtro, Ordenação e Busca + Resumo */}
+        <div className="space-y-3 mb-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground font-semibold tracking-wide">
+              {sortedTransactions.length} {sortedTransactions.length === 1 ? "transação" : "transações"}
+            </span>
+
+            {/* Ícones conforme o print do usuário: [Filtro] [Ordenar] [Buscar] */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsFilterModalOpen(true)}
+                className={`p-2.5 rounded-xl border transition-all cursor-pointer relative ${
+                  activeFilterCount > 0
+                    ? "bg-[#b300e4]/20 border-[#b300e4]/60 text-[#d246f8]"
+                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                }`}
+                title="Filtrar transações"
+              >
+                <Filter className="w-4 h-4" />
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#b300e4] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSortOrder((prev) => {
+                    if (prev === "date-desc") return "amount-desc";
+                    if (prev === "amount-desc") return "amount-asc";
+                    if (prev === "amount-asc") return "date-asc";
+                    return "date-desc";
+                  });
+                }}
+                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                  sortOrder !== "date-desc"
+                    ? "bg-[#b300e4]/20 border-[#b300e4]/60 text-[#d246f8]"
+                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                }`}
+                title={`Ordenar: ${
+                  sortOrder === "date-desc" ? "Mais recentes" :
+                  sortOrder === "amount-desc" ? "Maior valor" :
+                  sortOrder === "amount-asc" ? "Menor valor" : "Mais antigas"
+                }`}
+              >
+                <ArrowUpDown className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowMobileSearch((prev) => !prev)}
+                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                  showMobileSearch || searchTerm
+                    ? "bg-white/10 border-white/20 text-white"
+                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                }`}
+                title="Buscar"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Campo de busca expansível no mobile */}
+          {showMobileSearch && (
+            <div className="relative animate-in fade-in-0 duration-150">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Buscar por descrição, categoria ou conta..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-9 bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-8 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Resumo de 3 colunas exatamente como no print do usuário */}
+          <div className="grid grid-cols-3 gap-2 py-3 px-3.5 bg-zinc-900/60 border border-white/5 rounded-2xl">
+            <div>
+              <p className="text-sm font-extrabold text-emerald-400 tabular-nums truncate">
+                {formatCurrency(calcIncome)}
+              </p>
+              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Receitas</p>
+            </div>
+            <div>
+              <p className="text-sm font-extrabold text-rose-500 tabular-nums truncate">
+                {formatCurrency(calcExpense)}
+              </p>
+              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Despesas</p>
+            </div>
+            <div>
+              <p className={`text-sm font-extrabold tabular-nums truncate ${calcBalance >= 0 ? "text-white" : "text-rose-400"}`}>
+                {formatCurrency(calcBalance)}
+              </p>
+              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Balanço</p>
+            </div>
+          </div>
+
+          {/* Chips dos filtros ativos no mobile */}
+          {activeFilterCount > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+              <span className="text-zinc-500 shrink-0">Ativos:</span>
+              {filters.status !== "all" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.status === "paid" ? "Pago" : "Não pago"}
+                </span>
+              )}
+              {filters.type !== "all" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.type === "income" ? "Receitas" : "Despesas"}
+                </span>
+              )}
+              {filters.account !== "all" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.account}
+                </span>
+              )}
+              {filters.card !== "all" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.card}
+                </span>
+              )}
+              {filters.category !== "all" && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.category}
+                </span>
+              )}
+              {(filters.startDate || filters.endDate) && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  {filters.startDate || "Início"} - {filters.endDate || "Fim"}
+                </span>
+              )}
+              {filters.amount && (
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 shrink-0">
+                  R$ {filters.amount}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setFilters(initialFilterState)}
+                className="text-[#d246f8] hover:underline shrink-0 font-medium ml-1 cursor-pointer"
+              >
+                Limpar
+              </button>
+            </div>
+          )}
+        </div>
+
         {groupedMobile.length > 0 ? (
           <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm divide-y divide-border/30">
             {groupedMobile.map((group) => (
@@ -578,25 +831,45 @@ export default function TransactionTable({ transactions, summary }: TransactionT
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
-            {([
-              { id: "all", label: "Todas" },
-              { id: "income", label: "Entradas" },
-              { id: "expense", label: "Saídas" },
-              { id: "pending", label: "Pendentes" },
-            ] as const).map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFilterType(tab.id)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  filterType === tab.id
-                    ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsFilterModalOpen(true)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 cursor-pointer ${
+                activeFilterCount > 0
+                  ? "bg-[#b300e4]/15 border-[#b300e4]/50 text-[#d246f8]"
+                  : "bg-muted/40 border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              }`}
+            >
+              <Filter className="w-3.5 h-3.5" />
+              <span>Filtros</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#b300e4] text-white text-[10px] flex items-center justify-center font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
+              {([
+                { id: "all", label: "Todas" },
+                { id: "income", label: "Entradas" },
+                { id: "expense", label: "Saídas" },
+                { id: "pending", label: "Pendentes" },
+              ] as const).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setFilterType(tab.id)}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filterType === tab.id
+                      ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/20 scale-[1.02]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -775,6 +1048,19 @@ export default function TransactionTable({ transactions, summary }: TransactionT
           </div>
         </div>
       </div>
+
+      {/* Modal / Bottom Sheet de Filtros Avançados */}
+      <TransactionFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        filters={filters}
+        onFilterChange={setFilters}
+        onReset={() => setFilters(initialFilterState)}
+        resultCount={sortedTransactions.length}
+        accounts={accounts}
+        creditCards={creditCards}
+        categories={categories}
+      />
     </div>
   );
 }

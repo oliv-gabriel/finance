@@ -1,9 +1,8 @@
 import { getTransactions } from "@/app/actions/transactions";
 import { getDashboardData } from "@/app/actions/dashboard";
 import { Button } from "@/components/ui/Button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
-import DeleteAllTransactionsButton from "@/components/transactions/DeleteAllTransactionsButton";
 import { isAdmin } from "@/lib/auth-utils";
 import Navbar from "@/components/Navbar";
 import TransactionTable from "@/components/transactions/TransactionTable";
@@ -38,7 +37,6 @@ export default async function TransactionsPage({
             </p>
           </div>
           <div className="flex items-center gap-3 self-end sm:self-auto">
-            <DeleteAllTransactionsButton />
             <Link href={`?${(() => {
               const currentParams = new URLSearchParams();
               if (month) currentParams.set("month", month.toString());
@@ -54,7 +52,13 @@ export default async function TransactionsPage({
           </div>
         </div>
 
-        <TransactionTable transactions={transactions as any} summary={data.summary} />
+        <TransactionTable
+          transactions={transactions as any}
+          summary={data.summary}
+          accounts={data.accounts}
+          creditCards={data.creditCards}
+          categories={data.categoryDistribution}
+        />
       </div>
     </div>
   );

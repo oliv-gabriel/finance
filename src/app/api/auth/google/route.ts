@@ -1,6 +1,20 @@
 import { NextResponse } from "next/server";
 import { getCurrentUserSession } from "@/lib/auth-utils";
 
+function getRedirectUri(req: Request): string {
+  const envUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl) {
+    return `${envUrl.replace(/\/$/, "")}/api/auth/google/callback`;
+  }
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  const proto = req.headers.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+  if (host) {
+    return `${proto}://${host}/api/auth/google/callback`;
+  }
+  const url = new URL(req.url);
+  return `${url.origin}/api/auth/google/callback`;
+}
+
 export async function GET(req: Request) {
   const session = await getCurrentUserSession();
   if (!session?.id) {
@@ -14,8 +28,7 @@ export async function GET(req: Request) {
     );
   }
 
-  const url = new URL(req.url);
-  const redirectUri = `${url.origin}/api/auth/google/callback`;
+  const redirectUri = getRedirectUri(req);
 
   const scopes = [
     "openid",
