@@ -201,10 +201,10 @@ export async function getDashboardData(month?: number, year?: number) {
         toNumber(card.limit) - (allUnpaidByCard.get(card.id) ?? 0);
       const isCurrentMonth =
         targetMonth === now.getMonth() + 1 && targetYear === now.getFullYear();
+      const isPaid = !stats.hasUnpaid && stats.transactionCount > 0;
       let status = "Fechado";
-
-      if (!stats.hasUnpaid && stats.transactionCount > 0) {
-        status = "Fechado";
+      if (isPaid) {
+        status = "Paga";
       } else if (isCurrentMonth) {
         status = now.getDate() <= (card.closingDay || 31) ? "Aberto" : "Fechado";
       } else if (
@@ -222,6 +222,7 @@ export async function getDashboardData(month?: number, year?: number) {
         closingDay: card.closingDay,
         dueDay: card.dueDay,
         status,
+        isPaid,
         includeInTotal: card.includeInTotal,
       };
     });

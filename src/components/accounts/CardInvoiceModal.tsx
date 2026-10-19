@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { getCardInvoiceDetails } from "@/app/actions/accounts";
 import { payCardBill, toggleTransactionPaid } from "@/app/actions/transactions";
 import { 
   X, ChevronLeft, ChevronRight, Calendar, CreditCard as CreditCardIcon, 
-  CheckCircle2, Clock, Loader2, TrendingUp, DollarSign, Percent, Tag, ShieldCheck
+  CheckCircle2, Clock, Loader2, TrendingUp, DollarSign, Percent, Tag, ShieldCheck,
+  Pencil, ChevronDown
 } from "lucide-react";
 
 interface CardInvoiceModalProps {
@@ -25,7 +28,7 @@ interface InvoiceData {
     dueDay: number | null;
     bankName: string;
   };
-  availableAccounts: { id: string; name: string }[];
+  availableAccounts: { id: string; name: string; balance?: number }[];
   invoice: {
     totalSpent: number;
     totalPaid: number;
@@ -42,6 +45,7 @@ interface InvoiceData {
       paid: boolean;
       categoryName: string;
       categoryColor: string;
+      seriesId?: string | null;
     }[];
   };
 }
@@ -65,6 +69,8 @@ const getBankIcon = (name: string) => {
 };
 
 export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth, initialYear }: CardInvoiceModalProps) {
+  const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
   const [data, setData] = useState<InvoiceData | null>(null);
@@ -72,6 +78,35 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
   const [paying, setPaying] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [actionTx, setActionTx] = useState<InvoiceData["invoice"]["transactions"][0] | null>(null);
+
+  const isSeries = (tx: { description: string; seriesId?: string | null }) => {
+    return Boolean(tx.seriesId || /\(\d+\/\d+\)/.test(tx.description));
+  };
+
+  const handleRowClick = (tx: InvoiceData["invoice"]["transactions"][0]) => {
+    if (isSeries(tx)) {
+      setActionTx(tx);
+    } else {
+      onClose();
+      router.push(`/transactions/edit/${tx.id}`);
+    }
+  };
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen && cardId) {
@@ -84,6 +119,9 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
     try {
       const result = await getCardInvoiceDetails(targetCardId, m, y);
       setData(result);
+      if (result?.availableAccounts?.length && !selectedAccountId) {
+        setSelectedAccountId(result.availableAccounts[0].id);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -91,7 +129,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
     }
   };
 
-  if (!isOpen || !cardId) return null;
+  if (!isOpen || !cardId || !mounted) return null;
 
   const handlePrevMonth = () => {
     if (month === 1) {
@@ -124,10 +162,16 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
 
     setPaying(true);
     try {
-      await payCardBill(cardId, month, year, selectedAccountId);
-      await loadData(cardId, month, year);
+      const res = await payCardBill(cardId, month, year, selectedAccountId);
+      if (res && !res.success) {
+        alert(res.error || "Erro ao pagar fatura");
+      } else {
+        await loadData(cardId, month, year);
+        router.refresh();
+      }
     } catch (err) {
       console.error(err);
+      alert("Erro ao processar pagamento");
     } finally {
       setPaying(false);
     }
@@ -155,10 +199,13 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
     return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(d);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 md:p-6 animate-in fade-in-0 duration-200">
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-4 md:p-6 animate-in fade-in-0 duration-200 overflow-y-auto"
+      onClick={onClose}
+    >
       <div 
-        className="w-full max-w-3xl rounded-3xl bg-[#121212] border border-border/80 shadow-2xl shadow-[#b300e4]/15 overflow-hidden flex flex-col max-h-[92vh] text-foreground"
+        className="w-full max-w-3xl rounded-3xl bg-[#121212] border border-border/80 shadow-2xl shadow-[#b300e4]/15 overflow-hidden flex flex-col max-h-[90vh] text-foreground my-auto shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabeçalho */}
@@ -239,7 +286,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
         </div>
 
         {/* Corpo do Modal */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#b300e4]" />
@@ -314,20 +361,29 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                 </h3>
                 
                 {data.invoice.transactions.length > 0 ? (
-                  <div className="rounded-2xl border border-border/70 bg-card overflow-hidden divide-y divide-border/30 max-h-[280px] sm:max-h-[340px] overflow-y-auto shadow-inner">
+                  <div className="rounded-2xl border border-border/70 bg-card overflow-hidden divide-y divide-border/30 max-h-[280px] sm:max-h-[340px] overflow-y-auto shadow-inner [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent]">
                     {data.invoice.transactions.map((tx) => (
                       <div 
                         key={tx.id} 
-                        onClick={() => handleToggleTx(tx.id, tx.paid)}
-                        title={tx.paid ? "Clique para alterar para Em aberto" : "Clique para alterar para Pago"}
+                        onClick={() => handleRowClick(tx)}
+                        title="Clique para editar este lançamento"
                         className="flex items-center justify-between p-3.5 hover:bg-muted/60 hover:border-l-4 hover:border-l-[#b300e4] transition-all cursor-pointer group/tx select-none"
                       >
                         <div className="flex items-center gap-3 min-w-0 pr-2">
-                          <div className="size-9 rounded-xl bg-[#b300e4]/10 text-[#b300e4] flex items-center justify-center shrink-0 font-bold">
+                          <div className="size-9 rounded-xl bg-[#b300e4]/10 text-[#b300e4] flex items-center justify-center shrink-0 font-bold group-hover/tx:scale-105 transition-transform">
                             <Tag className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-foreground truncate group-hover/tx:text-[#b300e4] transition-colors">{tx.description || "Compra no cartão"}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-bold text-foreground truncate group-hover/tx:text-[#b300e4] transition-colors">
+                                {tx.description || "Compra no cartão"}
+                              </p>
+                              {isSeries(tx) && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-zinc-400 font-medium shrink-0">
+                                  Parcelado
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                               <span>{formatDate(tx.date)}</span>
                               <span>•</span>
@@ -336,25 +392,35 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0 flex flex-col items-end">
-                          <p className="text-sm font-bold tabular-nums text-red-400">
-                            - {formatCurrency(tx.amount)}
-                          </p>
-                          <span className={`text-[11px] font-semibold flex items-center justify-end gap-1.5 mt-1 px-2.5 py-0.5 rounded-full border transition-all ${
-                            togglingId === tx.id
-                              ? "bg-muted text-muted-foreground border-border"
-                              : tx.paid 
-                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 group-hover/tx:bg-emerald-500/25 group-hover/tx:border-emerald-500/50" 
-                              : "bg-amber-500/15 text-amber-400 border-amber-500/30 group-hover/tx:bg-amber-500/25 group-hover/tx:border-amber-500/50"
-                          }`}>
-                            {togglingId === tx.id ? (
-                              <><Loader2 className="w-3 h-3 animate-spin" /> Atualizando...</>
-                            ) : tx.paid ? (
-                              <><CheckCircle2 className="w-3 h-3" /> Pago</>
-                            ) : (
-                              <><Clock className="w-3 h-3" /> Em aberto</>
-                            )}
-                          </span>
+                        <div className="text-right shrink-0 flex items-center">
+                          <div className="flex flex-col items-end">
+                            <p className="text-sm font-bold tabular-nums text-red-400">
+                              - {formatCurrency(tx.amount)}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleTx(tx.id, tx.paid);
+                              }}
+                              title={tx.paid ? "Clique para alterar para Em aberto" : "Clique para alterar para Pago"}
+                              className={`text-[11px] font-semibold flex items-center justify-end gap-1.5 mt-1 px-2.5 py-0.5 rounded-full border transition-all cursor-pointer ${
+                                togglingId === tx.id
+                                  ? "bg-muted text-muted-foreground border-border"
+                                  : tx.paid 
+                                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25" 
+                                  : "bg-amber-500/15 text-amber-400 border-amber-500/30 hover:bg-amber-500/25"
+                              }`}
+                            >
+                              {togglingId === tx.id ? (
+                                <><Loader2 className="w-3 h-3 animate-spin" /> Atualizando...</>
+                              ) : tx.paid ? (
+                                <><CheckCircle2 className="w-3 h-3" /> Pago</>
+                              ) : (
+                                <><Clock className="w-3 h-3" /> Em aberto</>
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -382,31 +448,43 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
             </div>
             
             <div className="flex flex-col sm:flex-row w-full sm:w-auto items-center gap-3">
-              {Math.max(0, data.invoice.totalSpent - data.invoice.totalPaid) > 0 && (
-                <div className="w-full sm:w-auto">
+              {!data.invoice.isPaid && Math.max(0, data.invoice.totalSpent - data.invoice.totalPaid) > 0 && (
+                <div className="relative w-full sm:w-auto min-w-[220px]">
                   <select
                     value={selectedAccountId}
                     onChange={(e) => setSelectedAccountId(e.target.value)}
-                    className="w-full sm:w-auto bg-card text-sm text-foreground border border-border/80 rounded-xl px-3 py-3 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer appearance-none"
-                    style={{ backgroundImage: 'none' }}
+                    className="w-full bg-[#1c1c1f] text-xs font-semibold text-foreground border border-border/80 rounded-xl pl-3 pr-8 py-3 focus:outline-none focus:ring-2 focus:ring-[#b300e4]/50 cursor-pointer appearance-none shadow-sm"
                   >
                     <option value="" disabled>Selecione a conta</option>
                     {data.availableAccounts?.map(acc => (
-                      <option key={acc.id} value={acc.id}>{acc.name}</option>
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} ({formatCurrency(acc.balance ?? 0)})
+                      </option>
                     ))}
                   </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </div>
               )}
 
               <button
                 onClick={handlePayBill}
                 disabled={paying || data.invoice.totalSpent === 0 || data.invoice.isPaid}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl font-extrabold text-sm text-white transition-all duration-300 shadow-lg cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-[#b300e4]/30 hover:shadow-[#b300e4]/50 hover:scale-[1.02] active:scale-[0.98]"
+                className={`w-full sm:w-auto px-6 py-3 rounded-2xl font-extrabold text-sm transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                  data.invoice.isPaid
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default shadow-none"
+                    : data.invoice.totalSpent === 0
+                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50 shadow-none"
+                    : "text-white cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none bg-[#b300e4] hover:bg-[#b300e4]/90 shadow-[#b300e4]/30 hover:shadow-[#b300e4]/50 hover:scale-[1.02] active:scale-[0.98]"
+                }`}
               >
                 {paying ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Registrando...</>
                 ) : data.invoice.isPaid ? (
-                  <><CheckCircle2 className="w-4 h-4 text-white" /> Fatura Paga</>
+                  <><CheckCircle2 className="w-4 h-4 text-emerald-400" /> Fatura Paga</>
+                ) : data.invoice.totalSpent === 0 ? (
+                  <>Sem Lançamentos</>
                 ) : (
                   <>Pagar Fatura Completa</>
                 )}
@@ -415,6 +493,98 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
           </div>
         )}
       </div>
-    </div>
+
+      {/* Modal de Escolha de Edição de Lançamento */}
+      {actionTx && (
+        <div 
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in-0"
+          onClick={() => setActionTx(null)}
+        >
+          <div 
+            className="w-full max-w-sm rounded-2xl bg-[#18181b] border border-white/10 p-5 shadow-2xl space-y-4 animate-in zoom-in-95 text-foreground"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/5">
+              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                <div className="p-2 rounded-xl bg-[#b300e4]/15 text-[#b300e4] shrink-0">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-white">Editar Lançamento</h3>
+                  <p className="text-xs text-zinc-400 truncate">{actionTx.description}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActionTx(null)}
+                className="text-zinc-500 hover:text-white shrink-0 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-zinc-400">
+                {isSeries(actionTx) 
+                  ? "Este lançamento pertence a uma compra parcelada. Escolha como deseja editar:" 
+                  : "Deseja editar as informações deste lançamento?"}
+              </p>
+
+              {isSeries(actionTx) ? (
+                <>
+                  <button
+                    onClick={() => {
+                      const targetId = actionTx.id;
+                      setActionTx(null);
+                      onClose();
+                      router.push(`/transactions/edit/${targetId}?mode=single`);
+                    }}
+                    className="w-full text-left p-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 transition-colors text-xs font-medium text-white flex items-center justify-between cursor-pointer"
+                  >
+                    <div>
+                      <p className="font-semibold text-white">Editar apenas esta parcela</p>
+                      <p className="text-[11px] text-zinc-400 mt-0.5">Altera somente o valor ou dados deste mês</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const targetId = actionTx.id;
+                      setActionTx(null);
+                      onClose();
+                      router.push(`/transactions/edit/${targetId}?mode=series`);
+                    }}
+                    className="w-full text-left p-3 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white transition-colors text-xs font-semibold flex items-center justify-between cursor-pointer"
+                  >
+                    <div>
+                      <p className="font-semibold text-white">Editar toda a série</p>
+                      <p className="text-[11px] text-white/80 mt-0.5">Aplica a alteração a todas as parcelas pendentes</p>
+                    </div>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => {
+                    const targetId = actionTx.id;
+                    setActionTx(null);
+                    onClose();
+                    router.push(`/transactions/edit/${targetId}`);
+                  }}
+                  className="w-full p-3 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white transition-colors text-xs font-semibold text-center cursor-pointer"
+                >
+                  Abrir Edição do Lançamento
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => setActionTx(null)}
+              className="w-full py-1 text-xs text-zinc-400 hover:text-white font-medium cursor-pointer"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>,
+    document.body
   );
 }

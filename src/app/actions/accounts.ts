@@ -123,6 +123,52 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
       }),
     ]);
 
+    const contaIds = contas.map(c => c.id);
+    const [balances, transfersIn] = await Promise.all([
+      prisma.transaction.groupBy({
+        by: ["accountId", "type"],
+        where: { userId, paid: true, accountId: { in: contaIds } },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.groupBy({
+        by: ["destinationAccountId"],
+        where: {
+          userId,
+          paid: true,
+          type: "TRANSFER",
+          destinationAccountId: { in: contaIds },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const balanceByAccount = new Map<string, Map<string, number>>();
+    for (const item of balances) {
+      if (!item.accountId) continue;
+      const values = balanceByAccount.get(item.accountId) ?? new Map<string, number>();
+      values.set(item.type, toNumber(item._sum.amount));
+      balanceByAccount.set(item.accountId, values);
+    }
+
+    const transfersInByAccount = new Map(
+      transfersIn
+        .filter((item) => item.destinationAccountId)
+        .map((item) => [item.destinationAccountId as string, toNumber(item._sum.amount)])
+    );
+
+    const availableAccounts = contas.map(acc => {
+      const values = balanceByAccount.get(acc.id);
+      const inc = values?.get("INCOME") ?? 0;
+      const exp = values?.get("EXPENSE") ?? 0;
+      const tOut = values?.get("TRANSFER") ?? 0;
+      const tIn = transfersInByAccount.get(acc.id) ?? 0;
+      return {
+        id: acc.id,
+        name: acc.name,
+        balance: inc - exp - tOut + tIn,
+      };
+    });
+
     const expenses = transactions.filter((t) => t.type === "EXPENSE");
     const totalSpent = expenses.reduce((sum, t) => sum + toNumber(t.amount), 0);
     const totalPaid = expenses.filter((t) => t.paid).reduce((sum, t) => sum + toNumber(t.amount), 0);
@@ -141,7 +187,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
         dueDay: card.dueDay || null,
         bankName: card.bank?.name || card.name,
       },
-      availableAccounts: contas,
+      availableAccounts,
       invoice: {
         totalSpent,
         totalPaid,
@@ -158,6 +204,7 @@ export async function getCardInvoiceDetails(cardId: string, month: number, year:
           paid: t.paid,
           categoryName: t.category?.name || "Geral",
           categoryColor: t.category?.color || "#b300e4",
+          seriesId: t.seriesId,
         })),
       },
     };

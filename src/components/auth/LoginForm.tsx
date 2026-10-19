@@ -30,7 +30,7 @@ export default function LoginForm() {
       if (result?.error) {
         setError("Credenciais inválidas.");
       } else if (result?.url) {
-        router.push(result.url);
+        window.location.href = result.url;
       }
     } catch {
       setError("Erro inesperado no login.");

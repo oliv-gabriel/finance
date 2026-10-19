@@ -4,6 +4,7 @@ import { ImapFlow } from "imapflow";
 import { simpleParser } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getCurrentUserId, isAdmin } from "@/lib/auth-utils";
 
 // Configurações do Servidor IMAP (Configurável via .env)
 const imapConfig = {
@@ -21,6 +22,13 @@ const imapConfig = {
  * Sincroniza transações a partir dos e-mails da 99Pay.
  */
 export async function syncEmails() {
+    const admin = await isAdmin();
+    if (!admin) {
+        return { success: false, error: "Apenas administradores podem sincronizar os e-mails do sistema." };
+    }
+
+    const userId = await getCurrentUserId();
+
     if (!imapConfig.auth.user || !imapConfig.auth.pass) {
         return { success: false, error: "E-mail ou senha de app não configurados no .env" };
     }
@@ -58,12 +66,16 @@ export async function syncEmails() {
         
         console.log(`Download concluído. Processando ${rawMessages.length} e-mails offline...`);
 
-        // Busca ou cria a Conta "99 Pay"
-        const allAccounts = await prisma.account.findMany();
-        let account99 = allAccounts.find(a => a.name.toLowerCase().includes("99"));
+        // Busca ou cria a Conta "99 Pay" para este usuário
+        let account99 = await prisma.account.findFirst({
+            where: {
+                userId,
+                name: { contains: "99", mode: "insensitive" }
+            }
+        });
         if (!account99) {
             account99 = await prisma.account.create({
-                data: { name: "99 Pay", type: "CONTA", includeInTotal: true }
+                data: { name: "99 Pay", type: "CONTA", includeInTotal: true, userId }
             });
         }
 
@@ -137,12 +149,13 @@ export async function syncEmails() {
                             externalId,
                             categoryId: category.id,
                             accountId: account99.id,
+                            userId,
                         };
 
                         try {
                             await prisma.transaction.upsert({
                                 where: { externalId },
-                                update: {}, 
+                                update: { userId }, 
                                 create: payload
                             });
                             syncedCount++;

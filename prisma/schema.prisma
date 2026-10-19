@@ -104,6 +104,7 @@ model User {
   email         String          @unique
   password      String?
   image         String?
+  role          String          @default("USER")
   sessions      Session[]
   authAccounts  AuthAccount[]
   Authenticator Authenticator[]
@@ -111,6 +112,15 @@ model User {
   accounts      Account[]
   transactions  Transaction[]
   budgets       Budget[]
+
+  // Integração com Google Gmail para leitura de comprovantes
+  googleEmail         String?
+  googleAccessToken   String?
+  googleRefreshToken  String?
+  googleTokenExpiry   DateTime?
+  bankSenderEmail     String?
+  bankSyncAccountId   String?
+  bankSyncRules       String?
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt

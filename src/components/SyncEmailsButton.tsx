@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { syncGoogleEmails } from "@/app/actions/googleSync";
 import { syncEmails } from "@/app/actions/emailSync";
 import { RefreshCw, Loader2, Check } from "lucide-react";
 
@@ -14,7 +15,16 @@ export default function SyncEmailsButton() {
         setErrorMessage(null);
         
         try {
-            const result = await syncEmails();
+            // Tenta primeiro a sincronização oficial via Google API do usuário
+            let result: { success: boolean; count?: number; error?: string; message?: string } = await syncGoogleEmails();
+
+            // Se o usuário não conectou a conta Google, tenta o método IMAP do .env caso configurado
+            if (!result.success && result.error?.includes("ainda não conectou")) {
+                const imapResult = await syncEmails();
+                if (imapResult.success) {
+                    result = imapResult;
+                }
+            }
 
             if (result.success) {
                 setCount(result.count || 0);
@@ -22,7 +32,7 @@ export default function SyncEmailsButton() {
                 setTimeout(() => setStatus("idle"), 5000);
             } else {
                 setStatus("error");
-                setErrorMessage(result.error || "Falha de autenticação IMAP");
+                setErrorMessage(result.error || "Falha na sincronização");
                 setTimeout(() => {
                     setStatus("idle");
                     setErrorMessage(null);

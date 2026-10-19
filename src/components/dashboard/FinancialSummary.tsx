@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff, ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { CreditCard, Wallet, Plus, MoreVertical, Calendar, Loader2, EyeOff, ChevronLeft, ChevronRight, X, ChevronDown, CheckCircle2 } from "lucide-react";
 import { payCardBill } from "@/app/actions/transactions";
 import { toggleAccountIncludeInTotal } from "@/app/actions/accounts";
 import CardInvoiceModal from "@/components/accounts/CardInvoiceModal";
@@ -14,6 +15,7 @@ interface CardData {
   limiteDisponivel: number;
   closingDay: number | null;
   status: string;
+  isPaid?: boolean;
   includeInTotal?: boolean;
 }
 
@@ -49,6 +51,24 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
   const [payingId, setPayingId] = useState<string | null>(null);
   const [togglingAccountId, setTogglingAccountId] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [paymentCard, setPaymentCard] = useState<CardData | null>(null);
+  const [selectedPaymentAccount, setSelectedPaymentAccount] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (paymentCard) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [paymentCard]);
 
   const accountsRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -73,14 +93,27 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
     }).format(value);
   };
 
-  const handlePayBill = async (cardId: string) => {
-    if (!confirm("Deseja marcar todas as transações deste mês como pagas?")) return;
-    
-    setPayingId(cardId);
+  const handleOpenPaymentModal = (card: CardData) => {
+    setPaymentCard(card);
+    const defaultAcc = accounts.find(a => a.includeInTotal !== false) || accounts[0];
+    setSelectedPaymentAccount(defaultAcc?.id || "");
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!paymentCard) return;
+    if (!selectedPaymentAccount) {
+      alert("Por favor, selecione a conta de onde o valor sairá.");
+      return;
+    }
+
+    setPayingId(paymentCard.id);
     try {
-      const result = await payCardBill(cardId, month, year);
+      const result = await payCardBill(paymentCard.id, month, year, selectedPaymentAccount);
       if (!result.success) {
-        alert("Erro ao pagar fatura");
+        alert(result.error || "Erro ao pagar fatura");
+      } else {
+        setPaymentCard(null);
+        router.refresh();
       }
     } catch (error) {
       console.error(error);
@@ -141,7 +174,11 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
             </div>
           </div>
           
-          <div ref={accountsRef} className="flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div 
+            ref={accountsRef} 
+            className="no-scrollbar flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {accountChunks.length > 0 ? (
               accountChunks.map((chunk, chunkIndex) => (
                 <ul key={chunkIndex} className="flex w-full min-w-0 flex-none snap-center flex-col gap-2 divide-y divide-border/30">
@@ -226,7 +263,11 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
             </div>
           </div>
           
-          <div ref={cardsRef} className="flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div 
+            ref={cardsRef} 
+            className="no-scrollbar flex w-full min-w-0 max-w-full overflow-x-auto scroll-smooth snap-x snap-mandatory gap-4 pb-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
             {creditCards.length > 0 ? (
               creditCards.map((card) => (
                 <div 
@@ -279,23 +320,41 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                       <p className="text-xs font-normal">Fecha em {card.closingDay?.toString().padStart(2, '0')} de {getMonthName(month).slice(0, 3)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <span className={`size-2.5 rounded-full ${card.status === "Aberto" ? "bg-green-500" : "bg-red-500"}`}></span>
-                      <span className={`text-xs font-normal ${card.status === "Aberto" ? "text-green-500" : "text-red-500"}`}>
-                        {card.status === "Aberto" ? "Em aberto" : "Fechado"}
+                      <span className={`size-2.5 rounded-full ${
+                        card.isPaid || card.status === "Paga"
+                          ? "bg-emerald-400"
+                          : card.status === "Aberto"
+                          ? "bg-green-500"
+                          : "bg-red-500"
+                      }`}></span>
+                      <span className={`text-xs font-normal ${
+                        card.isPaid || card.status === "Paga"
+                          ? "text-emerald-400 font-semibold"
+                          : card.status === "Aberto"
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}>
+                        {card.isPaid || card.status === "Paga" ? "Fatura paga" : card.status === "Aberto" ? "Em aberto" : "Fechado"}
                       </span>
                     </div>
                   </div>
                   
                   <button 
                     type="button" 
-                    disabled={payingId === card.id || card.faturaAtual === 0}
-                    onClick={(e) => { e.stopPropagation(); handlePayBill(card.id); }}
-                    className="border-border bg-card text-foreground hover:bg-muted mt-5 h-10 w-full rounded-full border text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                    disabled={payingId === card.id || card.faturaAtual === 0 || card.isPaid || card.status === "Paga"}
+                    onClick={(e) => { e.stopPropagation(); handleOpenPaymentModal(card); }}
+                    className={`mt-5 h-10 w-full rounded-full border text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                      card.isPaid || card.status === "Paga"
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default"
+                        : "border-border bg-card text-foreground hover:bg-[#b300e4] hover:text-white hover:border-[#b300e4] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    }`}
                   >
                     {payingId === card.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : card.isPaid || card.status === "Paga" ? (
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                     ) : null}
-                    Pagar fatura
+                    {card.isPaid || card.status === "Paga" ? "Fatura paga" : "Pagar fatura"}
                   </button>
                 </div>
               ))
@@ -330,6 +389,115 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
         initialMonth={month}
         initialYear={year}
       />
+
+      {/* Modal de Pagamento de Fatura com Seleção de Conta */}
+      {mounted && paymentCard && createPortal(
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in-0"
+          onClick={() => !payingId && setPaymentCard(null)}
+        >
+          <div 
+            className="w-full max-w-md rounded-2xl bg-[#141414] border border-white/10 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 text-foreground my-auto shrink-0 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-[#b300e4]/15 text-[#d246f8]">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Pagar Fatura</h3>
+                  <p className="text-xs text-zinc-400">Cartão {paymentCard.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !payingId && setPaymentCard(null)}
+                className="text-zinc-500 hover:text-white p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-between">
+              <div>
+                <p className="text-xs text-zinc-400">Valor da Fatura ({getMonthName(month)})</p>
+                <p className="text-xl font-extrabold text-white mt-0.5">
+                  {formatCurrency(paymentCard.faturaAtual)}
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#b300e4]/20 text-[#d246f8] border border-[#b300e4]/30">
+                {paymentCard.status}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-zinc-300">
+                Conta de onde o valor será descontado
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedPaymentAccount}
+                  onChange={(e) => setSelectedPaymentAccount(e.target.value)}
+                  className="w-full h-11 bg-zinc-900 border border-white/10 rounded-xl px-3 pr-8 text-sm text-white focus:outline-none focus:border-[#b300e4] cursor-pointer appearance-none"
+                >
+                  <option value="" disabled>Selecione uma conta bancária</option>
+                  {accounts.map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} — Saldo: {formatCurrency(acc.balance)}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+              <p className="text-[11px] text-zinc-500 leading-relaxed">
+                Ao confirmar, o valor de <strong>{formatCurrency(paymentCard.faturaAtual)}</strong> será debitado do saldo da conta selecionada e a fatura será marcada como paga.
+              </p>
+              {selectedPaymentAccount && (() => {
+                const chosen = accounts.find(a => a.id === selectedPaymentAccount);
+                if (!chosen) return null;
+                const remaining = chosen.balance - paymentCard.faturaAtual;
+                return (
+                  <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-zinc-950 border border-white/5 text-zinc-400">
+                    <span>Saldo restante na conta:</span>
+                    <span className={`font-bold tabular-nums ${remaining >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      {formatCurrency(remaining)}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                disabled={!!payingId}
+                onClick={() => setPaymentCard(null)}
+                className="flex-1 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold border border-white/10 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={!!payingId || !selectedPaymentAccount || paymentCard.faturaAtual === 0}
+                onClick={handleConfirmPayment}
+                className="flex-1 h-10 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#b300e4]/20 disabled:opacity-40"
+              >
+                {payingId ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Processando...
+                  </>
+                ) : (
+                  "Confirmar Pagamento"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

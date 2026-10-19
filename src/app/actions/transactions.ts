@@ -336,7 +336,19 @@ export async function payCardBill(cardId: string, month: number, year: number, p
       }
     });
 
-    const invoiceTotal = pendingTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+    let invoiceTotal = pendingTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+
+    if (invoiceTotal === 0 && paymentAccountId) {
+      const allExpenses = await prisma.transaction.findMany({
+        where: {
+          userId,
+          accountId: cardId,
+          date: { gte: startDate, lte: endDate },
+          type: "EXPENSE",
+        }
+      });
+      invoiceTotal = allExpenses.reduce((sum, tx) => sum + Number(tx.amount), 0);
+    }
 
     // Se um paymentAccountId foi selecionado e há um valor a pagar, criamos a transação
     if (paymentAccountId && invoiceTotal > 0) {
