@@ -230,6 +230,9 @@ export function ProfilePanel({
           type: "error",
           text: res.error || "Erro durante a sincronização de e-mails.",
         });
+        if (res.error?.includes("expirou") || res.error?.includes("reconecte") || res.error?.includes("revogada")) {
+          getUserGoogleSettings().then((updated) => setGoogleSettings(updated));
+        }
       }
     } catch {
       setGoogleFeedback({

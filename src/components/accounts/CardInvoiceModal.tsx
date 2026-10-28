@@ -10,6 +10,7 @@ import {
   CheckCircle2, Clock, Loader2, TrendingUp, DollarSign, Percent, Tag, ShieldCheck,
   Pencil, ChevronDown
 } from "lucide-react";
+import { getBankIcon } from "@/lib/icons";
 
 interface CardInvoiceModalProps {
   isOpen: boolean;
@@ -54,19 +55,6 @@ const MONTH_NAMES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
 ];
-
-const getBankIcon = (name: string) => {
-  const nameLower = name.toLowerCase();
-  if (nameLower.includes("brasil") || nameLower === "bb") return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-do-brasil.svg";
-  if (nameLower.includes("99")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/99-pay.svg";
-  if (nameLower.includes("nubank") || nameLower.includes("nu")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/nubank.svg";
-  if (nameLower.includes("itau") || nameLower.includes("itaú")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/itau.svg";
-  if (nameLower.includes("bradesco")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/bradesco.svg";
-  if (nameLower.includes("inter")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-inter.svg";
-  if (nameLower.includes("santander")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/santander.svg";
-  if (nameLower.includes("picpay")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-  return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-};
 
 export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth, initialYear }: CardInvoiceModalProps) {
   const router = useRouter();

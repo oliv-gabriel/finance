@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { syncGoogleEmails } from "@/app/actions/googleSync";
-import { syncEmails } from "@/app/actions/emailSync";
 import { RefreshCw, Loader2, Check } from "lucide-react";
 
 export default function SyncEmailsButton() {
@@ -15,16 +14,7 @@ export default function SyncEmailsButton() {
         setErrorMessage(null);
         
         try {
-            // Tenta primeiro a sincronização oficial via Google API do usuário
-            let result: { success: boolean; count?: number; error?: string; message?: string } = await syncGoogleEmails();
-
-            // Se o usuário não conectou a conta Google, tenta o método IMAP do .env caso configurado
-            if (!result.success && result.error?.includes("ainda não conectou")) {
-                const imapResult = await syncEmails();
-                if (imapResult.success) {
-                    result = imapResult;
-                }
-            }
+            const result = await syncGoogleEmails();
 
             if (result.success) {
                 setCount(result.count || 0);
@@ -32,7 +22,7 @@ export default function SyncEmailsButton() {
                 setTimeout(() => setStatus("idle"), 5000);
             } else {
                 setStatus("error");
-                setErrorMessage(result.error || "Falha na sincronização");
+                setErrorMessage(result.error || "Falha na sincronização com o Google");
                 setTimeout(() => {
                     setStatus("idle");
                     setErrorMessage(null);
@@ -54,12 +44,12 @@ export default function SyncEmailsButton() {
             disabled={status === "loading"}
             title={
                 status === "loading"
-                    ? "Sincronizando 99Pay..."
+                    ? "Sincronizando com o Gmail..."
                     : status === "success"
-                    ? count === 0 ? "Tudo atualizado!" : `${count} novas transações da 99Pay sincronizadas!`
+                    ? count === 0 ? "Tudo atualizado!" : `${count} novos comprovantes sincronizados!`
                     : status === "error"
-                    ? `Erro ao sincronizar: ${errorMessage || "Falha IMAP"}`
-                    : "Sincronizar 99Pay (PIX e Corridas)"
+                    ? `Erro: ${errorMessage || "Falha ao sincronizar"}`
+                    : "Sincronizar comprovantes do Gmail"
             }
             className={`group inline-flex items-center justify-center gap-1.5 h-10 px-3 min-w-10 rounded-xl text-xs font-semibold border transition-all duration-300 cursor-pointer disabled:cursor-wait ${
                 status === "loading"

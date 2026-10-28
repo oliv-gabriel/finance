@@ -162,35 +162,58 @@ async function getValidAccessToken(userId: string) {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
     if (!clientId || !clientSecret) {
-      throw new Error("Credenciais do Google Cloud ausentes no servidor.");
+      console.error("[GoogleSync] Credenciais GOOGLE_CLIENT_ID ou GOOGLE_CLIENT_SECRET ausentes.");
+      return null;
     }
 
-    const refreshRes = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
-        refresh_token: user.googleRefreshToken,
-        grant_type: "refresh_token",
-      }),
-    });
+    try {
+      const refreshRes = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: user.googleRefreshToken,
+          grant_type: "refresh_token",
+        }),
+      });
 
-    const refreshData = await refreshRes.json();
-    if (!refreshRes.ok || !refreshData.access_token) {
-      throw new Error("Falha ao renovar conexão com o Google. Reconecte sua conta.");
+      const refreshData = await refreshRes.json();
+      if (!refreshRes.ok || !refreshData.access_token) {
+        console.error("[GoogleSync] Falha ao renovar token Google:", refreshData);
+
+        // Se o token foi revogado ou expirou (ex: limite de 7 dias do Google em modo 'Testing' / invalid_grant)
+        if (refreshData.error === "invalid_grant" || refreshRes.status === 400) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              googleAccessToken: null,
+              googleRefreshToken: null,
+              googleTokenExpiry: null,
+            },
+          });
+          revalidatePath("/profile");
+        }
+
+        return null;
+      }
+
+      const newExpiry = new Date(Date.now() + (refreshData.expires_in || 3600) * 1000);
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          googleAccessToken: refreshData.access_token,
+          // Salva novo refresh_token se fornecido pelo Google (rotação de tokens)
+          ...(refreshData.refresh_token ? { googleRefreshToken: refreshData.refresh_token } : {}),
+          googleTokenExpiry: newExpiry,
+        },
+      });
+
+      return refreshData.access_token;
+    } catch (err) {
+      console.error("[GoogleSync] Erro de rede ao tentar renovar token:", err);
+      return null;
     }
-
-    const newExpiry = new Date(Date.now() + (refreshData.expires_in || 3600) * 1000);
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        googleAccessToken: refreshData.access_token,
-        googleTokenExpiry: newExpiry,
-      },
-    });
-
-    return refreshData.access_token;
   }
 
   return user.googleAccessToken;
@@ -258,55 +281,58 @@ function parseDate(dateStr: string): Date {
  * Processa todos os remetentes configurados nas regras do usuário.
  */
 export async function syncGoogleEmails() {
-  const userId = await getCurrentUserId();
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      googleAccessToken: true,
-      googleRefreshToken: true,
-      bankSenderEmail: true,
-      bankSyncAccountId: true,
-      bankSyncRules: true,
-    },
-  });
-
-  if (!user?.googleAccessToken && !user?.googleRefreshToken) {
-    return { success: false, error: "Você ainda não conectou sua conta do Google em 'Meu Perfil'." };
-  }
-
-  // 1. Obtém as regras configuradas (múltiplos remetentes)
-  let rules: BankSyncRule[] = [];
-  if (user.bankSyncRules) {
-    try {
-      const parsed = JSON.parse(user.bankSyncRules);
-      if (Array.isArray(parsed)) {
-        rules = parsed.filter((r) => r && typeof r.email === "string" && r.email.trim());
-      }
-    } catch {
-      // Ignora erro de JSON
-    }
-  }
-
-  if (rules.length === 0 && user.bankSenderEmail?.trim()) {
-    rules = [
-      {
-        id: "default",
-        email: user.bankSenderEmail.trim(),
-        accountId: user.bankSyncAccountId || "",
-      },
-    ];
-  }
-
-  if (rules.length === 0) {
-    return { success: false, error: "Por favor, cadastre ao menos um e-mail de remetente bancário no seu perfil." };
-  }
-
-  const accessToken = await getValidAccessToken(userId);
-  if (!accessToken) {
-    return { success: false, error: "Não foi possível autenticar com o Google. Tente reconectar sua conta." };
-  }
-
   try {
+    const userId = await getCurrentUserId();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        googleAccessToken: true,
+        googleRefreshToken: true,
+        bankSenderEmail: true,
+        bankSyncAccountId: true,
+        bankSyncRules: true,
+      },
+    });
+
+    if (!user?.googleAccessToken && !user?.googleRefreshToken) {
+      return { success: false, error: "Você ainda não conectou sua conta do Google em 'Meu Perfil'." };
+    }
+
+    // 1. Obtém as regras configuradas (múltiplos remetentes)
+    let rules: BankSyncRule[] = [];
+    if (user.bankSyncRules) {
+      try {
+        const parsed = JSON.parse(user.bankSyncRules);
+        if (Array.isArray(parsed)) {
+          rules = parsed.filter((r) => r && typeof r.email === "string" && r.email.trim());
+        }
+      } catch {
+        // Ignora erro de JSON
+      }
+    }
+
+    if (rules.length === 0 && user.bankSenderEmail?.trim()) {
+      rules = [
+        {
+          id: "default",
+          email: user.bankSenderEmail.trim(),
+          accountId: user.bankSyncAccountId || "",
+        },
+      ];
+    }
+
+    if (rules.length === 0) {
+      return { success: false, error: "Por favor, cadastre ao menos um e-mail de remetente bancário no seu perfil." };
+    }
+
+    const accessToken = await getValidAccessToken(userId);
+    if (!accessToken) {
+      return {
+        success: false,
+        error: "Sua conexão com o Google expirou ou foi revogada. Por favor, reconecte sua conta em 'Meu Perfil'.",
+      };
+    }
+
     // Busca ou cria a categoria "Sincronizado"
     let category = await prisma.category.findFirst({
       where: { name: "Sincronizado" },
@@ -549,6 +575,6 @@ export async function syncGoogleEmails() {
     };
   } catch (err: any) {
     console.error("Erro geral na sincronização com Gmail:", err);
-    return { success: false, error: "Erro de comunicação com os servidores do Google." };
+    return { success: false, error: err?.message || "Erro de comunicação com os servidores do Google." };
   }
 }

@@ -7,6 +7,7 @@ import { payCardBill } from "@/app/actions/transactions";
 import { toggleAccountIncludeInTotal } from "@/app/actions/accounts";
 import CardInvoiceModal from "@/components/accounts/CardInvoiceModal";
 import { useRouter } from "next/navigation";
+import { getBankIcon } from "@/lib/icons";
 
 interface CardData {
   id: string;
@@ -32,19 +33,6 @@ interface FinancialSummaryProps {
   month: number;
   year: number;
 }
-
-const getBankIcon = (name: string) => {
-  const nameLower = name.toLowerCase();
-  if (nameLower.includes("brasil")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-do-brasil.svg";
-  if (nameLower.includes("99")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/99-pay.svg";
-  if (nameLower.includes("carteira")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-  if (nameLower.includes("nubank")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/nubank.svg";
-  if (nameLower.includes("itau")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/itau.svg";
-  if (nameLower.includes("bradesco")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/bradesco.svg";
-  if (nameLower.includes("inter")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-inter.svg";
-  if (nameLower.includes("santander")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/santander.svg";
-  return "https://cdn.despezzas.com.br/svgs/carteira.svg"; // fallback
-};
 
 export default function FinancialSummary({ creditCards, accounts, month, year }: FinancialSummaryProps) {
   const router = useRouter();

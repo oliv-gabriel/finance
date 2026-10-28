@@ -1,26 +1,12 @@
 import { getCategories } from "@/app/actions/categories";
 import { getDashboardData } from "@/app/actions/dashboard";
 import { Button } from "@/components/ui/Button";
-import { Plus, Pencil, Tag, Utensils, Wine, ShoppingBag, Car, Home, Smartphone, Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign } from "lucide-react";
+import { Plus, Pencil, Tag } from "lucide-react";
+import { getCategoryIconComponent } from "@/lib/icons";
 import Link from "next/link";
 import { isAdmin } from "@/lib/auth-utils";
 import Navbar from "@/components/Navbar";
 
-const getCategoryIconComponent = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes("aliment") || lower.includes("restauran") || lower.includes("comida") || lower.includes("ifood") || lower.includes("lanche")) return Utensils;
-  if (lower.includes("bar") || lower.includes("bebida") || lower.includes("vinho") || lower.includes("lazer")) return Wine;
-  if (lower.includes("compra") || lower.includes("mercado") || lower.includes("loja") || lower.includes("supermercado")) return ShoppingBag;
-  if (lower.includes("transpor") || lower.includes("uber") || lower.includes("carro") || lower.includes("gasolina") || lower.includes("combustível")) return Car;
-  if (lower.includes("casa") || lower.includes("aluguel") || lower.includes("moradia") || lower.includes("luz") || lower.includes("água")) return Home;
-  if (lower.includes("celular") || lower.includes("telefone") || lower.includes("internet") || lower.includes("assinatura") || lower.includes("spotify") || lower.includes("netflix") || lower.includes("tv")) return Smartphone;
-  if (lower.includes("jogo") || lower.includes("game") || lower.includes("steam") || lower.includes("psn") || lower.includes("xbox") || lower.includes("hobbie")) return Gamepad2;
-  if (lower.includes("viagem") || lower.includes("ferias") || lower.includes("voo") || lower.includes("hotel")) return Plane;
-  if (lower.includes("saude") || lower.includes("saúde") || lower.includes("farmacia") || lower.includes("medico") || lower.includes("academia") || lower.includes("cuidados") || lower.includes("pet")) return HeartPulse;
-  if (lower.includes("educa") || lower.includes("curso") || lower.includes("faculdade") || lower.includes("escola") || lower.includes("livro")) return GraduationCap;
-  if (lower.includes("salario") || lower.includes("salário") || lower.includes("renda") || lower.includes("invest")) return DollarSign;
-  return Tag;
-};
 
 export default async function CategoriesPage({
   searchParams,

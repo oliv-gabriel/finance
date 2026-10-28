@@ -97,6 +97,7 @@ export async function registerUser(formData: FormData) {
 }
 
 export async function toggleUserRole(userId: string, newRole: "ADMIN" | "USER") {
+  const session = await auth();
   const admin = await isAdmin();
   if (!admin) {
     return { error: "Acesso não autorizado." };
@@ -105,20 +106,22 @@ export async function toggleUserRole(userId: string, newRole: "ADMIN" | "USER") 
   try {
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     if (!targetUser) {
       return { error: "Usuário não encontrado." };
     }
 
-    if (
-      (targetUser.id === "cmu3bvnp40000ufqs95rnpmkr" ||
-        targetUser.name === "gab" ||
-        targetUser.email === "gab") &&
-      newRole !== "ADMIN"
-    ) {
-      return { error: "O usuário mestre não pode perder o acesso de Administrador." };
+    if (session?.user?.id === userId && newRole !== "ADMIN") {
+      return { error: "Você não pode remover seu próprio acesso de Administrador." };
+    }
+
+    if (targetUser.role === "ADMIN" && newRole !== "ADMIN") {
+      const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+      if (adminCount <= 1) {
+        return { error: "O sistema precisa de pelo menos um Administrador ativo." };
+      }
     }
 
     await prisma.user.update({
@@ -212,23 +215,22 @@ export async function deleteUser(userId: string) {
   try {
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, role: true },
     });
 
     if (!targetUser) {
       return { error: "Usuário não encontrado." };
     }
 
-    if (
-      targetUser.id === "cmu3bvnp40000ufqs95rnpmkr" ||
-      targetUser.name === "gab" ||
-      targetUser.email === "gab"
-    ) {
-      return { error: "O usuário mestre não pode ser excluído." };
-    }
-
     if (session?.user?.id === userId) {
       return { error: "Você não pode excluir sua própria conta enquanto estiver logado nela." };
+    }
+
+    if (targetUser.role === "ADMIN") {
+      const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+      if (adminCount <= 1) {
+        return { error: "Não é possível excluir o único Administrador ativo do sistema." };
+      }
     }
 
     await prisma.user.delete({

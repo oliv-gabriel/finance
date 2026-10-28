@@ -3,14 +3,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   CheckCircle2, Clock, Edit2, Trash2, Calendar, Tag,
-  Search, Utensils, Wine, ShoppingBag, Car, Home, Smartphone,
-  Gamepad2, Plane, HeartPulse, GraduationCap, DollarSign, CreditCard as CreditCardIcon,
+  Search, CreditCard as CreditCardIcon,
   ArrowUpRight, ArrowDownLeft, TrendingUp, X, CheckCircle, ArrowRightLeft,
   Filter, ArrowUpDown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toggleTransactionPaid, deleteTransaction } from "@/app/actions/transactions";
 import TransactionFilterModal, { FilterState, initialFilterState } from "./TransactionFilterModal";
+import { getBankIcon, getCategoryIconComponent } from "@/lib/icons";
 
 interface Transaction {
   id: string;
@@ -46,36 +46,6 @@ interface TransactionTableProps {
   creditCards?: { id: string; name: string }[];
   categories?: { name: string; color?: string; icon?: string }[];
 }
-
-const getBankIcon = (name: string) => {
-  const nameLower = name.toLowerCase();
-  if (nameLower.includes("brasil") || nameLower === "bb") return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-do-brasil.svg";
-  if (nameLower.includes("99")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/99-pay.svg";
-  if (nameLower.includes("carteira")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-  if (nameLower.includes("nubank") || nameLower.includes("nu")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/nubank.svg";
-  if (nameLower.includes("itau") || nameLower.includes("itaú")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/itau.svg";
-  if (nameLower.includes("bradesco")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/bradesco.svg";
-  if (nameLower.includes("inter")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/banco-inter.svg";
-  if (nameLower.includes("santander")) return "https://raw.githubusercontent.com/budgi-it/brazilian-financial-icons/835b29d98d5f30a57dfb6d8b20652f215e2e010a/santander.svg";
-  if (nameLower.includes("picpay")) return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-  return "https://cdn.despezzas.com.br/svgs/carteira.svg";
-};
-
-const getCategoryIconComponent = (name: string) => {
-  const lower = name.toLowerCase();
-  if (lower.includes("aliment") || lower.includes("restauran") || lower.includes("comida") || lower.includes("ifood") || lower.includes("lanche")) return Utensils;
-  if (lower.includes("bar") || lower.includes("bebida") || lower.includes("vinho") || lower.includes("lazer")) return Wine;
-  if (lower.includes("compra") || lower.includes("mercado") || lower.includes("loja") || lower.includes("supermercado")) return ShoppingBag;
-  if (lower.includes("transpor") || lower.includes("uber") || lower.includes("carro") || lower.includes("gasolina") || lower.includes("combustível")) return Car;
-  if (lower.includes("casa") || lower.includes("aluguel") || lower.includes("moradia") || lower.includes("luz") || lower.includes("água")) return Home;
-  if (lower.includes("celular") || lower.includes("telefone") || lower.includes("internet") || lower.includes("assinatura") || lower.includes("spotify") || lower.includes("netflix")) return Smartphone;
-  if (lower.includes("jogo") || lower.includes("game") || lower.includes("steam") || lower.includes("psn") || lower.includes("xbox")) return Gamepad2;
-  if (lower.includes("viagem") || lower.includes("ferias") || lower.includes("voo") || lower.includes("hotel")) return Plane;
-  if (lower.includes("saude") || lower.includes("saúde") || lower.includes("farmacia") || lower.includes("medico") || lower.includes("academia")) return HeartPulse;
-  if (lower.includes("educa") || lower.includes("curso") || lower.includes("faculdade") || lower.includes("escola") || lower.includes("livro")) return GraduationCap;
-  if (lower.includes("salario") || lower.includes("salário") || lower.includes("renda") || lower.includes("invest")) return DollarSign;
-  return Tag;
-};
 
 export default function TransactionTable({
   transactions,

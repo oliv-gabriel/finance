@@ -37,12 +37,7 @@ export async function getCurrentUserSession(forceDbRefresh = false) {
     }
   }
 
-  const isUserAdmin =
-    id === "cmu3bvnp40000ufqs95rnpmkr" ||
-    role === "ADMIN" ||
-    name === "gab" ||
-    email === "gab" ||
-    email === "gab@example.com";
+  const isUserAdmin = role === "ADMIN";
 
   return {
     id,
