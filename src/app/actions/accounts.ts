@@ -39,23 +39,96 @@ export async function createAccount(data: {
   try {
     const { bankId, ...rest } = data;
     const userId = await getCurrentUserId();
+
+    if (!data.name || data.name.trim() === "") {
+      return { success: false, error: "O nome da conta ou cartão é obrigatório." };
+    }
+
+    if (data.type === "CARTAO") {
+      if (data.closingDay !== undefined && (data.closingDay < 1 || data.closingDay > 31)) {
+        return { success: false, error: "Dia de fechamento deve ser entre 1 e 31." };
+      }
+      if (data.dueDay !== undefined && (data.dueDay < 1 || data.dueDay > 31)) {
+        return { success: false, error: "Dia de vencimento deve ser entre 1 e 31." };
+      }
+      if (data.limit !== undefined && data.limit < 0) {
+        return { success: false, error: "O limite não pode ser negativo." };
+      }
+    }
+
     const account = await prisma.account.create({
       data: {
         ...rest,
+        name: rest.name.trim(),
         userId,
         includeInTotal: rest.includeInTotal !== undefined ? rest.includeInTotal : true,
         bankId: bankId && bankId.trim() !== "" ? bankId : null,
       },
     });
     revalidatePath("/accounts");
+    revalidatePath("/transactions");
     revalidatePath("/transactions/new");
     revalidatePath("/");
     return { success: true, account };
   } catch (error) {
     console.error("Error creating account:", error);
-    // Return a more descriptive error if possible
     const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
     return { success: false, error: `Falha ao criar conta: ${errorMessage}` };
+  }
+}
+
+export async function updateAccount(
+  id: string,
+  data: {
+    name: string;
+    bankId?: string | null;
+    limit?: number | null;
+    closingDay?: number | null;
+    dueDay?: number | null;
+    includeInTotal?: boolean;
+  }
+) {
+  try {
+    const userId = await getCurrentUserId();
+    const { bankId, ...rest } = data;
+
+    if (!data.name || data.name.trim() === "") {
+      return { success: false, error: "O nome não pode ficar vazio." };
+    }
+
+    if (data.closingDay !== undefined && data.closingDay !== null) {
+      if (data.closingDay < 1 || data.closingDay > 31) {
+        return { success: false, error: "Dia de fechamento deve ser entre 1 e 31." };
+      }
+    }
+
+    if (data.dueDay !== undefined && data.dueDay !== null) {
+      if (data.dueDay < 1 || data.dueDay > 31) {
+        return { success: false, error: "Dia de vencimento deve ser entre 1 e 31." };
+      }
+    }
+
+    if (data.limit !== undefined && data.limit !== null && data.limit < 0) {
+      return { success: false, error: "O limite não pode ser negativo." };
+    }
+
+    await prisma.account.update({
+      where: { id, userId },
+      data: {
+        ...rest,
+        name: rest.name.trim(),
+        bankId: bankId !== undefined ? (bankId && bankId.trim() !== "" ? bankId : null) : undefined,
+      },
+    });
+    revalidatePath("/accounts");
+    revalidatePath("/transactions");
+    revalidatePath("/transactions/new");
+    revalidatePath("/");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating account:", error);
+    const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+    return { success: false, error: `Falha ao atualizar conta: ${errorMessage}` };
   }
 }
 

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Landmark, CreditCard, Trash2, FileText, Check, Plus, AlertCircle } from "lucide-react";
+import { Landmark, CreditCard, Trash2, FileText, Pencil, X, Loader2, Plus, Info } from "lucide-react";
 import { getBankIcon, getBankStyle } from "@/lib/icons";
-import { toggleAccountIncludeInTotal, deleteAccount } from "@/app/actions/accounts";
+import { toggleAccountIncludeInTotal, deleteAccount, updateAccount } from "@/app/actions/accounts";
 import CardInvoiceModal from "./CardInvoiceModal";
 import { useRouter } from "next/navigation";
 
@@ -15,6 +15,7 @@ export interface AccountItemData {
   limit?: number | null;
   closingDay?: number | null;
   dueDay?: number | null;
+  bankId?: string | null;
   bank?: { id: string; name: string } | null;
 }
 
@@ -36,6 +37,62 @@ export default function AccountsList({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [editingAccount, setEditingAccount] = useState<AccountItemData | null>(null);
+
+  // Form states for editing
+  const [editName, setEditName] = useState("");
+  const [editBankId, setEditBankId] = useState("");
+  const [editLimit, setEditLimit] = useState("");
+  const [editClosingDay, setEditClosingDay] = useState("");
+  const [editDueDay, setEditDueDay] = useState("");
+  const [editIncludeInTotal, setEditIncludeInTotal] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const startEdit = (acc: AccountItemData) => {
+    setEditingAccount(acc);
+    setEditName(acc.name);
+    setEditBankId(acc.bankId || acc.bank?.id || "");
+    setEditLimit(acc.limit != null ? acc.limit.toString() : "");
+    setEditClosingDay(acc.closingDay != null ? acc.closingDay.toString() : "");
+    setEditDueDay(acc.dueDay != null ? acc.dueDay.toString() : "");
+    setEditIncludeInTotal(acc.includeInTotal !== false);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAccount || !editName.trim()) return;
+
+    if (editingAccount.type === "CARTAO") {
+      const cDay = parseInt(editClosingDay);
+      const dDay = parseInt(editDueDay);
+      if (isNaN(cDay) || cDay < 1 || cDay > 31) {
+        alert("O dia de fechamento deve ser um número entre 1 e 31.");
+        return;
+      }
+      if (isNaN(dDay) || dDay < 1 || dDay > 31) {
+        alert("O dia de vencimento deve ser um número entre 1 e 31.");
+        return;
+      }
+    }
+
+    setIsSaving(true);
+    const res = await updateAccount(editingAccount.id, {
+      name: editName.trim(),
+      bankId: editingAccount.type === "CARTAO" ? (editBankId ? editBankId : null) : undefined,
+      limit: editingAccount.type === "CARTAO" ? (editLimit ? parseFloat(editLimit) : 0) : undefined,
+      closingDay: editingAccount.type === "CARTAO" ? (editClosingDay ? parseInt(editClosingDay) : null) : undefined,
+      dueDay: editingAccount.type === "CARTAO" ? (editDueDay ? parseInt(editDueDay) : null) : undefined,
+      includeInTotal: editIncludeInTotal,
+    });
+    setIsSaving(false);
+
+    if (!res.success) {
+      alert(res.error || "Falha ao atualizar conta");
+    } else {
+      setEditingAccount(null);
+      router.refresh();
+    }
+  };
 
   // Optimistic tracking for includeInTotal switches
   const [includeMap, setIncludeMap] = useState<Record<string, boolean>>(() => {
@@ -169,8 +226,8 @@ export default function AccountsList({
                       </div>
                     </div>
 
-                    {/* Lado Direito: Ações (Toggle Switch Roxo + Lixeira) */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    {/* Lado Direito: Ações (Toggle Switch Roxo + Editar + Lixeira) */}
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                       {/* Toggle Switch Roxo */}
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-zinc-400 select-none">
@@ -194,6 +251,17 @@ export default function AccountsList({
                           />
                         </button>
                       </div>
+
+                      {/* Botão Editar Conta */}
+                      <button
+                        type="button"
+                        onClick={() => startEdit(account)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                        title="Editar conta bancária"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-[#b300e4]" />
+                        <span>Editar</span>
+                      </button>
 
                       {/* Excluir Conta */}
                       <button
@@ -298,21 +366,21 @@ export default function AccountsList({
                             </span>
                           )}
                           {(card.closingDay || card.dueDay) && (
-                            <span className="text-zinc-500">
-                              • Fecha {card.closingDay || "-"} / Vence {card.dueDay || "-"}
+                            <span className="text-zinc-400">
+                              • Fecha dia {card.closingDay || "-"} / Vence dia {card.dueDay || "-"}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Lado Direito: Ações (Fatura + Toggle Switch + Lixeira) */}
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    {/* Lado Direito: Ações (Fatura + Toggle Switch + Editar + Lixeira) */}
+                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
                       {/* Botão Ver Fatura */}
                       <button
                         type="button"
                         onClick={() => setSelectedCardId(card.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-white/20 transition-all cursor-pointer"
                         title="Ver detalhes da fatura deste cartão"
                       >
                         <FileText className="w-3.5 h-3.5 text-[#b300e4]" />
@@ -340,6 +408,17 @@ export default function AccountsList({
                         </button>
                       </div>
 
+                      {/* Botão Editar Cartão */}
+                      <button
+                        type="button"
+                        onClick={() => startEdit(card)}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-[#b300e4]/15 text-zinc-300 hover:text-white border border-white/10 hover:border-[#b300e4]/30 transition-all cursor-pointer"
+                        title="Editar cartão de crédito"
+                      >
+                        <Pencil className="h-3.5 w-3.5 text-[#b300e4]" />
+                        <span>Editar</span>
+                      </button>
+
                       {/* Excluir Cartão */}
                       <button
                         type="button"
@@ -359,6 +438,192 @@ export default function AccountsList({
         </div>
       </div>
 
+      {/* Modal de Edição de Conta ou Cartão */}
+      {editingAccount && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="bg-[#18181b] border border-white/10 rounded-2xl p-5 md:p-6 w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-[#b300e4]/10 text-[#b300e4] flex items-center justify-center">
+                  <Pencil className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    Editar {editingAccount.type === "CONTA" ? "Conta Bancária" : "Cartão de Crédito"}
+                  </h3>
+                  <p className="text-xs text-zinc-400">Altere as informações e salve as alterações</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingAccount(null)}
+                className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-300">
+                  {editingAccount.type === "CONTA" ? "Nome da Conta ou Banco" : "Nome do Cartão"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                />
+              </div>
+
+              {editingAccount.type === "CARTAO" && (
+                <div className="space-y-3 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
+                      <select
+                        value={editBankId}
+                        onChange={(e) => setEditBankId(e.target.value)}
+                        className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
+                      >
+                        <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
+                        {bankAccounts.map((b) => (
+                          <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editLimit}
+                        onChange={(e) => setEditLimit(e.target.value)}
+                        placeholder="0,00"
+                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-zinc-300">
+                          Dia Fechamento (Corte) <span className="text-red-400">*</span>
+                        </label>
+                        <span className="text-[10px] text-zinc-500">Ex: 10</span>
+                      </div>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        required
+                        value={editClosingDay}
+                        onChange={(e) => setEditClosingDay(e.target.value)}
+                        placeholder="Ex: 10"
+                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                      />
+                      <p className="text-[11px] text-zinc-400">
+                        Até este dia as compras entram na fatura atual.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-zinc-300">
+                          Dia Vencimento (Pagamento) <span className="text-red-400">*</span>
+                        </label>
+                        <span className="text-[10px] text-zinc-500">Ex: 20</span>
+                      </div>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        required
+                        value={editDueDay}
+                        onChange={(e) => setEditDueDay(e.target.value)}
+                        placeholder="Ex: 20"
+                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                      />
+                      <p className="text-[11px] text-zinc-400">
+                        Dia limite para pagar o valor da fatura.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Resumo do ciclo de faturas */}
+                  {editClosingDay && editDueDay && (
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5 text-xs text-zinc-300">
+                      <Info className="w-4 h-4 text-[#b300e4] shrink-0" />
+                      <span>
+                        Resumo: Compras até dia <strong>{editClosingDay}</strong> entram na fatura com vencimento dia <strong>{editDueDay}</strong>.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Toggle Switch Somar no saldo geral */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+                <div className="flex flex-col pr-3">
+                  <span className="text-sm font-semibold text-white">Somar no saldo geral</span>
+                  <span className="text-xs text-zinc-400">
+                    {editingAccount.type === "CONTA"
+                      ? "Contabiliza o saldo desta conta no valor total do dashboard"
+                      : "Contabiliza as faturas deste cartão nas despesas do dashboard"}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={editIncludeInTotal}
+                  onClick={() => setEditIncludeInTotal(!editIncludeInTotal)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    editIncludeInTotal ? "bg-[#b300e4]" : "bg-zinc-700"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      editIncludeInTotal ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Botões do modal */}
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingAccount(null)}
+                  className="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs md:text-sm font-bold bg-[#b300e4] hover:bg-[#b300e4]/90 text-white shadow-md shadow-[#b300e4]/25 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <span>Salvar Alterações</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Fatura do Cartão */}
       <CardInvoiceModal
         isOpen={!!selectedCardId}
@@ -370,4 +635,3 @@ export default function AccountsList({
     </div>
   );
 }
-

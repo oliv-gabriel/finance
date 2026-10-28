@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createAccount } from "@/app/actions/accounts";
-import { Landmark, CreditCard, Plus, X, Loader2 } from "lucide-react";
+import { Landmark, CreditCard, Plus, X, Loader2, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface Account {
@@ -41,6 +41,19 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
+
+    if (type === "CARTAO") {
+      const cDay = parseInt(closingDay);
+      const dDay = parseInt(dueDay);
+      if (isNaN(cDay) || cDay < 1 || cDay > 31) {
+        alert("O dia de fechamento deve ser um número entre 1 e 31.");
+        return;
+      }
+      if (isNaN(dDay) || dDay < 1 || dDay > 31) {
+        alert("O dia de vencimento deve ser um número entre 1 e 31.");
+        return;
+      }
+    }
 
     setIsPending(true);
 
@@ -145,68 +158,100 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={type === "CONTA" ? "Ex: Nubank, Itaú, 99Pay, Inter..." : "Ex: Nubank Ultravioleta, C6 Black..."}
+            placeholder={type === "CONTA" ? "Ex: Nubank, Itaú, 99Pay, Inter..." : "Ex: Nubank Ultravioleta, BB Elo, C6..."}
             className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
           />
         </div>
 
         {/* Campos específicos para Cartão de Crédito */}
         {type === "CARTAO" && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-            <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
-              <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
-              <select
-                value={bankId}
-                onChange={(e) => setBankId(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
-              >
-                <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
-                {bankAccounts.map((b) => (
-                  <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+          <div className="space-y-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
+                <select
+                  value={bankId}
+                  onChange={(e) => setBankId(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
+                >
+                  <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
+                  {bankAccounts.map((b) => (
+                    <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={limit}
+                  onChange={(e) => setLimit(e.target.value)}
+                  placeholder="0,00"
+                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={limit}
-                onChange={(e) => setLimit(e.target.value)}
-                placeholder="0,00"
-                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-zinc-300">
+                    Dia Fechamento (Corte) <span className="text-red-400">*</span>
+                  </label>
+                  <span className="text-[10px] text-zinc-500">Ex: 10</span>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  required={type === "CARTAO"}
+                  value={closingDay}
+                  onChange={(e) => setClosingDay(e.target.value)}
+                  placeholder="Ex: 10"
+                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                />
+                <p className="text-[11px] text-zinc-400">
+                  Melhor dia de compra. Até este dia as compras entram na fatura deste mês.
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-zinc-300">
+                    Dia Vencimento (Pagamento) <span className="text-red-400">*</span>
+                  </label>
+                  <span className="text-[10px] text-zinc-500">Ex: 20</span>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  required={type === "CARTAO"}
+                  value={dueDay}
+                  onChange={(e) => setDueDay(e.target.value)}
+                  placeholder="Ex: 20"
+                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                />
+                <p className="text-[11px] text-zinc-400">
+                  Dia limite de pagamento do boleto da fatura.
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300">Dia Fechamento</label>
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={closingDay}
-                onChange={(e) => setClosingDay(e.target.value)}
-                placeholder="Ex: 5"
-                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-zinc-300">Dia Vencimento</label>
-              <input
-                type="number"
-                min="1"
-                max="31"
-                value={dueDay}
-                onChange={(e) => setDueDay(e.target.value)}
-                placeholder="Ex: 12"
-                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
-              />
-            </div>
+            {/* Dica visual de ciclo se ambos estiverem preenchidos */}
+            {closingDay && dueDay && (
+              <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5 text-xs text-zinc-300">
+                <Info className="w-4 h-4 text-[#b300e4] shrink-0" />
+                <span>
+                  Resumo: Compras até dia <strong>{closingDay}</strong> entram na fatura com vencimento dia <strong>{dueDay}</strong>.
+                </span>
+              </div>
+            )}
           </div>
         )}
 

@@ -1,5 +1,4 @@
 import { getAccounts } from "@/app/actions/accounts";
-import { getDashboardData } from "@/app/actions/dashboard";
 import AccountForm from "@/components/accounts/AccountForm";
 import AccountsList from "@/components/accounts/AccountsList";
 import { isAdmin } from "@/lib/auth-utils";
@@ -16,17 +15,14 @@ export default async function AccountsPage({
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
 
-  const [accounts, data] = await Promise.all([
-    getAccounts(),
-    getDashboardData(month, year),
-  ]);
+  const accounts = await getAccounts();
 
   const bankAccounts = accounts.filter((a) => a.type === "CONTA");
   const creditCards = accounts.filter((a) => a.type === "CARTAO");
 
   return (
     <div className="flex flex-col min-h-screen bg-[#121212]">
-      <Navbar summary={data.summary} isAdmin={admin} />
+      <Navbar isAdmin={admin} />
 
       <div className="max-w-6xl mx-auto w-full px-4 py-5 md:px-8 md:py-8 space-y-6 flex-1 overflow-auto pb-36 sm:pb-16">
         {/* Cabeçalho da Página */}
