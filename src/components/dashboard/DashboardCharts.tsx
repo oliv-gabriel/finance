@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell
@@ -82,6 +82,8 @@ export function ExpensesBarChart({ data }: { data: any[] }) {
 }
 
 export function CategoriesPieChart({ data }: { data: any[] }) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
   if (!data || data.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-xs text-muted-foreground font-medium">
@@ -98,8 +100,15 @@ export function CategoriesPieChart({ data }: { data: any[] }) {
     color: VIBRANT_PALETTE[index % VIBRANT_PALETTE.length],
   }));
 
-  const formatBRL = (val: number) =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
+  const formatBRL = (val: number, hideCents = false) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: hideCents ? 0 : 2,
+    }).format(val);
+
+  const activeItem = activeIndex !== null ? coloredData[activeIndex] : null;
+  const activePct = activeItem && total > 0 ? Math.round((activeItem.value / total) * 100) : 0;
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-between">
@@ -118,36 +127,73 @@ export function CategoriesPieChart({ data }: { data: any[] }) {
               stroke="#191919"
               strokeWidth={2}
               animationDuration={1000}
+              onMouseEnter={(_, index) => setActiveIndex(index)}
+              onMouseLeave={() => setActiveIndex(null)}
             >
-              {coloredData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color} 
-                />
-              ))}
+              {coloredData.map((entry, index) => {
+                const isHovered = activeIndex === index;
+                const isDimmed = activeIndex !== null && !isHovered;
+                return (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color}
+                    opacity={isDimmed ? 0.35 : 1}
+                    stroke={isHovered ? "#ffffff" : "#191919"}
+                    strokeWidth={isHovered ? 2.5 : 2}
+                    className="transition-all duration-200 cursor-pointer outline-none"
+                  />
+                );
+              })}
             </Pie>
-            <RechartsTooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Informação Centralizada no Buraco do Donut */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</span>
-          <span className="text-sm font-black text-foreground tabular-nums leading-tight">
-            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(total)}
-          </span>
+        {/* Informação Centralizada no Buraco do Donut (HUB Dinâmico sem colisão) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none px-3">
+          {activeItem ? (
+            <div className="flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-150">
+              <span 
+                className="text-[10px] font-black uppercase tracking-wider truncate max-w-[110px]"
+                style={{ color: activeItem.color }}
+              >
+                {activeItem.name}
+              </span>
+              <span className="text-xs sm:text-sm font-black text-white tabular-nums leading-tight mt-0.5">
+                {formatBRL(activeItem.value)}
+              </span>
+              <span className="text-[10px] font-bold text-zinc-400 tabular-nums">
+                {activePct}% do total
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center animate-in fade-in duration-150">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</span>
+              <span className="text-sm font-black text-foreground tabular-nums leading-tight">
+                {formatBRL(total, true)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Legenda Customizada com Percentual e Scroll Oculto */}
-      <div className="w-full max-h-[90px] overflow-y-auto no-scrollbar flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 pt-2 px-1">
+      {/* Legenda Customizada com Percentual e Efeito Hover Interativo */}
+      <div className="w-full max-h-[90px] overflow-y-auto no-scrollbar flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 pt-2 px-1">
         {coloredData.map((item, i) => {
           const pct = total > 0 ? Math.round((item.value / total) * 100) : 0;
+          const isCurrent = activeIndex === i;
           return (
             <div 
               key={i} 
               title={`${item.name}: ${formatBRL(item.value)} (${pct}%)`}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-default select-none"
+              onMouseEnter={() => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(null)}
+              className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-lg transition-all duration-200 cursor-pointer select-none ${
+                isCurrent
+                  ? "bg-white/10 text-white font-semibold shadow-xs"
+                  : activeIndex !== null
+                  ? "opacity-35 text-muted-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              }`}
             >
               <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
               <span className="truncate max-w-[120px] font-medium text-[11px]">{item.name}</span>

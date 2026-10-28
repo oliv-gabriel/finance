@@ -6,7 +6,7 @@ import { createTransaction, updateTransaction } from "@/app/actions/transactions
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
-import { Save, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Calendar as CalendarIcon } from "lucide-react";
+import { Save, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Calendar as CalendarIcon, Check } from "lucide-react";
 import Link from "next/link";
 
 interface Category {
@@ -138,75 +138,83 @@ export default function TransactionForm({ categories, accounts, initialData, ini
   }
   return (
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-      <div className={`flex-1 space-y-5 overflow-y-auto custom-scrollbar ${isModal ? "px-6 py-4" : ""}`}>
+      <div className={`flex-1 space-y-4 sm:space-y-5 overflow-y-auto custom-scrollbar overscroll-contain ${isModal ? "px-4 sm:px-6 py-4" : ""}`}>
         {!isModal && (
           <div className="mb-6">
-            <h2 className="text-xl font-bold">{initialData ? "Editar Transação" : "Nova Transação"}</h2>
+            <h2 className="text-xl font-bold text-white">{initialData ? "Editar Transação" : "Nova Transação"}</h2>
           </div>
         )}
-        <div className="flex bg-muted p-1 rounded-lg gap-1">
+        <div className="grid grid-cols-3 bg-zinc-900/90 p-1.5 rounded-2xl gap-1.5 border border-border/60">
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: "EXPENSE" })}
-              className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 formData.type === "EXPENSE" 
-                  ? "bg-white shadow text-red-600" 
-                  : "text-muted-foreground hover:bg-white/50"
+                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-xs scale-[1.02]" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               }`}
             >
-              <ArrowDownCircle className="mr-2 h-4 w-4" />
-              Despesa
+              <ArrowDownCircle className="h-4 w-4 shrink-0" />
+              <span>Despesa</span>
             </button>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: "INCOME" })}
-              className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 formData.type === "INCOME" 
-                  ? "bg-white shadow text-green-600" 
-                  : "text-muted-foreground hover:bg-white/50"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-xs scale-[1.02]" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               }`}
             >
-              <ArrowUpCircle className="mr-2 h-4 w-4" />
-              Receita
+              <ArrowUpCircle className="h-4 w-4 shrink-0" />
+              <span>Receita</span>
             </button>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, type: "TRANSFER", paid: true })}
-              className={`flex-1 flex items-center justify-center py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                 formData.type === "TRANSFER" 
-                  ? "bg-white shadow text-blue-600" 
-                  : "text-muted-foreground hover:bg-white/50"
+                  ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 shadow-xs scale-[1.02]" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
               }`}
             >
-              <ArrowRightLeft className="mr-2 h-4 w-4" />
-              Transferência
+              <ArrowRightLeft className="h-4 w-4 shrink-0" />
+              <span className="truncate">Transferir</span>
             </button>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Descrição</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-white uppercase tracking-wider">Descrição</label>
             <Input
               required
               placeholder="Ex: Aluguel, Supermercado, Salário"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="h-11 sm:h-12 text-sm rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4]"
             />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Valor (R$)</label>
-              <Input
-                required
-                type="text"
-                placeholder="0,00"
-                value={formData.amount}
-                onChange={handleAmountChange}
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-white uppercase tracking-wider">Valor</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-3.5 text-xs sm:text-sm font-bold text-muted-foreground pointer-events-none select-none">
+                  R$
+                </span>
+                <Input
+                  required
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0,00"
+                  value={formData.amount}
+                  onChange={handleAmountChange}
+                  className="h-11 sm:h-12 pl-10 text-base sm:text-lg font-black tracking-tight rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4] tabular-nums"
+                />
+              </div>
             </div>
             
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-white uppercase tracking-wider">Data</label>
               <div className="relative group">
                 <Input
                   required
@@ -214,12 +222,12 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                   placeholder="DD/MM/AAAA"
                   value={formData.date}
                   onChange={handleDateChange}
-                  className="pr-10"
+                  className="h-11 sm:h-12 pr-11 text-sm font-semibold rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4] tabular-nums"
                 />
                 <button
                   type="button"
                   onClick={() => hiddenDateInputRef.current?.showPicker()}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-blue-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground hover:text-[#b300e4] transition-colors cursor-pointer"
                   title="Abrir calendário"
                 >
                   <CalendarIcon className="h-4 w-4" />
@@ -236,25 +244,33 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           </div>
 
           {formData.type !== "TRANSFER" && (
-            <div className="flex items-center space-x-2 py-2">
-              <input
-                type="checkbox"
-                id="paid"
-                checked={formData.paid}
-                onChange={(e) => setFormData({ ...formData, paid: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-              />
-              <label htmlFor="paid" className="text-sm font-medium cursor-pointer">
-                Esta transação já foi {formData.type === "EXPENSE" ? "paga" : "recebida"}
-              </label>
+            <div 
+              onClick={() => setFormData({ ...formData, paid: !formData.paid })}
+              className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-border/80 bg-zinc-900/80 hover:bg-zinc-900 transition-all cursor-pointer select-none"
+            >
+              <span className="text-sm sm:text-base font-bold text-white">
+                {formData.type === "EXPENSE" ? "Pago" : "Recebido"}
+              </span>
+
+              <div 
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                  formData.paid ? "bg-[#b300e4] shadow-xs shadow-[#b300e4]/50" : "bg-zinc-700/80"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block size-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                    formData.paid ? "translate-x-5.5" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
             </div>
           )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">{formData.type === "TRANSFER" ? "Conta de Origem" : "Conta ou Cartão"}</label>
+            <label className="text-xs font-bold text-white uppercase tracking-wider">{formData.type === "TRANSFER" ? "Conta de Origem" : "Conta ou Cartão"}</label>
             <select
               required
-              className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
               value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
             >
@@ -278,10 +294,10 @@ export default function TransactionForm({ categories, accounts, initialData, ini
 
           {formData.type === "TRANSFER" && (
             <div className="space-y-2 mt-4">
-              <label className="text-sm font-medium">Conta de Destino</label>
+              <label className="text-xs font-bold text-white uppercase tracking-wider">Conta de Destino</label>
               <select
                 required
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
                 value={formData.destinationAccountId}
                 onChange={(e) => setFormData({ ...formData, destinationAccountId: e.target.value })}
               >
@@ -296,7 +312,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           {showRecurrence && formData.type !== "TRANSFER" && (
             <div className="space-y-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-900/50">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground">Lançamento</label>
+                <label className="text-sm font-semibold text-white">Lançamento</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 bg-muted p-1 rounded-xl gap-1.5 border border-border/50">
                   <button
                     type="button"
@@ -340,7 +356,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
               {formData.entryType !== "unico" && formData.entryType !== "fixa" && (
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <label className="text-xs font-semibold text-white uppercase tracking-wide">
                       {formData.entryType === "recorrente" ? "Frequência" : "Frequência das parcelas"}
                     </label>
                     <select
@@ -354,7 +370,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <label className="text-xs font-semibold text-white uppercase tracking-wide">
                       {formData.entryType === "recorrente" ? "Quantidade de vezes" : "Número de parcelas (x)"}
                     </label>
                     <Input
@@ -427,10 +443,10 @@ export default function TransactionForm({ categories, accounts, initialData, ini
 
           {formData.type !== "TRANSFER" && (
             <div className="space-y-2">
-              <label className="text-sm font-medium">Categoria</label>
+              <label className="text-xs font-bold text-white uppercase tracking-wider">Categoria</label>
               <select
                 required
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
                 value={formData.categoryId}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
               >
@@ -491,18 +507,31 @@ export default function TransactionForm({ categories, accounts, initialData, ini
         </div>
       
       {/* Footer / Botões */}
-      <div className={`mt-auto ${isModal ? "p-6 border-t border-border/40 bg-background/50 backdrop-blur-sm" : "p-6 border-t"}`}>
-        <div className={`flex ${isModal ? "justify-between" : "justify-end"} space-x-3`}>
+      <div className={`mt-auto shrink-0 ${isModal ? "p-4 sm:p-5 border-t border-border/40 bg-card/95 backdrop-blur-md" : "p-6 border-t"}`}>
+        <div className="flex items-center gap-3">
           {onCancel ? (
-            <Button variant="outline" type="button" onClick={onCancel} className={isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}>
+            <Button 
+              variant="outline" 
+              type="button" 
+              onClick={onCancel} 
+              className={isModal ? "flex-1 h-11 sm:h-12 rounded-xl text-sm font-bold border-border/80 hover:bg-muted" : ""}
+            >
               Cancelar
             </Button>
           ) : (
-            <Link href="/transactions">
-              <Button variant="outline" type="button">Cancelar</Button>
+            <Link href="/transactions" className="flex-1">
+              <Button variant="outline" type="button" className="w-full h-11 sm:h-12 rounded-xl text-sm font-bold">
+                Cancelar
+              </Button>
             </Link>
           )}
-          <Button type="submit" disabled={isPending} className={`bg-[#b300e4] text-white hover:bg-[#b300e4]/90 ${isModal ? "flex-1 rounded-xl h-11 font-bold" : ""}`}>
+          <Button 
+            type="submit" 
+            disabled={isPending} 
+            className={`bg-[#b300e4] text-white hover:bg-[#b300e4]/90 shadow-md shadow-[#b300e4]/25 text-sm font-bold transition-all ${
+              isModal ? "flex-1 h-11 sm:h-12 rounded-xl" : "h-11 sm:h-12 px-6 rounded-xl"
+            }`}
+          >
             {isPending ? "Salvando..." : (initialData ? "Salvar" : "Criar")}
           </Button>
         </div>

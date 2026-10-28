@@ -14,19 +14,18 @@ export async function getTransactions(options?: {
   limit?: number;
   month?: number;
   year?: number;
+  accounts?: any[];
 }) {
   try {
+    const userId = await getCurrentUserId();
     let monthFilter: Prisma.TransactionWhereInput = {};
     if (options?.month && options?.year) {
       if (!validatePeriod(options.month, options.year)) {
         return [];
       }
-      const userId = await getCurrentUserId();
-      const allAccounts = await prisma.account.findMany({ where: { userId } });
+      const allAccounts = options.accounts ?? (await prisma.account.findMany({ where: { userId } }));
       monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
     }
-
-    const userId = await getCurrentUserId();
 
     const transactions = await prisma.transaction.findMany({
       where: {
@@ -258,20 +257,6 @@ export async function toggleTransactionPaid(id: string, paid: boolean) {
   }
 }
 
-export async function deleteAllTransactions() {
-  try {
-    const userId = await getCurrentUserId();
-    await prisma.transaction.deleteMany({
-      where: { userId }
-    });
-    revalidatePath("/transactions");
-    revalidatePath("/");
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting all transactions:", error);
-    return { success: false, error: "Falha ao limpar transações" };
-  }
-}
 
 export async function deleteTransaction(id: string, deleteAllInSeries?: boolean) {
   try {

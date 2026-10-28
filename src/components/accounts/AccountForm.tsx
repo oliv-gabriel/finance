@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { createAccount } from "@/app/actions/accounts";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Landmark, CreditCard, Plus, X, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Account {
   id: string;
@@ -12,109 +11,260 @@ interface Account {
   type: string;
 }
 
-export default function AccountForm({ bankAccounts }: { bankAccounts: Account[] }) {
-  const [type, setType] = useState("CONTA");
+interface AccountFormProps {
+  bankAccounts: Account[];
+  isOpenDefault?: boolean;
+}
+
+export default function AccountForm({ bankAccounts, isOpenDefault = false }: AccountFormProps) {
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(isOpenDefault);
+  const [type, setType] = useState<"CONTA" | "CARTAO">("CONTA");
+  const [name, setName] = useState("");
+  const [bankId, setBankId] = useState("");
+  const [limit, setLimit] = useState("");
+  const [closingDay, setClosingDay] = useState("");
+  const [dueDay, setDueDay] = useState("");
+  const [includeInTotal, setIncludeInTotal] = useState(true);
   const [isPending, setIsPending] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
-    setIsPending(true);
-    const name = formData.get("name") as string;
-    const type = formData.get("type") as string;
-    const bankId = formData.get("bankId") as string;
-    const limit = formData.get("limit") ? parseFloat(formData.get("limit") as string) : undefined;
-    const closingDay = formData.get("closingDay") ? parseInt(formData.get("closingDay") as string) : undefined;
-    const dueDay = formData.get("dueDay") ? parseInt(formData.get("dueDay") as string) : undefined;
-    const includeInTotal = formData.get("includeInTotal") !== null;
+  const resetForm = () => {
+    setName("");
+    setBankId("");
+    setLimit("");
+    setClosingDay("");
+    setDueDay("");
+    setIncludeInTotal(true);
+    setType("CONTA");
+  };
 
-    const result = await createAccount({ 
-      name, 
-      type, 
-      bankId: type === "CARTAO" ? bankId : undefined,
-      limit: type === "CARTAO" ? limit : undefined,
-      closingDay: type === "CARTAO" ? closingDay : undefined,
-      dueDay: type === "CARTAO" ? dueDay : undefined,
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setIsPending(true);
+
+    const result = await createAccount({
+      name: name.trim(),
+      type,
+      bankId: type === "CARTAO" && bankId ? bankId : undefined,
+      limit: type === "CARTAO" && limit ? parseFloat(limit) : undefined,
+      closingDay: type === "CARTAO" && closingDay ? parseInt(closingDay) : undefined,
+      dueDay: type === "CARTAO" && dueDay ? parseInt(dueDay) : undefined,
       includeInTotal,
     });
 
+    setIsPending(false);
+
     if (!result.success) {
       alert(result.error);
+    } else {
+      resetForm();
+      setIsOpen(false);
+      router.refresh();
     }
-    setIsPending(false);
-    // The page will revalidate due to revalidatePath in the action
+  }
+
+  if (!isOpen) {
+    return (
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-[#b300e4]/40 hover:border-[#b300e4] bg-[#18181b]/50 hover:bg-[#b300e4]/5 text-sm font-semibold text-zinc-300 hover:text-white flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer group shadow-2xs"
+      >
+        <div className="w-7 h-7 rounded-xl bg-[#b300e4]/10 group-hover:bg-[#b300e4] text-[#b300e4] group-hover:text-white flex items-center justify-center transition-colors">
+          <Plus className="h-4 w-4 stroke-[2.5]" />
+        </div>
+        <span>Cadastrar Nova Conta ou Cartão</span>
+      </button>
+    );
   }
 
   return (
-    <div className="bg-card border border-border/70 rounded-2xl p-6 shadow-xs">
-      <h2 className="text-base font-semibold tracking-tight text-foreground mb-4">Cadastrar Nova Conta ou Cartão</h2>
-      <form action={handleSubmit} className="flex flex-col md:flex-row items-end gap-4">
-          <div className="flex-1 w-full space-y-2">
-            <label className="text-sm font-medium">Nome</label>
-            <Input name="name" required placeholder="Ex: Nubank, Itaú..." />
-          </div>
-          <div className="w-full md:w-48 space-y-2">
-            <label className="text-sm font-medium">Tipo</label>
-            <select 
-              name="type" 
-              required 
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+    <div className="bg-[#18181b] border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl relative animate-in fade-in-50 zoom-in-95 duration-200">
+      {/* Header do Form */}
+      <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/5">
+        <div>
+          <h2 className="text-base font-bold text-white tracking-tight">
+            {type === "CONTA" ? "Cadastrar Nova Conta Bancária" : "Cadastrar Novo Cartão de Crédito"}
+          </h2>
+          <p className="text-xs text-zinc-400 mt-0.5">Preencha os dados abaixo para cadastrar no sistema</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(false);
+            resetForm();
+          }}
+          className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+          title="Fechar formulário"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Seletor de Tipo (Pills / Abas) */}
+        <div>
+          <label className="text-xs font-semibold text-zinc-300 mb-1.5 block">Tipo de Registro</label>
+          <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setType("CONTA")}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
+                type === "CONTA"
+                  ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/30"
+                  : "text-zinc-400 hover:text-white"
+              }`}
             >
-              <option value="CONTA">Conta Bancária</option>
-              <option value="CARTAO">Cartão de Crédito</option>
-            </select>
+              <Landmark className="w-4 h-4" />
+              Conta Bancária
+            </button>
+            <button
+              type="button"
+              onClick={() => setType("CARTAO")}
+              className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
+                type === "CARTAO"
+                  ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/30"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              Cartão de Crédito
+            </button>
           </div>
+        </div>
 
-          {type === "CARTAO" && (
-            <>
-              <div className="w-full md:w-48 space-y-2">
-                <label className="text-sm font-medium">Vincular ao Banco</label>
-                <select 
-                  name="bankId" 
-                  required
-                  defaultValue="" 
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
-                >
-                  <option value="" disabled>Selecione o banco</option>
-                  {bankAccounts.map(bank => (
-                    <option key={bank.id} value={bank.id}>{bank.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-full md:w-32 space-y-2">
-                <label className="text-sm font-medium">Limite Total</label>
-                <Input name="limit" type="number" step="0.01" required placeholder="0,00" />
-              </div>
-              <div className="w-full md:w-28 space-y-2">
-                <label className="text-sm font-medium">Dia Fechamento</label>
-                <Input name="closingDay" type="number" min="1" max="31" required placeholder="Ex: 5" />
-              </div>
-              <div className="w-full md:w-28 space-y-2">
-                <label className="text-sm font-medium">Dia Vencimento</label>
-                <Input name="dueDay" type="number" min="1" max="31" required placeholder="Ex: 12" />
-              </div>
-            </>
-          )}
+        {/* Nome da Conta ou Cartão */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-zinc-300">
+            {type === "CONTA" ? "Nome da Conta ou Banco" : "Nome do Cartão"}
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={type === "CONTA" ? "Ex: Nubank, Itaú, 99Pay, Inter..." : "Ex: Nubank Ultravioleta, C6 Black..."}
+            className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+          />
+        </div>
 
-          <div className="flex items-center gap-2 pb-2">
-            <input
-              type="checkbox"
-              id="includeInTotal"
-              name="includeInTotal"
-              defaultChecked={true}
-              className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+        {/* Campos específicos para Cartão de Crédito */}
+        {type === "CARTAO" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+            <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+              <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
+              <select
+                value={bankId}
+                onChange={(e) => setBankId(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
+              >
+                <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
+                {bankAccounts.map((b) => (
+                  <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={limit}
+                onChange={(e) => setLimit(e.target.value)}
+                placeholder="0,00"
+                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-300">Dia Fechamento</label>
+              <input
+                type="number"
+                min="1"
+                max="31"
+                value={closingDay}
+                onChange={(e) => setClosingDay(e.target.value)}
+                placeholder="Ex: 5"
+                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-300">Dia Vencimento</label>
+              <input
+                type="number"
+                min="1"
+                max="31"
+                value={dueDay}
+                onChange={(e) => setDueDay(e.target.value)}
+                placeholder="Ex: 12"
+                className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Toggle Switch "Somar no saldo geral" */}
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+          <div className="flex flex-col pr-3">
+            <span className="text-sm font-semibold text-white">Somar no saldo geral</span>
+            <span className="text-xs text-zinc-400">
+              {type === "CONTA"
+                ? "Contabiliza o saldo desta conta no valor total do dashboard"
+                : "Contabiliza as faturas deste cartão nas despesas do dashboard"}
+            </span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={includeInTotal}
+            onClick={() => setIncludeInTotal(!includeInTotal)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              includeInTotal ? "bg-[#b300e4]" : "bg-zinc-700"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                includeInTotal ? "translate-x-5" : "translate-x-0"
+              }`}
             />
-            <label htmlFor="includeInTotal" className="text-sm font-medium cursor-pointer text-muted-foreground whitespace-nowrap">
-              Somar no saldo geral
-            </label>
-          </div>
+          </button>
+        </div>
 
-          <div className="flex-shrink-0">
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Cadastrando..." : "Cadastrar"}
-            </Button>
-          </div>
-        </form>
+        {/* Botões de Ação */}
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              resetForm();
+            }}
+            className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold bg-[#b300e4] hover:bg-[#b300e4]/90 text-white shadow-md shadow-[#b300e4]/25 transition-all duration-200 cursor-pointer disabled:opacity-50"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Cadastrando...</span>
+              </>
+            ) : (
+              <span>Cadastrar {type === "CONTA" ? "Conta" : "Cartão"}</span>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

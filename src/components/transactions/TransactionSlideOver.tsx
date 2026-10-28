@@ -47,19 +47,23 @@ export default function TransactionSlideOver() {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
         onClick={closeSlideOver}
       />
       
-      {/* Slide-over panel */}
-      <div className="fixed inset-y-0 right-0 z-[100] w-full max-w-md bg-card shadow-2xl transition-transform duration-300 transform translate-x-0 flex flex-col border-l border-border/50">
+      {/* Slide-over / Bottom-sheet Container */}
+      <div className="fixed inset-x-0 bottom-0 z-[100] w-full max-h-[92dvh] sm:max-h-full sm:inset-y-0 sm:left-auto sm:right-0 sm:max-w-md bg-card shadow-2xl transition-all duration-300 flex flex-col rounded-t-3xl sm:rounded-none border-t sm:border-t-0 sm:border-l border-border/60 animate-in slide-in-from-bottom sm:slide-in-from-right duration-300">
         
+        {/* Mobile Drag Indicator */}
+        <div className="w-12 h-1.5 rounded-full bg-zinc-700/60 mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
-          <h2 className="text-xl font-bold tracking-tight text-foreground">Criar Transação</h2>
+        <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-border/40 shrink-0">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Criar Transação</h2>
           <button 
             onClick={closeSlideOver}
-            className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors cursor-pointer"
+            className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            aria-label="Fechar"
           >
             <X className="h-5 w-5" />
           </button>
@@ -67,7 +71,7 @@ export default function TransactionSlideOver() {
 
         {/* Content */}
         {loading ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center p-8">
             <div className="size-8 border-4 border-muted-foreground/30 border-t-[#b300e4] rounded-full animate-spin" />
           </div>
         ) : (
