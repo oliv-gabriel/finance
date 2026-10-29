@@ -61,20 +61,24 @@ body, html {
   }
 }
 
-.page-transition {
-  animation: pageFadeIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+.page-enter {
+  animation: pageFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Utilitários globais para micro-interações */
-.btn-press {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s;
-}
-.btn-press:active {
-  transform: scale(0.95);
-  opacity: 0.8;
+.glass {
+  background-color: rgba(25, 25, 25, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Scrollbar escura elegante (elimina a barra branca padrão do Windows) */
+.glass-card {
+  background-color: rgba(25, 25, 25, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -107,4 +111,33 @@ body, html {
 .no-scrollbar {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+/* Remove qualquer seleção azul nativa de campos de data */
+.date-pill-input {
+  caret-color: transparent !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.date-pill-input::-webkit-datetime-edit-day-field:focus,
+.date-pill-input::-webkit-datetime-edit-month-field:focus,
+.date-pill-input::-webkit-datetime-edit-year-field:focus,
+.date-pill-input::-webkit-datetime-edit-day-field:active,
+.date-pill-input::-webkit-datetime-edit-month-field:active,
+.date-pill-input::-webkit-datetime-edit-year-field:active {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  outline: none !important;
+}
+
+.date-pill-input::-webkit-datetime-edit-fields-wrapper {
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+.date-pill-input::selection,
+.date-pill-input *::selection {
+  background-color: transparent !important;
+  color: #ffffff !important;
 }

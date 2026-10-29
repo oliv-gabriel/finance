@@ -14,12 +14,22 @@ export async function getTransactions(options?: {
   limit?: number;
   month?: number;
   year?: number;
+  startDate?: string;
+  endDate?: string;
   accounts?: any[];
 }) {
   try {
     const userId = await getCurrentUserId();
     let monthFilter: Prisma.TransactionWhereInput = {};
-    if (options?.month && options?.year) {
+
+    if (options?.startDate && options?.endDate) {
+      monthFilter = {
+        date: {
+          gte: new Date(options.startDate + "T00:00:00.000"),
+          lte: new Date(options.endDate + "T23:59:59.999"),
+        },
+      };
+    } else if (options?.month && options?.year) {
       if (!validatePeriod(options.month, options.year)) {
         return [];
       }

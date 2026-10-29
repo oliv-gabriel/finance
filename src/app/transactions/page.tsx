@@ -10,17 +10,19 @@ import TransactionTable from "@/components/transactions/TransactionTable";
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; startDate?: string; endDate?: string }>;
 }) {
   const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
+  const startDate = params.startDate;
+  const endDate = params.endDate;
 
   const [data, transactions] = await Promise.all([
-    getDashboardData(month, year),
-    getTransactions({ month, year }),
+    getDashboardData(month, year, startDate, endDate),
+    getTransactions({ month, year, startDate, endDate }),
   ]);
 
   return (
@@ -39,8 +41,13 @@ export default async function TransactionsPage({
           <div className="flex items-center gap-3 self-end sm:self-auto">
             <Link href={`?${(() => {
               const currentParams = new URLSearchParams();
-              if (month) currentParams.set("month", month.toString());
-              if (year) currentParams.set("year", year.toString());
+              if (startDate && endDate) {
+                currentParams.set("startDate", startDate);
+                currentParams.set("endDate", endDate);
+              } else {
+                if (month) currentParams.set("month", month.toString());
+                if (year) currentParams.set("year", year.toString());
+              }
               currentParams.set("newTransaction", "true");
               return currentParams.toString();
             })()}`}>

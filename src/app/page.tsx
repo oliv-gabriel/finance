@@ -12,17 +12,19 @@ import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; year?: string }>;
+  searchParams: Promise<{ month?: string; year?: string; startDate?: string; endDate?: string }>;
 }) {
   const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
   const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
   const year = params.year ? parseInt(params.year) : now.getFullYear();
+  const startDate = params.startDate;
+  const endDate = params.endDate;
 
   const [data, recentTransactions] = await Promise.all([
-    getDashboardData(month, year),
-    getTransactions({ limit: 5, month, year }),
+    getDashboardData(month, year, startDate, endDate),
+    getTransactions({ limit: 5, month, year, startDate, endDate }),
   ]);
 
   return (

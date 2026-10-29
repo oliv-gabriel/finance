@@ -5,11 +5,33 @@ import { getTransactionWhereForMonth } from "@/lib/billingCycles";
 import { toNumber } from "@/lib/money";
 import { getCurrentUserId } from "@/lib/auth-utils";
 
-export async function getDashboardData(month?: number, year?: number) {
+export async function getDashboardData(
+  month?: number, 
+  year?: number, 
+  startDateStr?: string, 
+  endDateStr?: string
+) {
   try {
     const now = new Date();
-    const targetMonth = month ?? (now.getMonth() + 1);
-    const targetYear = year ?? now.getFullYear();
+    const isCustomRange = Boolean(startDateStr && endDateStr);
+
+    let startDate: Date;
+    let endDate: Date;
+    let targetMonth: number;
+    let targetYear: number;
+
+    if (isCustomRange && startDateStr && endDateStr) {
+      startDate = new Date(startDateStr + "T00:00:00.000");
+      endDate = new Date(endDateStr + "T23:59:59.999");
+      targetMonth = startDate.getMonth() + 1;
+      targetYear = startDate.getFullYear();
+    } else {
+      targetMonth = month ?? (now.getMonth() + 1);
+      targetYear = year ?? now.getFullYear();
+      startDate = new Date(targetYear, targetMonth - 1, 1);
+      endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
+    }
+
     const userId = await getCurrentUserId();
 
     const allAccounts = await prisma.account.findMany({
@@ -24,9 +46,10 @@ export async function getDashboardData(month?: number, year?: number) {
         includeInTotal: true,
       },
     });
-    const startDate = new Date(targetYear, targetMonth - 1, 1);
-    const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
-    const whereClause = getTransactionWhereForMonth(targetMonth, targetYear, allAccounts);
+
+    const whereClause = isCustomRange
+      ? { date: { gte: startDate, lte: endDate } }
+      : getTransactionWhereForMonth(targetMonth, targetYear, allAccounts);
     const contas = allAccounts.filter((account) => account.type === "CONTA");
     const cartoes = allAccounts.filter((account) => account.type === "CARTAO");
     const contaIds = contas.map((account) => account.id);
@@ -78,7 +101,11 @@ export async function getDashboardData(month?: number, year?: number) {
     const accountIncluded = new Map(
       allAccounts.map((account) => [account.id, account.includeInTotal])
     );
-    const dailyExpenses = Array.from({ length: endDate.getDate() }, (_, index) => ({
+    const daysCount = isCustomRange
+      ? Math.max(1, Math.min(62, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))))
+      : endDate.getDate();
+
+    const dailyExpenses = Array.from({ length: daysCount }, (_, index) => ({
       day: index + 1,
       amount: 0,
     }));
@@ -141,7 +168,12 @@ export async function getDashboardData(month?: number, year?: number) {
       // Credit-card billing cycles can include dates from an adjacent month.
       // Only civil-month dates belong on this chart, avoiding an invalid day index.
       if (transaction.date >= startDate && transaction.date <= endDate) {
-        dailyExpenses[transaction.date.getDate() - 1].amount += amount;
+        const dayIdx = isCustomRange
+          ? Math.floor((transaction.date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+          : transaction.date.getDate() - 1;
+        if (dailyExpenses[dayIdx]) {
+          dailyExpenses[dayIdx].amount += amount;
+        }
       }
     }
 
