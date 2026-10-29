@@ -17,10 +17,17 @@ export default async function Dashboard({
   const admin = await isAdmin();
   const params = await searchParams;
   const now = new Date();
-  const month = params.month ? parseInt(params.month) : now.getMonth() + 1;
-  const year = params.year ? parseInt(params.year) : now.getFullYear();
-  const startDate = params.startDate;
-  const endDate = params.endDate;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const lastDay = new Date(currentYear, currentMonth, 0).getDate();
+  const defaultStartDate = `${currentYear}-${pad(currentMonth)}-01`;
+  const defaultEndDate = `${currentYear}-${pad(currentMonth)}-${pad(lastDay)}`;
+
+  const startDate = params.startDate || defaultStartDate;
+  const endDate = params.endDate || defaultEndDate;
+  const month = params.month ? parseInt(params.month) : currentMonth;
+  const year = params.year ? parseInt(params.year) : currentYear;
 
   const [data, recentTransactions] = await Promise.all([
     getDashboardData(month, year, startDate, endDate),

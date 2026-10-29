@@ -13,24 +13,18 @@ export async function getDashboardData(
 ) {
   try {
     const now = new Date();
-    const isCustomRange = Boolean(startDateStr && endDateStr);
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const lastDay = new Date(currentYear, currentMonth, 0).getDate();
 
-    let startDate: Date;
-    let endDate: Date;
-    let targetMonth: number;
-    let targetYear: number;
+    const startStr = startDateStr || (month && year ? `${year}-${pad(month)}-01` : `${currentYear}-${pad(currentMonth)}-01`);
+    const endStr = endDateStr || (month && year ? `${year}-${pad(month)}-${pad(new Date(year, month, 0).getDate())}` : `${currentYear}-${pad(currentMonth)}-${pad(lastDay)}`);
 
-    if (isCustomRange && startDateStr && endDateStr) {
-      startDate = new Date(startDateStr + "T00:00:00.000");
-      endDate = new Date(endDateStr + "T23:59:59.999");
-      targetMonth = startDate.getMonth() + 1;
-      targetYear = startDate.getFullYear();
-    } else {
-      targetMonth = month ?? (now.getMonth() + 1);
-      targetYear = year ?? now.getFullYear();
-      startDate = new Date(targetYear, targetMonth - 1, 1);
-      endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59, 999);
-    }
+    const startDate = new Date(startStr + "T00:00:00.000");
+    const endDate = new Date(endStr + "T23:59:59.999");
+    const targetMonth = startDate.getMonth() + 1;
+    const targetYear = startDate.getFullYear();
 
     const userId = await getCurrentUserId();
 
@@ -47,9 +41,7 @@ export async function getDashboardData(
       },
     });
 
-    const whereClause = isCustomRange
-      ? { date: { gte: startDate, lte: endDate } }
-      : getTransactionWhereForMonth(targetMonth, targetYear, allAccounts);
+    const whereClause = { date: { gte: startDate, lte: endDate } };
     const contas = allAccounts.filter((account) => account.type === "CONTA");
     const cartoes = allAccounts.filter((account) => account.type === "CARTAO");
     const contaIds = contas.map((account) => account.id);
@@ -101,9 +93,13 @@ export async function getDashboardData(
     const accountIncluded = new Map(
       allAccounts.map((account) => [account.id, account.includeInTotal])
     );
-    const daysCount = isCustomRange
-      ? Math.max(1, Math.min(62, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))))
-      : endDate.getDate();
+    const isSingleMonth =
+      startDate.getFullYear() === endDate.getFullYear() &&
+      startDate.getMonth() === endDate.getMonth();
+
+    const daysCount = isSingleMonth
+      ? new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate()
+      : Math.max(1, Math.min(62, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))));
 
     const dailyExpenses = Array.from({ length: daysCount }, (_, index) => ({
       day: index + 1,
@@ -168,9 +164,9 @@ export async function getDashboardData(
       // Credit-card billing cycles can include dates from an adjacent month.
       // Only civil-month dates belong on this chart, avoiding an invalid day index.
       if (transaction.date >= startDate && transaction.date <= endDate) {
-        const dayIdx = isCustomRange
-          ? Math.floor((transaction.date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-          : transaction.date.getDate() - 1;
+        const dayIdx = isSingleMonth
+          ? transaction.date.getDate() - 1
+          : Math.floor((transaction.date.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
         if (dailyExpenses[dayIdx]) {
           dailyExpenses[dayIdx].amount += amount;
         }

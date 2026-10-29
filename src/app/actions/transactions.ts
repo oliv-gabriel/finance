@@ -20,22 +20,21 @@ export async function getTransactions(options?: {
 }) {
   try {
     const userId = await getCurrentUserId();
-    let monthFilter: Prisma.TransactionWhereInput = {};
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const lastDay = new Date(currentYear, currentMonth, 0).getDate();
 
-    if (options?.startDate && options?.endDate) {
-      monthFilter = {
-        date: {
-          gte: new Date(options.startDate + "T00:00:00.000"),
-          lte: new Date(options.endDate + "T23:59:59.999"),
-        },
-      };
-    } else if (options?.month && options?.year) {
-      if (!validatePeriod(options.month, options.year)) {
-        return [];
-      }
-      const allAccounts = options.accounts ?? (await prisma.account.findMany({ where: { userId } }));
-      monthFilter = getTransactionWhereForMonth(options.month, options.year, allAccounts);
-    }
+    const startStr = options?.startDate || (options?.month && options?.year ? `${options.year}-${pad(options.month)}-01` : `${currentYear}-${pad(currentMonth)}-01`);
+    const endStr = options?.endDate || (options?.month && options?.year ? `${options.year}-${pad(options.month)}-${pad(new Date(options.year, options.month, 0).getDate())}` : `${currentYear}-${pad(currentMonth)}-${pad(lastDay)}`);
+
+    const monthFilter: Prisma.TransactionWhereInput = {
+      date: {
+        gte: new Date(startStr + "T00:00:00.000"),
+        lte: new Date(endStr + "T23:59:59.999"),
+      },
+    };
 
     const transactions = await prisma.transaction.findMany({
       where: {
