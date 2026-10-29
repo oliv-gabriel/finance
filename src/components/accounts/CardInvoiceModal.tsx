@@ -460,7 +460,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                       onClick={handleNextMonth}
                       className="mt-2 text-xs font-semibold text-[#b300e4] hover:text-[#b300e4]/80 flex items-center gap-1 bg-[#b300e4]/10 hover:bg-[#b300e4]/20 px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
                     >
-                      <span>Ver fatura seguinte ({MONTH_NAMES[month === 12 ? 0 : month]})</span>
+                      <span>Ver fatura de {MONTH_NAMES[month === 12 ? 0 : month]}</span>
                       <ChevronRight className="h-3.5 w-3.5" />
                     </button>
                   </div>

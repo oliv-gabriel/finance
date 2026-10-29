@@ -13,8 +13,6 @@ interface CardData {
   id: string;
   name: string;
   faturaAtual: number;
-  proximaFatura?: number;
-  proximoMesNome?: string;
   limiteDisponivel: number;
   closingDay: number | null;
   status: string;
@@ -298,13 +296,6 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     <span className="text-muted-foreground text-xs font-normal truncate">Fatura de {getMonthName(month)}</span>
                     <span className="text-foreground ml-2 shrink-0 text-sm font-medium tabular-nums">{formatCurrency(card.faturaAtual)}</span>
                   </div>
-
-                  {Boolean(card.proximaFatura && card.proximaFatura > 0 && card.status === "Fechado") && (
-                    <div className="text-[11px] text-muted-foreground px-1 mt-1.5 flex items-center justify-between">
-                      <span className="truncate">Fatura seguinte ({card.proximoMesNome?.slice(0, 3)}):</span>
-                      <span className="font-semibold text-foreground shrink-0 ml-1">{formatCurrency(card.proximaFatura!)}</span>
-                    </div>
-                  )}
 
                   <div className="text-foreground mt-4 flex items-center gap-2 px-1">
                     <CreditCard className="opacity-70 h-4 w-4" />

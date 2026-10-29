@@ -226,11 +226,6 @@ export async function getDashboardData(
         .map((item) => [item.accountId as string, toNumber(item._sum.amount)])
     );
 
-    const MONTH_NAMES = [
-      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-    ];
-
     const creditCards = await Promise.all(
       cartoes.map(async (card) => {
         const stats = cardStats.get(card.id)!;
@@ -248,30 +243,10 @@ export async function getDashboardData(
           status = "Fechado";
         }
 
-        let nextInvoice = 0;
-        const nextMonth = targetMonth === 12 ? 1 : targetMonth + 1;
-        const nextYear = targetMonth === 12 ? targetYear + 1 : targetYear;
-
-        if (now > cycleEnd) {
-          const { startDate: nextStart, endDate: nextEnd } = getAccountBillingCycle(card, nextMonth, nextYear);
-          const nextTxs = await prisma.transaction.aggregate({
-            where: {
-              userId,
-              accountId: card.id,
-              date: { gte: nextStart, lte: nextEnd },
-              type: "EXPENSE",
-            },
-            _sum: { amount: true },
-          });
-          nextInvoice = toNumber(nextTxs._sum.amount);
-        }
-
         return {
           id: card.id,
           name: card.name,
           faturaAtual: stats.invoice,
-          proximaFatura: nextInvoice,
-          proximoMesNome: MONTH_NAMES[nextMonth - 1],
           limiteDisponivel,
           closingDay: card.closingDay,
           dueDay: card.dueDay,
