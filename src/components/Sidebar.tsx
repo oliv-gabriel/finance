@@ -58,6 +58,10 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
     };
   }, [pathname]);
 
+  if (pathname?.startsWith("/login")) {
+    return null;
+  }
+
   return (
     <aside 
       onMouseEnter={() => setIsCollapsed(false)}

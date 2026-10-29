@@ -5,9 +5,20 @@ import { cn } from "@/lib/utils";
 import MobileNav from "./MobileNav";
 import TransactionSlideOver from "./transactions/TransactionSlideOver";
 import { Suspense } from "react";
+import { usePathname } from "next/navigation";
 
 export default function ClientMainContent({ children }: { children: React.ReactNode }) {
   const { isCollapsed } = useSidebar();
+  const pathname = usePathname();
+  const isAuthPage = pathname?.startsWith("/login");
+
+  if (isAuthPage) {
+    return (
+      <main className="flex min-h-screen min-w-0 flex-1 flex-col">
+        {children}
+      </main>
+    );
+  }
 
   return (
     <main className={cn(
