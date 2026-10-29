@@ -11,6 +11,10 @@ import {
   updateUsername,
 } from "../actions/authActions";
 import {
+  saveTelegramSettings,
+  sendTestTelegramMessage,
+} from "../actions/telegramActions";
+import {
   getUserGoogleSettings,
   saveBankSyncRules,
   disconnectGoogle,
@@ -35,7 +39,14 @@ import {
   ShieldCheck,
   ChevronDown,
   Plus,
+  Send,
 } from "lucide-react";
+
+export interface TelegramSettings {
+  telegramChatId: string;
+  telegramNotifyBills: boolean;
+  botConfigured: boolean;
+}
 
 export interface GoogleSettings {
   isConnected: boolean;
@@ -70,12 +81,14 @@ interface ProfilePanelProps {
   userSession: UserSessionData;
   initialUsers?: AdminUser[];
   initialGoogleSettings?: GoogleSettings;
+  initialTelegramSettings?: TelegramSettings;
 }
 
 export function ProfilePanel({
   userSession,
   initialUsers = [],
   initialGoogleSettings,
+  initialTelegramSettings,
 }: ProfilePanelProps) {
   const isAdmin = userSession.isAdmin;
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
@@ -107,6 +120,70 @@ export function ProfilePanel({
   const [isDisconnectingGoogle, setIsDisconnectingGoogle] = useState(false);
   const [isSyncingGoogle, setIsSyncingGoogle] = useState(false);
   const [googleFeedback, setGoogleFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Estados de Notificação no Telegram
+  const [telegramChatId, setTelegramChatId] = useState(
+    initialTelegramSettings?.telegramChatId || ""
+  );
+  const [telegramNotifyBills, setTelegramNotifyBills] = useState(
+    initialTelegramSettings?.telegramNotifyBills ?? true
+  );
+  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
+  const [isTestingTelegram, setIsTestingTelegram] = useState(false);
+  const [telegramFeedback, setTelegramFeedback] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  async function handleSaveTelegram(e: React.FormEvent) {
+    e.preventDefault();
+    setIsSavingTelegram(true);
+    setTelegramFeedback(null);
+    try {
+      const res = await saveTelegramSettings({
+        telegramChatId,
+        telegramNotifyBills,
+      });
+      if (res.error) {
+        setTelegramFeedback({ type: "error", text: res.error });
+      } else {
+        setTelegramFeedback({
+          type: "success",
+          text: res.message || "Configurações salvas com sucesso!",
+        });
+      }
+    } catch {
+      setTelegramFeedback({
+        type: "error",
+        text: "Erro inesperado ao salvar configurações do Telegram.",
+      });
+    } finally {
+      setIsSavingTelegram(false);
+    }
+  }
+
+  async function handleSendTestTelegram() {
+    setIsTestingTelegram(true);
+    setTelegramFeedback(null);
+    try {
+      const res = await sendTestTelegramMessage();
+      if (res.error) {
+        setTelegramFeedback({ type: "error", text: res.error });
+      } else {
+        setTelegramFeedback({
+          type: "success",
+          text: res.message || "Mensagem de teste enviada com sucesso!",
+        });
+      }
+    } catch {
+      setTelegramFeedback({
+        type: "error",
+        text: "Erro inesperado ao enviar mensagem de teste.",
+      });
+    } finally {
+      setIsTestingTelegram(false);
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -966,6 +1043,129 @@ export function ProfilePanel({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Card de Notificações no Telegram */}
+          <div className="bg-[#141414] border border-white/10 rounded-xl p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                  <Send className="w-5 h-5 -rotate-12 translate-x-[-1px] translate-y-[-1px]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-semibold text-white">Notificações no Telegram</h2>
+                    {telegramChatId ? (
+                      <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Ativo
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                        Não configurado
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Receba alertas diários das suas contas e despesas pendentes direto no seu Telegram.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {telegramFeedback && (
+              <div
+                role="alert"
+                className={`p-3 rounded-xl text-xs mb-5 flex items-center justify-between gap-2 ${
+                  telegramFeedback.type === "success"
+                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                    : "bg-red-500/10 border border-red-500/20 text-red-400"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  {telegramFeedback.type === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  )}
+                  <span>{telegramFeedback.text}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTelegramFeedback(null)}
+                  className="text-zinc-500 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            <div className="bg-[#18181b] border border-white/5 rounded-xl p-4 mb-5 text-xs text-zinc-400 space-y-2">
+              <p className="font-semibold text-zinc-200">Como conectar seu Telegram:</p>
+              <ol className="list-decimal list-inside space-y-1.5 text-zinc-400 text-[11px] leading-relaxed">
+                <li>
+                  Abra o bot no Telegram e clique em <span className="text-white font-medium">Começar</span> (<code className="bg-zinc-800 px-1 py-0.5 rounded text-white font-mono">/start</code>).
+                </li>
+                <li>
+                  Para descobrir seu <span className="text-white font-medium">Chat ID</span>, envie qualquer mensagem para o bot gratuito <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-sky-400 hover:underline">@userinfobot</a> no Telegram.
+                </li>
+                <li>
+                  Copie o número do seu <span className="text-white font-medium">Id</span> e cole no campo abaixo.
+                </li>
+              </ol>
+            </div>
+
+            <form onSubmit={handleSaveTelegram} className="space-y-4">
+              <div>
+                <label htmlFor="telegram-chat-id" className="block text-xs font-medium text-zinc-300 mb-1.5">
+                  Seu Chat ID do Telegram
+                </label>
+                <input
+                  id="telegram-chat-id"
+                  type="text"
+                  placeholder="Ex: 123456789"
+                  value={telegramChatId}
+                  onChange={(e) => setTelegramChatId(e.target.value.replace(/\D/g, ""))}
+                  className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  id="telegram-notify-bills"
+                  type="checkbox"
+                  checked={telegramNotifyBills}
+                  onChange={(e) => setTelegramNotifyBills(e.target.checked)}
+                  className="w-4 h-4 rounded bg-zinc-900 border-white/20 text-[#b300e4] focus:ring-[#b300e4] accent-[#b300e4] cursor-pointer"
+                />
+                <label htmlFor="telegram-notify-bills" className="text-xs text-zinc-300 cursor-pointer select-none">
+                  Receber alertas de contas vencendo e atrasadas diariamente
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <Button
+                  type="submit"
+                  disabled={isSavingTelegram}
+                  className="h-8 bg-[#b300e4] hover:bg-[#9a00c4] text-white font-medium rounded-lg text-xs px-4 disabled:opacity-40"
+                >
+                  {isSavingTelegram ? "Salvando..." : "Salvar Configurações"}
+                </Button>
+
+                {telegramChatId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isTestingTelegram}
+                    onClick={handleSendTestTelegram}
+                    className="h-8 border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg text-xs px-3.5 flex items-center gap-1.5"
+                  >
+                    <Send className={`w-3 h-3 ${isTestingTelegram ? "animate-pulse text-sky-400" : ""}`} />
+                    {isTestingTelegram ? "Enviando teste..." : "Enviar Mensagem de Teste"}
+                  </Button>
+                )}
+              </div>
+            </form>
           </div>
 
           {/* Card para Trocar Senha */}
