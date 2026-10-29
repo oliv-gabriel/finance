@@ -52,12 +52,12 @@ export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
       <div className="md:hidden flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 flex items-center justify-center font-medium text-sm">
-            {user?.name ? user.name.slice(0, 1).toUpperCase() : "G"}
+            {user?.name ? user.name.slice(0, 1).toUpperCase() : "U"}
           </div>
           <div className="relative">
             <div className="flex items-center gap-1.5">
               <h2 className="text-foreground text-sm font-medium leading-tight">
-                {user?.name || "gab"}
+                {user?.name || "Usuário"}
               </h2>
               {isAdminState && (
                 <span className="text-[10px] text-zinc-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-medium">
