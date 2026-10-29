@@ -26,12 +26,15 @@ export default async function Dashboard({
 
   const startDate = params.startDate || defaultStartDate;
   const endDate = params.endDate || defaultEndDate;
-  const month = params.month ? parseInt(params.month) : currentMonth;
-  const year = params.year ? parseInt(params.year) : currentYear;
+
+  // Deriva o mês e ano ativos a partir da data de início (startDate) ou dos parâmetros
+  const startParts = startDate.split("-");
+  const parsedYear = startParts.length === 3 ? parseInt(startParts[0]) : (params.year ? parseInt(params.year) : currentYear);
+  const parsedMonth = startParts.length === 3 ? parseInt(startParts[1]) : (params.month ? parseInt(params.month) : currentMonth);
 
   const [data, recentTransactions] = await Promise.all([
-    getDashboardData(month, year, startDate, endDate),
-    getTransactions({ limit: 5, month, year, startDate, endDate }),
+    getDashboardData(parsedMonth, parsedYear, startDate, endDate),
+    getTransactions({ limit: 5, month: parsedMonth, year: parsedYear, startDate, endDate }),
   ]);
 
   return (
@@ -46,8 +49,8 @@ export default async function Dashboard({
         <FinancialSummary 
           accounts={data.accounts}
           creditCards={data.creditCards}
-          month={month}
-          year={year}
+          month={parsedMonth}
+          year={parsedYear}
         />
 
 

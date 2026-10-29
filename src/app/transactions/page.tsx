@@ -24,12 +24,13 @@ export default async function TransactionsPage({
 
   const startDate = params.startDate || defaultStartDate;
   const endDate = params.endDate || defaultEndDate;
-  const month = params.month ? parseInt(params.month) : currentMonth;
-  const year = params.year ? parseInt(params.year) : currentYear;
+  const startParts = startDate.split("-");
+  const parsedYear = startParts.length === 3 ? parseInt(startParts[0]) : (params.year ? parseInt(params.year) : currentYear);
+  const parsedMonth = startParts.length === 3 ? parseInt(startParts[1]) : (params.month ? parseInt(params.month) : currentMonth);
 
   const [data, transactions] = await Promise.all([
-    getDashboardData(month, year, startDate, endDate),
-    getTransactions({ month, year, startDate, endDate }),
+    getDashboardData(parsedMonth, parsedYear, startDate, endDate),
+    getTransactions({ month: parsedMonth, year: parsedYear, startDate, endDate }),
   ]);
 
   return (
@@ -52,8 +53,8 @@ export default async function TransactionsPage({
                 currentParams.set("startDate", startDate);
                 currentParams.set("endDate", endDate);
               } else {
-                if (month) currentParams.set("month", month.toString());
-                if (year) currentParams.set("year", year.toString());
+                if (parsedMonth) currentParams.set("month", parsedMonth.toString());
+                if (parsedYear) currentParams.set("year", parsedYear.toString());
               }
               currentParams.set("newTransaction", "true");
               return currentParams.toString();
