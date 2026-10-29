@@ -87,6 +87,13 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
 
   useEffect(() => {
     if (isOpen) {
+      setMonth(initialMonth);
+      setYear(initialYear);
+    }
+  }, [isOpen, initialMonth, initialYear]);
+
+  useEffect(() => {
+    if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -184,7 +191,10 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
-    return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(d);
+    const day = String(d.getDate()).padStart(2, "0");
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const y = d.getFullYear();
+    return `${day}/${m}/${y}`;
   };
 
   return createPortal(
@@ -234,7 +244,8 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
         </div>
 
         {/* Filtro de Mês */}
-        <div className="flex items-center justify-between px-6 py-3 bg-muted/20 border-b border-border/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-3 bg-muted/20 border-b border-border/40 gap-2">
+          <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
           <button 
             onClick={handlePrevMonth}
             className="flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-[#b300e4] transition-colors p-1 rounded-lg hover:bg-muted/40 cursor-pointer"
@@ -271,6 +282,27 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
             <span className="hidden sm:inline">Próximo</span>
             <ChevronRight className="h-4 w-4" />
           </button>
+          </div>
+
+          {data?.invoice && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground self-center sm:self-auto">
+              <span>Período: <strong className="text-foreground">{formatDate(data.invoice.startDate)}</strong> a <strong className="text-foreground">{formatDate(data.invoice.endDate)}</strong></span>
+              <span>•</span>
+              <span className={`inline-flex items-center gap-1 font-semibold ${
+                data.invoice.isPaid 
+                  ? "text-emerald-400" 
+                  : new Date() <= new Date(data.invoice.endDate) 
+                  ? "text-green-500" 
+                  : "text-red-400"
+              }`}>
+                {data.invoice.isPaid 
+                  ? "Fatura Paga" 
+                  : new Date() <= new Date(data.invoice.endDate) 
+                  ? "Em Aberto" 
+                  : "Fechada"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Corpo do Modal */}
@@ -414,8 +446,23 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-border/60 bg-card p-10 text-center text-muted-foreground text-sm font-medium">
-                    Nenhuma compra registrada nesta fatura.
+                  <div className="rounded-2xl border border-border/60 bg-card p-8 text-center flex flex-col items-center justify-center gap-2.5">
+                    <p className="text-muted-foreground text-sm font-medium">
+                      Nenhuma compra registrada nesta fatura ({formatDate(data.invoice.startDate)} a {formatDate(data.invoice.endDate)}).
+                    </p>
+                    {data.card.closingDay && (
+                      <p className="text-xs text-muted-foreground/80 max-w-md">
+                        Esta fatura fechou no dia {data.card.closingDay?.toString().padStart(2, "0")}. Compras realizadas após o fechamento entram na fatura do mês seguinte.
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleNextMonth}
+                      className="mt-2 text-xs font-semibold text-[#b300e4] hover:text-[#b300e4]/80 flex items-center gap-1 bg-[#b300e4]/10 hover:bg-[#b300e4]/20 px-3.5 py-2 rounded-xl transition-colors cursor-pointer"
+                    >
+                      <span>Ver fatura seguinte ({MONTH_NAMES[month === 12 ? 0 : month]})</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
               </div>

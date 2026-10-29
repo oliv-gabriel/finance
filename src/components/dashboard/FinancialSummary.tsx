@@ -13,11 +13,15 @@ interface CardData {
   id: string;
   name: string;
   faturaAtual: number;
+  proximaFatura?: number;
+  proximoMesNome?: string;
   limiteDisponivel: number;
   closingDay: number | null;
   status: string;
   isPaid?: boolean;
   includeInTotal?: boolean;
+  cycleStartDate?: string;
+  cycleEndDate?: string;
 }
 
 interface AccountData {
@@ -294,8 +298,15 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     <span className="text-muted-foreground text-xs font-normal truncate">Fatura de {getMonthName(month)}</span>
                     <span className="text-foreground ml-2 shrink-0 text-sm font-medium tabular-nums">{formatCurrency(card.faturaAtual)}</span>
                   </div>
-                  
-                  <div className="text-foreground mt-5 flex items-center gap-2 px-1">
+
+                  {Boolean(card.proximaFatura && card.proximaFatura > 0 && card.status === "Fechado") && (
+                    <div className="text-[11px] text-muted-foreground px-1 mt-1.5 flex items-center justify-between">
+                      <span className="truncate">Fatura seguinte ({card.proximoMesNome?.slice(0, 3)}):</span>
+                      <span className="font-semibold text-foreground shrink-0 ml-1">{formatCurrency(card.proximaFatura!)}</span>
+                    </div>
+                  )}
+
+                  <div className="text-foreground mt-4 flex items-center gap-2 px-1">
                     <CreditCard className="opacity-70 h-4 w-4" />
                     <p className="text-xs font-normal">
                       Limite disponível <strong className="font-bold">{formatCurrency(card.limiteDisponivel)}</strong>
@@ -305,7 +316,9 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                   <div className="text-foreground mt-2.5 flex flex-col items-start justify-between gap-2 px-1 sm:flex-row sm:items-center">
                     <div className="flex min-w-0 items-center gap-2">
                       <Calendar className="opacity-70 h-4 w-4" />
-                      <p className="text-xs font-normal">Fecha em {card.closingDay?.toString().padStart(2, '0')} de {getMonthName(month).slice(0, 3)}</p>
+                      <p className="text-xs font-normal">
+                        {card.status === "Fechado" || card.status === "Paga" ? "Fechou" : "Fecha"} em {card.closingDay?.toString().padStart(2, '0')} de {card.cycleEndDate ? getMonthName(new Date(card.cycleEndDate).getMonth() + 1).slice(0, 3) : getMonthName(month).slice(0, 3)}
+                      </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <span className={`size-2.5 rounded-full ${
@@ -322,7 +335,7 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                           ? "text-green-500"
                           : "text-red-500"
                       }`}>
-                        {card.isPaid || card.status === "Paga" ? "Fatura paga" : card.status === "Aberto" ? "Em aberto" : "Fechado"}
+                        {card.isPaid || card.status === "Paga" ? "Fatura paga" : card.status === "Aberto" ? "Em aberto" : "Fechada"}
                       </span>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getTransactionWhereForMonth } from "@/lib/billingCycles";
+import { getTransactionWhereForMonth, getAccountBillingCycle } from "@/lib/billingCycles";
 import { toNumber } from "@/lib/money";
 import { getCurrentUserId } from "@/lib/auth-utils";
 
@@ -41,7 +41,13 @@ export async function getDashboardData(
       },
     });
 
-    const whereClause = { date: { gte: startDate, lte: endDate } };
+    const isSingleMonth =
+      startDate.getFullYear() === endDate.getFullYear() &&
+      startDate.getMonth() === endDate.getMonth();
+
+    const whereClause = isSingleMonth
+      ? getTransactionWhereForMonth(targetMonth, targetYear, allAccounts)
+      : { date: { gte: startDate, lte: endDate } };
     const contas = allAccounts.filter((account) => account.type === "CONTA");
     const cartoes = allAccounts.filter((account) => account.type === "CARTAO");
     const contaIds = contas.map((account) => account.id);
@@ -93,9 +99,6 @@ export async function getDashboardData(
     const accountIncluded = new Map(
       allAccounts.map((account) => [account.id, account.includeInTotal])
     );
-    const isSingleMonth =
-      startDate.getFullYear() === endDate.getFullYear() &&
-      startDate.getMonth() === endDate.getMonth();
 
     const daysCount = isSingleMonth
       ? new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate()
@@ -223,37 +226,63 @@ export async function getDashboardData(
         .map((item) => [item.accountId as string, toNumber(item._sum.amount)])
     );
 
-    const creditCards = cartoes.map((card) => {
-      const stats = cardStats.get(card.id)!;
-      const limiteDisponivel =
-        toNumber(card.limit) - (allUnpaidByCard.get(card.id) ?? 0);
-      const isCurrentMonth =
-        targetMonth === now.getMonth() + 1 && targetYear === now.getFullYear();
-      const isPaid = !stats.hasUnpaid && stats.transactionCount > 0;
-      let status = "Fechado";
-      if (isPaid) {
-        status = "Paga";
-      } else if (isCurrentMonth) {
-        status = now.getDate() <= (card.closingDay || 31) ? "Aberto" : "Fechado";
-      } else if (
-        targetYear > now.getFullYear() ||
-        (targetYear === now.getFullYear() && targetMonth > now.getMonth() + 1)
-      ) {
-        status = "Aberto";
-      }
+    const MONTH_NAMES = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
 
-      return {
-        id: card.id,
-        name: card.name,
-        faturaAtual: stats.invoice,
-        limiteDisponivel,
-        closingDay: card.closingDay,
-        dueDay: card.dueDay,
-        status,
-        isPaid,
-        includeInTotal: card.includeInTotal,
-      };
-    });
+    const creditCards = await Promise.all(
+      cartoes.map(async (card) => {
+        const stats = cardStats.get(card.id)!;
+        const limiteDisponivel =
+          toNumber(card.limit) - (allUnpaidByCard.get(card.id) ?? 0);
+        const { startDate: cycleStart, endDate: cycleEnd } = getAccountBillingCycle(card, targetMonth, targetYear);
+
+        const isPaid = !stats.hasUnpaid && stats.transactionCount > 0;
+        let status = "Fechado";
+        if (isPaid) {
+          status = "Paga";
+        } else if (now <= cycleEnd) {
+          status = "Aberto";
+        } else {
+          status = "Fechado";
+        }
+
+        let nextInvoice = 0;
+        const nextMonth = targetMonth === 12 ? 1 : targetMonth + 1;
+        const nextYear = targetMonth === 12 ? targetYear + 1 : targetYear;
+
+        if (now > cycleEnd) {
+          const { startDate: nextStart, endDate: nextEnd } = getAccountBillingCycle(card, nextMonth, nextYear);
+          const nextTxs = await prisma.transaction.aggregate({
+            where: {
+              userId,
+              accountId: card.id,
+              date: { gte: nextStart, lte: nextEnd },
+              type: "EXPENSE",
+            },
+            _sum: { amount: true },
+          });
+          nextInvoice = toNumber(nextTxs._sum.amount);
+        }
+
+        return {
+          id: card.id,
+          name: card.name,
+          faturaAtual: stats.invoice,
+          proximaFatura: nextInvoice,
+          proximoMesNome: MONTH_NAMES[nextMonth - 1],
+          limiteDisponivel,
+          closingDay: card.closingDay,
+          dueDay: card.dueDay,
+          status,
+          isPaid,
+          includeInTotal: card.includeInTotal,
+          cycleStartDate: cycleStart.toISOString(),
+          cycleEndDate: cycleEnd.toISOString(),
+        };
+      })
+    );
 
     return {
       summary: {
