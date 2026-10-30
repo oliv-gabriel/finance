@@ -34,7 +34,7 @@ export default async function TransactionsPage({
   ]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212]">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto w-full space-y-6 flex-1 pb-36 md:pb-10">

@@ -76,7 +76,7 @@ export default function TransactionFilterModal({
   const pillClass = (isActive: boolean) =>
     isActive
       ? "bg-white text-zinc-950 font-bold px-4 py-2 rounded-full text-xs shadow-md transition-all cursor-pointer flex items-center gap-1.5 scale-[1.02]"
-      : "bg-zinc-900/90 border border-white/10 text-zinc-300 font-medium px-4 py-2 rounded-full text-xs hover:border-white/25 hover:text-white transition-all cursor-pointer flex items-center gap-1.5";
+      : "bg-muted border border-border text-muted-foreground font-medium px-4 py-2 rounded-full text-xs hover:border-border/80 hover:text-foreground transition-all cursor-pointer flex items-center gap-1.5";
 
   // Prepara lista única de contas e cartões
   const contaList = accounts.filter((a) => a.type === "CONTA" || !a.type);
@@ -85,15 +85,15 @@ export default function TransactionFilterModal({
   const modalContent = (
     <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in-0 duration-200">
       <div
-        className="w-full max-w-lg bg-[#141414] border border-white/10 rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh] text-white animate-in slide-in-from-bottom duration-300 sm:duration-200"
+        className="w-full max-w-lg bg-card border border-border rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col max-h-[90vh] text-foreground animate-in slide-in-from-bottom duration-300 sm:duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Barra puxador no mobile */}
         <div className="w-12 h-1.5 bg-zinc-700/80 rounded-full mx-auto mb-3 shrink-0 sm:hidden" />
 
         {/* Topo: Título e Limpar */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/5 shrink-0">
-          <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+        <div className="flex items-center justify-between pb-3 border-b border-border/40 shrink-0">
+          <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#d246f8]" />
             Filtrar transações
           </h2>
@@ -101,14 +101,14 @@ export default function TransactionFilterModal({
             <button
               type="button"
               onClick={onReset}
-              className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded-md hover:bg-white/5"
+              className="text-xs font-semibold text-zinc-400 hover:text-foreground transition-colors cursor-pointer px-2 py-1 rounded-md hover:bg-white/5"
             >
               Limpar
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="text-zinc-500 hover:text-white transition-colors cursor-pointer p-1 rounded-md"
+              className="text-zinc-500 hover:text-foreground transition-colors cursor-pointer p-1 rounded-md"
               title="Fechar"
             >
               <X className="w-4 h-4" />
@@ -117,13 +117,13 @@ export default function TransactionFilterModal({
         </div>
 
         {/* Abas */}
-        <div className="flex items-center gap-6 pt-3 border-b border-white/10 shrink-0 text-xs sm:text-sm">
+        <div className="flex items-center gap-6 pt-3 border-b border-border shrink-0 text-xs sm:text-sm">
           <button
             type="button"
             onClick={() => setActiveTab("detalhes")}
             className={`pb-2.5 transition-all cursor-pointer relative ${
               activeTab === "detalhes"
-                ? "text-white font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-white"
+                ? "text-foreground font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-white"
                 : "text-zinc-400 hover:text-zinc-200 font-medium"
             }`}
           >
@@ -134,7 +134,7 @@ export default function TransactionFilterModal({
             onClick={() => setActiveTab("categorias")}
             className={`pb-2.5 transition-all cursor-pointer relative ${
               activeTab === "categorias"
-                ? "text-white font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-white"
+                ? "text-foreground font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-white"
                 : "text-zinc-400 hover:text-zinc-200 font-medium"
             }`}
           >
@@ -276,7 +276,7 @@ export default function TransactionFilterModal({
                         type="date"
                         value={filters.startDate}
                         onChange={(e) => update("startDate", e.target.value)}
-                        className="w-full h-9 bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-2 text-xs text-white focus:outline-none focus:border-[#b300e4] cursor-pointer"
+                        className="w-full h-9 bg-zinc-900 border border-border rounded-xl pl-9 pr-2 text-xs text-foreground focus:outline-none focus:border-[#b300e4] cursor-pointer"
                       />
                     </div>
                   </div>
@@ -289,7 +289,7 @@ export default function TransactionFilterModal({
                         type="date"
                         value={filters.endDate}
                         onChange={(e) => update("endDate", e.target.value)}
-                        className="w-full h-9 bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-2 text-xs text-white focus:outline-none focus:border-[#b300e4] cursor-pointer"
+                        className="w-full h-9 bg-zinc-900 border border-border rounded-xl pl-9 pr-2 text-xs text-foreground focus:outline-none focus:border-[#b300e4] cursor-pointer"
                       />
                     </div>
                   </div>
@@ -321,13 +321,13 @@ export default function TransactionFilterModal({
                     value={filters.amount}
                     onChange={(e) => update("amount", e.target.value)}
                     placeholder="Insira um valor (R$)"
-                    className="w-full h-10 bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                    className="w-full h-10 bg-zinc-900 border border-border rounded-xl pl-9 pr-3 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
                   />
                   {filters.amount && (
                     <button
                       type="button"
                       onClick={() => update("amount", "")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-foreground"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -370,7 +370,7 @@ export default function TransactionFilterModal({
         </div>
 
         {/* Rodapé: Botão Ver Resultados */}
-        <div className="pt-3 border-t border-white/5 shrink-0">
+        <div className="pt-3 border-t border-border/40 shrink-0">
           <button
             type="button"
             onClick={onClose}

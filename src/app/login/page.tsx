@@ -1,5 +1,6 @@
 import LoginForm from "@/components/auth/LoginForm";
 import RegisterForm from "@/components/auth/RegisterForm";
+import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CircleDollarSign } from "lucide-react";
@@ -16,7 +17,12 @@ export default async function LoginPage(props: {
   const isRegister = searchParams.register === "true";
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#0d0d0f] relative overflow-hidden px-4 py-8 select-none">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background relative overflow-hidden px-4 py-8 select-none">
+      {/* Botão de alternar tema no topo direito */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
+
       {/* Efeitos de iluminação sutil no tema roxo da marca */}
       <div 
         aria-hidden="true" 
@@ -34,14 +40,14 @@ export default async function LoginPage(props: {
           <div className="w-10 h-10 rounded-2xl bg-[#b300e4]/15 border border-[#b300e4]/30 flex items-center justify-center shadow-lg shadow-[#b300e4]/20">
             <CircleDollarSign className="w-6 h-6 text-[#b300e4]" aria-hidden="true" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">
             Financeiro
           </h1>
         </div>
 
         {/* Formulário de Acesso */}
         <div className="w-full">
-          <Suspense fallback={<div className="w-full h-[420px] animate-pulse bg-[#18181b] border border-white/10 rounded-2xl" />}>
+          <Suspense fallback={<div className="w-full h-[420px] animate-pulse bg-card border border-border rounded-2xl" />}>
             {isRegister ? <RegisterForm /> : <LoginForm />}
           </Suspense>
         </div>
@@ -51,7 +57,7 @@ export default async function LoginPage(props: {
           <div className="text-center mt-6">
             <Link
               href="/login"
-              className="text-xs sm:text-sm text-zinc-400 hover:text-white transition-colors duration-150 inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] rounded-md px-2 py-1"
+              className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors duration-150 inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] rounded-md px-2 py-1"
             >
               Já tem uma conta? <span className="text-[#b300e4] font-semibold hover:underline">Entrar</span>
             </Link>
@@ -59,7 +65,7 @@ export default async function LoginPage(props: {
         )}
 
         {/* Rodapé discreto */}
-        <p className="mt-8 text-[11px] text-zinc-600 tracking-wide text-center">
+        <p className="mt-8 text-[11px] text-muted-foreground tracking-wide text-center">
           Financeiro &bull; Gestão Pessoal Segura
         </p>
       </div>

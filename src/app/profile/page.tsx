@@ -30,7 +30,7 @@ export default async function ProfilePage() {
     : undefined;
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212]">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar isAdmin={userSession.isAdmin} />
       <main className="p-4 md:p-8 flex-1 w-full max-w-5xl mx-auto">
         <ProfilePanel

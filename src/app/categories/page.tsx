@@ -25,7 +25,7 @@ export default async function CategoriesPage({
   ]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212]">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6 md:space-y-8 flex-1 overflow-auto">
@@ -59,7 +59,7 @@ export default async function CategoriesPage({
             return (
               <div 
                 key={category.id} 
-                className="group relative bg-[#18181b]/80 border border-border/60 hover:border-[#b300e4]/40 rounded-3xl p-5 shadow-xs hover:shadow-md hover:shadow-[#b300e4]/5 transition-all duration-300 flex items-center justify-between overflow-hidden cursor-default"
+                className="group relative bg-card border border-border hover:border-[#b300e4]/40 rounded-3xl p-5 shadow-xs hover:shadow-md hover:shadow-[#b300e4]/5 transition-all duration-300 flex items-center justify-between overflow-hidden cursor-default"
               >
                 {/* Glow de fundo no hover */}
                 <div 

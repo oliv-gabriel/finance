@@ -23,7 +23,7 @@ export default async function BudgetsPage({
   ]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212]">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar summary={data.summary} isAdmin={admin} />
       
       <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 flex-1 overflow-auto">

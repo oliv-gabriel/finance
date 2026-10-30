@@ -83,7 +83,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-[#b300e4]/40 hover:border-[#b300e4] bg-[#18181b]/50 hover:bg-[#b300e4]/5 text-sm font-semibold text-zinc-300 hover:text-white flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer group shadow-2xs"
+        className="w-full py-3.5 px-4 rounded-2xl border border-dashed border-[#b300e4]/40 hover:border-[#b300e4] bg-card/50 hover:bg-[#b300e4]/5 text-sm font-semibold text-foreground font-medium hover:text-white flex items-center justify-center gap-2.5 transition-all duration-200 cursor-pointer group shadow-2xs"
       >
         <div className="w-7 h-7 rounded-xl bg-[#b300e4]/10 group-hover:bg-[#b300e4] text-[#b300e4] group-hover:text-white flex items-center justify-center transition-colors">
           <Plus className="h-4 w-4 stroke-[2.5]" />
@@ -94,14 +94,14 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
   }
 
   return (
-    <div className="bg-[#18181b] border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl relative animate-in fade-in-50 zoom-in-95 duration-200">
+    <div className="bg-card border border-border rounded-2xl p-5 md:p-6 shadow-xl relative animate-in fade-in-50 zoom-in-95 duration-200">
       {/* Header do Form */}
-      <div className="flex items-center justify-between pb-4 mb-5 border-b border-white/5">
+      <div className="flex items-center justify-between pb-4 mb-5 border-b border-border/40">
         <div>
-          <h2 className="text-base font-bold text-white tracking-tight">
+          <h2 className="text-base font-bold text-foreground tracking-tight">
             {type === "CONTA" ? "Cadastrar Nova Conta Bancária" : "Cadastrar Novo Cartão de Crédito"}
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">Preencha os dados abaixo para cadastrar no sistema</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Preencha os dados abaixo para cadastrar no sistema</p>
         </div>
         <button
           type="button"
@@ -109,7 +109,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
             setIsOpen(false);
             resetForm();
           }}
-          className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+          className="text-muted-foreground hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           title="Fechar formulário"
         >
           <X className="h-5 w-5" />
@@ -119,15 +119,15 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Seletor de Tipo (Pills / Abas) */}
         <div>
-          <label className="text-xs font-semibold text-zinc-300 mb-1.5 block">Tipo de Registro</label>
-          <div className="grid grid-cols-2 gap-2 p-1 bg-zinc-900 border border-zinc-800 rounded-xl">
+          <label className="text-xs font-semibold text-foreground font-medium mb-1.5 block">Tipo de Registro</label>
+          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/50 border border-border rounded-xl">
             <button
               type="button"
               onClick={() => setType("CONTA")}
               className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
                 type === "CONTA"
                   ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/30"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-muted-foreground hover:text-white"
               }`}
             >
               <Landmark className="w-4 h-4" />
@@ -139,7 +139,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
               className={`flex items-center justify-center gap-2 py-2 rounded-lg text-xs md:text-sm font-semibold transition-all cursor-pointer ${
                 type === "CARTAO"
                   ? "bg-[#b300e4] text-white shadow-md shadow-[#b300e4]/30"
-                  : "text-zinc-400 hover:text-white"
+                  : "text-muted-foreground hover:text-white"
               }`}
             >
               <CreditCard className="w-4 h-4" />
@@ -150,7 +150,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
 
         {/* Nome da Conta ou Cartão */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-zinc-300">
+          <label className="text-xs font-semibold text-foreground font-medium">
             {type === "CONTA" ? "Nome da Conta ou Banco" : "Nome do Cartão"}
           </label>
           <input
@@ -159,7 +159,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={type === "CONTA" ? "Ex: Nubank, Itaú, 99Pay, Inter..." : "Ex: Nubank Ultravioleta, BB Elo, C6..."}
-            className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+            className="w-full h-11 px-3.5 rounded-xl bg-muted/50 border border-border text-white placeholder:text-muted-foreground/80 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
           />
         </div>
 
@@ -168,15 +168,15 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
           <div className="space-y-3 pt-1">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
+                <label className="text-xs font-semibold text-foreground font-medium">Vincular a uma Conta</label>
                 <select
                   value={bankId}
                   onChange={(e) => setBankId(e.target.value)}
-                  className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
+                  className="w-full h-11 px-3 rounded-xl bg-muted/50 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
                 >
-                  <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
+                  <option value="" className="bg-muted/50 text-muted-foreground">Nenhuma (Avulso)</option>
                   {bankAccounts.map((b) => (
-                    <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                    <option key={b.id} value={b.id} className="bg-muted/50 text-white">
                       {b.name}
                     </option>
                   ))}
@@ -184,7 +184,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
+                <label className="text-xs font-semibold text-foreground font-medium">Limite Total (R$)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -192,7 +192,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
                   value={limit}
                   onChange={(e) => setLimit(e.target.value)}
                   placeholder="0,00"
-                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                  className="w-full h-11 px-3.5 rounded-xl bg-muted/50 border border-border text-white placeholder:text-muted-foreground/80 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                 />
               </div>
             </div>
@@ -200,10 +200,10 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-zinc-300">
+                  <label className="text-xs font-semibold text-foreground font-medium">
                     Dia Fechamento (Corte) <span className="text-red-400">*</span>
                   </label>
-                  <span className="text-[10px] text-zinc-500">Ex: 10</span>
+                  <span className="text-[10px] text-muted-foreground/80">Ex: 10</span>
                 </div>
                 <input
                   type="number"
@@ -213,19 +213,19 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
                   value={closingDay}
                   onChange={(e) => setClosingDay(e.target.value)}
                   placeholder="Ex: 10"
-                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                  className="w-full h-11 px-3.5 rounded-xl bg-muted/50 border border-border text-white placeholder:text-muted-foreground/80 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                 />
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-muted-foreground">
                   Melhor dia de compra. Até este dia as compras entram na fatura deste mês.
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-zinc-300">
+                  <label className="text-xs font-semibold text-foreground font-medium">
                     Dia Vencimento (Pagamento) <span className="text-red-400">*</span>
                   </label>
-                  <span className="text-[10px] text-zinc-500">Ex: 20</span>
+                  <span className="text-[10px] text-muted-foreground/80">Ex: 20</span>
                 </div>
                 <input
                   type="number"
@@ -235,9 +235,9 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
                   value={dueDay}
                   onChange={(e) => setDueDay(e.target.value)}
                   placeholder="Ex: 20"
-                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder:text-zinc-500 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                  className="w-full h-11 px-3.5 rounded-xl bg-muted/50 border border-border text-white placeholder:text-muted-foreground/80 text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                 />
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-muted-foreground">
                   Dia limite de pagamento do boleto da fatura.
                 </p>
               </div>
@@ -245,7 +245,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
 
             {/* Dica visual de ciclo se ambos estiverem preenchidos */}
             {closingDay && dueDay && (
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5 text-xs text-zinc-300">
+              <div className="p-3 rounded-xl bg-white/5 border border-border flex items-center gap-2.5 text-xs text-foreground font-medium">
                 <Info className="w-4 h-4 text-[#b300e4] shrink-0" />
                 <span>
                   Resumo: Compras até dia <strong>{closingDay}</strong> entram na fatura com vencimento dia <strong>{dueDay}</strong>.
@@ -256,10 +256,10 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
         )}
 
         {/* Toggle Switch "Somar no saldo geral" */}
-        <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/50/70 border border-border/80">
           <div className="flex flex-col pr-3">
             <span className="text-sm font-semibold text-white">Somar no saldo geral</span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-muted-foreground">
               {type === "CONTA"
                 ? "Contabiliza o saldo desta conta no valor total do dashboard"
                 : "Contabiliza as faturas deste cartão nas despesas do dashboard"}
@@ -290,7 +290,7 @@ export default function AccountForm({ bankAccounts, isOpenDefault = false }: Acc
               setIsOpen(false);
               resetForm();
             }}
-            className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+            className="px-4 py-2.5 rounded-xl text-xs md:text-sm font-semibold text-muted-foreground hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
           >
             Cancelar
           </button>

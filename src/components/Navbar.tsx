@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, Plus, Crown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import DateFilter from "./DateFilter";
 import SyncEmailsButton from "./SyncEmailsButton";
+import ThemeToggle from "./ThemeToggle";
 import Link from "next/link";
 import { Button } from "./ui/Button";
 import { usePathname, useRouter } from "next/navigation";
@@ -47,11 +48,11 @@ export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#121212]/95 backdrop-blur supports-[backdrop-filter]:bg-[#121212]/80">
+    <header className="sticky top-0 z-30 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b border-border/40">
       {/* Mobile Top Header (Perfil e Ações Rápidas) */}
       <div className="md:hidden flex items-center justify-between px-4 pt-4 pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 text-zinc-200 flex items-center justify-center font-medium text-sm">
+          <div className="w-9 h-9 rounded-full bg-muted border border-border text-foreground flex items-center justify-center font-medium text-sm">
             {user?.name ? user.name.slice(0, 1).toUpperCase() : "U"}
           </div>
           <div className="relative">
@@ -60,7 +61,7 @@ export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
                 {user?.name || "Usuário"}
               </h2>
               {isAdminState && (
-                <span className="text-[10px] text-zinc-400 bg-white/5 border border-white/10 px-1.5 py-0.5 rounded font-medium">
+                <span className="text-[10px] text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded font-medium">
                   Admin
                 </span>
               )}
@@ -77,34 +78,43 @@ export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
             </div>
             
             {/* Dropdown Menu */}
-            <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-44 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+            <div id="profile-menu" className="hidden absolute top-full left-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 divide-y divide-border/40">
               <Link
                 href="/profile"
-                className="block w-full text-left px-4 py-2.5 text-sm text-zinc-200 hover:bg-white/5 transition-colors border-b border-white/5"
+                className="block w-full text-left px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
               >
                 Meu Perfil
               </Link>
+              <ThemeToggle variant="menu-item" />
               <button 
                 onClick={async () => {
                   signOut({ callbackUrl: "/login" });
                 }}
-                className="w-full text-left px-4 py-2.5 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-white/5 transition-colors"
+                className="w-full text-left px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 Sair
               </button>
             </div>
           </div>
         </div>
+
+        {/* Theme toggle no mobile */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Linha de Filtro de Data e Sincronização */}
-      <div className="flex items-center justify-between min-h-14 px-4 md:px-8 py-2 border-b md:border-none border-border/40">
+      <div className="flex items-center justify-between min-h-14 px-4 md:px-8 py-2">
         <div className="flex items-center gap-3">
           <DateFilter />
           {isAdminState && <SyncEmailsButton />}
         </div>
-        {!pathname.startsWith("/transactions") && (
-          <div className="flex items-center">
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center">
+            <ThemeToggle />
+          </div>
+          {!pathname.startsWith("/transactions") && (
             <Button 
               onClick={() => {
                 const params = new URLSearchParams(window.location.search);
@@ -116,8 +126,8 @@ export default function Navbar({ summary, isAdmin = false }: NavbarProps = {}) {
               <Plus className="sm:mr-1.5 h-4 w-4 stroke-[3]" />
               <span className="hidden sm:inline">Nova Transação</span>
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </header>
   );

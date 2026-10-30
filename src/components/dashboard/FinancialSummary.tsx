@@ -389,49 +389,49 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
           onClick={() => !payingId && setPaymentCard(null)}
         >
           <div 
-            className="w-full max-w-md rounded-2xl bg-[#141414] border border-white/10 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 text-foreground my-auto shrink-0 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-2xl space-y-5 animate-in zoom-in-95 text-foreground my-auto shrink-0 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center justify-between pb-3 border-b border-border/40">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-[#b300e4]/15 text-[#d246f8]">
+                <div className="p-2.5 rounded-xl bg-[#b300e4]/15 text-[#b300e4]">
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Pagar Fatura</h3>
-                  <p className="text-xs text-zinc-400">Cartão {paymentCard.name}</p>
+                  <h3 className="text-base font-bold text-foreground">Pagar Fatura</h3>
+                  <p className="text-xs text-muted-foreground">Cartão {paymentCard.name}</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => !payingId && setPaymentCard(null)}
-                className="text-zinc-500 hover:text-white p-1 rounded-lg"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-4 rounded-xl bg-zinc-900 border border-white/5 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-muted/60 border border-border flex items-center justify-between">
               <div>
-                <p className="text-xs text-zinc-400">Valor da Fatura ({getMonthName(month)})</p>
-                <p className="text-xl font-extrabold text-white mt-0.5">
+                <p className="text-xs text-muted-foreground">Valor da Fatura ({getMonthName(month)})</p>
+                <p className="text-xl font-extrabold text-foreground mt-0.5">
                   {formatCurrency(paymentCard.faturaAtual)}
                 </p>
               </div>
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#b300e4]/20 text-[#d246f8] border border-[#b300e4]/30">
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#b300e4]/20 text-[#b300e4] border border-[#b300e4]/30">
                 {paymentCard.status}
               </span>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs font-medium text-zinc-300">
+              <label className="block text-xs font-medium text-foreground">
                 Conta de onde o valor será descontado
               </label>
               <div className="relative">
                 <select
                   value={selectedPaymentAccount}
                   onChange={(e) => setSelectedPaymentAccount(e.target.value)}
-                  className="w-full h-11 bg-zinc-900 border border-white/10 rounded-xl px-3 pr-8 text-sm text-white focus:outline-none focus:border-[#b300e4] cursor-pointer appearance-none"
+                  className="w-full h-11 bg-muted/50 border border-border rounded-xl px-3 pr-8 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer appearance-none"
                 >
                   <option value="" disabled>Selecione uma conta bancária</option>
                   {accounts.map((acc) => (
@@ -440,11 +440,11 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                   <ChevronDown className="w-4 h-4" />
                 </div>
               </div>
-              <p className="text-[11px] text-zinc-500 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Ao confirmar, o valor de <strong>{formatCurrency(paymentCard.faturaAtual)}</strong> será debitado do saldo da conta selecionada e a fatura será marcada como paga.
               </p>
               {selectedPaymentAccount && (() => {
@@ -452,9 +452,9 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 if (!chosen) return null;
                 const remaining = chosen.balance - paymentCard.faturaAtual;
                 return (
-                  <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-zinc-950 border border-white/5 text-zinc-400">
+                  <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-muted/30 border border-border/50 text-muted-foreground">
                     <span>Saldo restante na conta:</span>
-                    <span className={`font-bold tabular-nums ${remaining >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                    <span className={`font-bold tabular-nums ${remaining >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                       {formatCurrency(remaining)}
                     </span>
                   </div>
@@ -467,7 +467,7 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 type="button"
                 disabled={!!payingId}
                 onClick={() => setPaymentCard(null)}
-                className="flex-1 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold border border-white/10 transition-colors"
+                className="flex-1 h-10 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold border border-border transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
@@ -475,7 +475,7 @@ export default function FinancialSummary({ creditCards, accounts, month, year }:
                 type="button"
                 disabled={!!payingId || !selectedPaymentAccount || paymentCard.faturaAtual === 0}
                 onClick={handleConfirmPayment}
-                className="flex-1 h-10 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#b300e4]/20 disabled:opacity-40"
+                className="flex-1 h-10 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#b300e4]/20 disabled:opacity-40 cursor-pointer"
               >
                 {payingId ? (
                   <>

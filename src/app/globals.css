@@ -1,15 +1,37 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --primary: #a800d7;
+  --primary-foreground: #ffffff;
+  color-scheme: light;
+}
+
+.dark {
   --background: #121212;
   --foreground: #ededed;
-  --card: #191919;
+  --card: #18181b;
   --card-foreground: #ededed;
+  --popover: #18181b;
+  --popover-foreground: #ededed;
   --muted: #242424;
   --muted-foreground: #a1a1aa;
-  --border: #1a1a1a;
+  --border: #27272a;
+  --input: #27272a;
   --primary: #b300e4;
   --primary-foreground: #ffffff;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -17,37 +39,33 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --font-sans: Arial, Helvetica, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #121212;
-    --foreground: #ededed;
-    --card: #191919;
-    --card-foreground: #ededed;
-    --muted: #242424;
-    --muted-foreground: #a1a1aa;
-    --border: #1a1a1a;
-    --primary: #b300e4;
-    --primary-foreground: #ffffff;
-  }
-}
-
 *, ::before, ::after {
-  border-color: #1a1a1a;
+  border-color: var(--border);
 }
 
 body, html {
-  background-color: #121212 !important;
+  background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Explicit select styles for Windows dark/light contrast (Web Interface Guidelines) */
+select, select option {
+  background-color: var(--card);
+  color: var(--foreground);
 }
 
 @keyframes pageFadeIn {
@@ -66,16 +84,24 @@ body, html {
 }
 
 .glass {
-  background-color: rgba(25, 25, 25, 0.7);
+  background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.dark .glass {
+  background-color: rgba(25, 25, 25, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card {
-  background-color: rgba(25, 25, 25, 0.5);
+  background-color: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.dark .glass-card {
+  background-color: rgba(25, 25, 25, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -89,16 +115,25 @@ body, html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
 * {
   scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+.dark * {
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
@@ -127,7 +162,7 @@ body, html {
 .date-pill-input::-webkit-datetime-edit-month-field:active,
 .date-pill-input::-webkit-datetime-edit-year-field:active {
   background-color: transparent !important;
-  color: #ffffff !important;
+  color: var(--foreground) !important;
   outline: none !important;
 }
 
@@ -139,16 +174,25 @@ body, html {
 .date-pill-input::selection,
 .date-pill-input *::selection {
   background-color: transparent !important;
-  color: #ffffff !important;
+  color: var(--foreground) !important;
 }
 
-/* Fix Chrome/Edge/Safari autofill background in dark mode */
+/* Autofill background handling */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #f8fafc inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #18181b inset !important;
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
-  transition: background-color 5000s ease-in-out 0s;
 }

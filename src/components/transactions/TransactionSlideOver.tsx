@@ -59,7 +59,7 @@ export default function TransactionSlideOver() {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b border-border/40 shrink-0">
-          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Criar Transação</h2>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Criar Transação</h2>
           <button 
             onClick={closeSlideOver}
             className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"

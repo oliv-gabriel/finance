@@ -184,19 +184,19 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white uppercase tracking-wider">Descrição</label>
+            <label className="text-xs font-bold text-foreground uppercase tracking-wider">Descrição</label>
             <Input
               required
               placeholder="Ex: Aluguel, Supermercado, Salário"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="h-11 sm:h-12 text-sm rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4]"
+              className="h-11 sm:h-12 text-sm rounded-xl bg-muted/60 text-foreground border-border/80 focus:border-[#b300e4]"
             />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white uppercase tracking-wider">Valor</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-wider">Valor</label>
               <div className="relative flex items-center">
                 <span className="absolute left-3.5 text-xs sm:text-sm font-bold text-muted-foreground pointer-events-none select-none">
                   R$
@@ -208,13 +208,13 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                   placeholder="0,00"
                   value={formData.amount}
                   onChange={handleAmountChange}
-                  className="h-11 sm:h-12 pl-10 text-base sm:text-lg font-black tracking-tight rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4] tabular-nums"
+                  className="h-11 sm:h-12 pl-10 text-base sm:text-lg font-black tracking-tight rounded-xl bg-muted/60 text-foreground border-border/80 focus:border-[#b300e4] tabular-nums"
                 />
               </div>
             </div>
             
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white uppercase tracking-wider">Data</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-wider">Data</label>
               <div className="relative group">
                 <Input
                   required
@@ -222,7 +222,7 @@ export default function TransactionForm({ categories, accounts, initialData, ini
                   placeholder="DD/MM/AAAA"
                   value={formData.date}
                   onChange={handleDateChange}
-                  className="h-11 sm:h-12 pr-11 text-sm font-semibold rounded-xl bg-zinc-900/80 border-border/80 focus:border-[#b300e4] tabular-nums"
+                  className="h-11 sm:h-12 pr-11 text-sm font-semibold rounded-xl bg-muted/60 text-foreground border-border/80 focus:border-[#b300e4] tabular-nums"
                 />
                 <button
                   type="button"
@@ -246,9 +246,9 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           {formData.type !== "TRANSFER" && (
             <div 
               onClick={() => setFormData({ ...formData, paid: !formData.paid })}
-              className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-border/80 bg-zinc-900/80 hover:bg-zinc-900 transition-all cursor-pointer select-none"
+              className="flex items-center justify-between p-3.5 sm:p-4 rounded-xl border border-border/80 bg-muted/60 text-foreground hover:bg-zinc-900 transition-all cursor-pointer select-none"
             >
-              <span className="text-sm sm:text-base font-bold text-white">
+              <span className="text-sm sm:text-base font-bold text-foreground">
                 {formData.type === "EXPENSE" ? "Pago" : "Recebido"}
               </span>
 
@@ -267,10 +267,10 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white uppercase tracking-wider">{formData.type === "TRANSFER" ? "Conta de Origem" : "Conta ou Cartão"}</label>
+            <label className="text-xs font-bold text-foreground uppercase tracking-wider">{formData.type === "TRANSFER" ? "Conta de Origem" : "Conta ou Cartão"}</label>
             <select
               required
-              className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
+              className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-muted/60 text-foreground px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
               value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
             >
@@ -294,10 +294,10 @@ export default function TransactionForm({ categories, accounts, initialData, ini
 
           {formData.type === "TRANSFER" && (
             <div className="space-y-2 mt-4">
-              <label className="text-xs font-bold text-white uppercase tracking-wider">Conta de Destino</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-wider">Conta de Destino</label>
               <select
                 required
-                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
+                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-muted/60 text-foreground px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
                 value={formData.destinationAccountId}
                 onChange={(e) => setFormData({ ...formData, destinationAccountId: e.target.value })}
               >
@@ -310,9 +310,9 @@ export default function TransactionForm({ categories, accounts, initialData, ini
           )}
 
           {showRecurrence && formData.type !== "TRANSFER" && (
-            <div className="space-y-4 p-4 border rounded-md bg-slate-50 dark:bg-slate-900/50">
+            <div className="space-y-4 p-4 border rounded-md bg-muted/30 border-border">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Lançamento</label>
+                <label className="text-sm font-semibold text-foreground">Lançamento</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 bg-muted p-1 rounded-xl gap-1.5 border border-border/50">
                   <button
                     type="button"
@@ -443,10 +443,10 @@ export default function TransactionForm({ categories, accounts, initialData, ini
 
           {formData.type !== "TRANSFER" && (
             <div className="space-y-2">
-              <label className="text-xs font-bold text-white uppercase tracking-wider">Categoria</label>
+              <label className="text-xs font-bold text-foreground uppercase tracking-wider">Categoria</label>
               <select
                 required
-                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-zinc-900/80 px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
+                className="flex h-11 sm:h-12 w-full rounded-xl border border-border/80 bg-muted/60 text-foreground px-3.5 text-sm font-medium text-foreground focus:border-[#b300e4] focus:outline-none transition-colors cursor-pointer"
                 value={formData.categoryId}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
               >

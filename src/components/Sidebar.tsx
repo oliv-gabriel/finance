@@ -67,7 +67,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-[#121212] transition-all duration-300 ease-in-out hidden md:block border-r border-white/5",
+        "fixed left-0 top-0 z-40 h-screen bg-card transition-[width] duration-300 ease-in-out hidden md:block border-r border-border",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -90,7 +90,9 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
                 title={isCollapsed ? item.name : undefined}
                 className={cn(
                   "flex items-center rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
-                  isActive ? "bg-[#b300e4]/15 text-[#b300e4] font-bold shadow-2xs border border-[#b300e4]/20" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  isActive 
+                    ? "bg-[#b300e4]/15 text-[#b300e4] font-bold shadow-2xs border border-[#b300e4]/20" 
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   isCollapsed && "justify-center px-2"
                 )}
               >
@@ -105,7 +107,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
           })}
         </nav>
 
-        <div className="mt-auto pt-4 space-y-1">
+        <div className="mt-auto pt-4 space-y-1.5 border-t border-border/40">
           <Link
             href="/export"
             title={isCollapsed ? "Exportar Dados" : undefined}
@@ -124,22 +126,22 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
               href="/profile"
               title={isCollapsed ? `${userInfo.name} (Meu Perfil)` : undefined}
               className={cn(
-                "flex items-center gap-2.5 rounded-xl p-2 transition-all mt-2",
+                "flex items-center gap-2.5 rounded-xl p-2 transition-all",
                 pathname === "/profile"
-                  ? "bg-white/10 text-white font-medium shadow-2xs border border-white/10"
-                  : "text-zinc-400 hover:text-white hover:bg-white/[0.04]",
+                  ? "bg-muted text-foreground font-medium shadow-2xs border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
                 isCollapsed && "justify-center px-1"
               )}
             >
-              <div className="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-xs font-semibold text-zinc-200 shrink-0 uppercase">
+              <div className="w-8 h-8 rounded-full bg-muted border border-border flex items-center justify-center text-xs font-semibold text-foreground shrink-0 uppercase">
                 {userInfo.name ? userInfo.name.slice(0, 1) : "U"}
               </div>
               {!isCollapsed && (
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-zinc-200 truncate leading-tight">
+                  <p className="text-xs font-semibold text-foreground truncate leading-tight">
                     {userInfo.name}
                   </p>
-                  <p className="text-[11px] text-zinc-500 font-medium truncate leading-tight mt-0.5">
+                  <p className="text-[11px] text-muted-foreground font-medium truncate leading-tight mt-0.5">
                     {userInfo.isAdmin ? "Administrador" : "Normal"}
                   </p>
                 </div>
@@ -151,7 +153,7 @@ export default function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
             onClick={() => signOut({ callbackUrl: "/login" })}
             title={isCollapsed ? "Sair" : undefined}
             className={cn(
-              "w-full flex items-center rounded-xl px-3 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-300 transition-colors hover:bg-muted/60",
+              "w-full flex items-center rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:bg-muted/60 cursor-pointer",
               isCollapsed && "justify-center px-2"
             )}
           >

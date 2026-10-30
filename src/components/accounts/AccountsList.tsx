@@ -145,19 +145,19 @@ export default function AccountsList({
       {/* Grid com Contas Bancárias e Cartões de Crédito */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* SEÇÃO 1: CONTAS BANCÁRIAS */}
-        <div className="bg-[#18181b] border border-white/10 rounded-2xl p-4 md:p-6 shadow-sm flex flex-col">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-6 shadow-sm flex flex-col">
           {/* Header da Seção */}
-          <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/5">
+          <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-border/40">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
                 <Landmark className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white tracking-tight">Contas Bancárias</h2>
-                <p className="text-xs text-zinc-400">{bankAccounts.length} {bankAccounts.length === 1 ? "conta cadastrada" : "contas cadastradas"}</p>
+                <h2 className="text-base font-bold text-foreground tracking-tight">Contas Bancárias</h2>
+                <p className="text-xs text-muted-foreground">{bankAccounts.length} {bankAccounts.length === 1 ? "conta cadastrada" : "contas cadastradas"}</p>
               </div>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 text-zinc-300 border border-white/10">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted/50 text-foreground border border-border">
               {bankAccounts.length}
             </span>
           </div>
@@ -165,11 +165,11 @@ export default function AccountsList({
           {/* Lista de Contas */}
           {bankAccounts.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-white/5 flex items-center justify-center text-zinc-500 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-muted border border-border/40 flex items-center justify-center text-muted-foreground/80 mb-3">
                 <Landmark className="h-6 w-6" />
               </div>
-              <p className="text-sm font-medium text-zinc-300">Nenhuma conta cadastrada</p>
-              <p className="text-xs text-zinc-500 mt-1 max-w-xs">Cadastre suas contas bancárias para organizar seus saldos e transferências.</p>
+              <p className="text-sm font-medium text-foreground">Nenhuma conta cadastrada</p>
+              <p className="text-xs text-muted-foreground/80 mt-1 max-w-xs">Cadastre suas contas bancárias para organizar seus saldos e transferências.</p>
               {onOpenNewAccount && (
                 <button
                   type="button"
@@ -191,7 +191,7 @@ export default function AccountsList({
                 return (
                   <div
                     key={account.id}
-                    className="group bg-[#141417] hover:bg-[#1a1a1f] border border-white/5 hover:border-white/10 rounded-2xl p-3.5 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    className="group bg-muted/30 hover:bg-muted/70 border border-border/40 hover:border-border rounded-2xl p-3.5 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                   >
                     {/* Lado Esquerdo: Ícone do Banco + Dados */}
                     <div className="flex items-center gap-3 min-w-0">
@@ -211,15 +211,15 @@ export default function AccountsList({
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-sm md:text-base font-bold text-white truncate leading-tight">
+                        <h3 className="text-sm md:text-base font-bold text-foreground truncate leading-tight">
                           {account.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] font-medium text-zinc-400">
+                          <span className="text-[11px] font-medium text-muted-foreground">
                             Conta Bancária
                           </span>
                           <span className="text-[10px] text-zinc-600">•</span>
-                          <span className={`text-[11px] font-medium ${isIncluded ? "text-emerald-400" : "text-zinc-500"}`}>
+                          <span className={`text-[11px] font-medium ${isIncluded ? "text-emerald-400" : "text-muted-foreground/80"}`}>
                             {isIncluded ? "Ativa no total" : "Oculta do total"}
                           </span>
                         </div>
@@ -227,10 +227,10 @@ export default function AccountsList({
                     </div>
 
                     {/* Lado Direito: Ações (Toggle Switch Roxo + Editar + Lixeira) */}
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    <div className="flex items-center justify-between sm:justify-end gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                       {/* Toggle Switch Roxo */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-400 select-none">
+                        <span className="text-xs text-muted-foreground select-none">
                           {isIncluded ? "No saldo" : "Oculto"}
                         </span>
                         <button
@@ -256,7 +256,7 @@ export default function AccountsList({
                       <button
                         type="button"
                         onClick={() => startEdit(account)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted text-foreground hover:text-white border border-border transition-colors cursor-pointer"
                         title="Editar conta bancária"
                       >
                         <Pencil className="h-3.5 w-3.5 text-[#b300e4]" />
@@ -269,7 +269,7 @@ export default function AccountsList({
                         disabled={isPending}
                         onClick={() => handleDelete(account.id, account.name)}
                         title="Excluir conta"
-                        className="text-zinc-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                        className="text-muted-foreground/80 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -282,19 +282,19 @@ export default function AccountsList({
         </div>
 
         {/* SEÇÃO 2: CARTÕES DE CRÉDITO */}
-        <div className="bg-[#18181b] border border-white/10 rounded-2xl p-4 md:p-6 shadow-sm flex flex-col">
+        <div className="bg-card border border-border rounded-2xl p-4 md:p-6 shadow-sm flex flex-col">
           {/* Header da Seção */}
-          <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/5">
+          <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-border/40">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center shrink-0">
                 <CreditCard className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-white tracking-tight">Cartões de Crédito</h2>
-                <p className="text-xs text-zinc-400">{creditCards.length} {creditCards.length === 1 ? "cartão cadastrado" : "cartões cadastrados"}</p>
+                <h2 className="text-base font-bold text-foreground tracking-tight">Cartões de Crédito</h2>
+                <p className="text-xs text-muted-foreground">{creditCards.length} {creditCards.length === 1 ? "cartão cadastrado" : "cartões cadastrados"}</p>
               </div>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-white/5 text-zinc-300 border border-white/10">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted/50 text-foreground border border-border">
               {creditCards.length}
             </span>
           </div>
@@ -302,11 +302,11 @@ export default function AccountsList({
           {/* Lista de Cartões */}
           {creditCards.length === 0 ? (
             <div className="py-10 text-center flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-zinc-800/80 border border-white/5 flex items-center justify-center text-zinc-500 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-muted border border-border/40 flex items-center justify-center text-muted-foreground/80 mb-3">
                 <CreditCard className="h-6 w-6" />
               </div>
-              <p className="text-sm font-medium text-zinc-300">Nenhum cartão cadastrado</p>
-              <p className="text-xs text-zinc-500 mt-1 max-w-xs">Cadastre seus cartões de crédito para controlar faturas, limites e vencimentos.</p>
+              <p className="text-sm font-medium text-foreground">Nenhum cartão cadastrado</p>
+              <p className="text-xs text-muted-foreground/80 mt-1 max-w-xs">Cadastre seus cartões de crédito para controlar faturas, limites e vencimentos.</p>
               {onOpenNewAccount && (
                 <button
                   type="button"
@@ -328,7 +328,7 @@ export default function AccountsList({
                 return (
                   <div
                     key={card.id}
-                    className="group bg-[#141417] hover:bg-[#1a1a1f] border border-white/5 hover:border-white/10 rounded-2xl p-3.5 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    className="group bg-muted/30 hover:bg-muted/70 border border-border/40 hover:border-border rounded-2xl p-3.5 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                   >
                     {/* Lado Esquerdo: Ícone + Dados do Cartão */}
                     <div className="flex items-center gap-3 min-w-0">
@@ -349,24 +349,24 @@ export default function AccountsList({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="text-sm md:text-base font-bold text-white truncate leading-tight">
+                          <h3 className="text-sm md:text-base font-bold text-foreground truncate leading-tight">
                             {card.name}
                           </h3>
                           {card.bank && (
-                            <span className="text-[10px] bg-white/5 border border-white/10 text-zinc-400 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] bg-muted/50 border border-border text-muted-foreground px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                               <Landmark className="h-2.5 w-2.5" />
                               {card.bank.name}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-zinc-400">
+                        <div className="flex items-center gap-2 mt-1 flex-wrap text-xs text-muted-foreground">
                           {card.limit != null && card.limit > 0 && (
-                            <span className="text-zinc-300 font-medium">
+                            <span className="text-foreground font-medium">
                               Limite: R$ {card.limit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                             </span>
                           )}
                           {(card.closingDay || card.dueDay) && (
-                            <span className="text-zinc-400">
+                            <span className="text-muted-foreground">
                               • Fecha dia {card.closingDay || "-"} / Vence dia {card.dueDay || "-"}
                             </span>
                           )}
@@ -375,12 +375,12 @@ export default function AccountsList({
                     </div>
 
                     {/* Lado Direito: Ações (Fatura + Toggle Switch + Editar + Lixeira) */}
-                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                       {/* Botão Ver Fatura */}
                       <button
                         type="button"
                         onClick={() => setSelectedCardId(card.id)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-muted text-foreground border border-border hover:border-border transition-all cursor-pointer"
                         title="Ver detalhes da fatura deste cartão"
                       >
                         <FileText className="w-3.5 h-3.5 text-[#b300e4]" />
@@ -412,7 +412,7 @@ export default function AccountsList({
                       <button
                         type="button"
                         onClick={() => startEdit(card)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-[#b300e4]/15 text-zinc-300 hover:text-white border border-white/10 hover:border-[#b300e4]/30 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-muted/50 hover:bg-[#b300e4]/15 text-foreground hover:text-white border border-border hover:border-[#b300e4]/30 transition-all cursor-pointer"
                         title="Editar cartão de crédito"
                       >
                         <Pencil className="h-3.5 w-3.5 text-[#b300e4]" />
@@ -425,7 +425,7 @@ export default function AccountsList({
                         disabled={isPending}
                         onClick={() => handleDelete(card.id, card.name)}
                         title="Excluir cartão"
-                        className="text-zinc-500 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
+                        className="text-muted-foreground/80 hover:text-red-400 p-2 hover:bg-red-500/10 rounded-xl transition-colors cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -441,23 +441,23 @@ export default function AccountsList({
       {/* Modal de Edição de Conta ou Cartão */}
       {editingAccount && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="bg-[#18181b] border border-white/10 rounded-2xl p-5 md:p-6 w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-white/5">
+          <div className="bg-card border border-border rounded-2xl p-5 md:p-6 w-full max-w-lg shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-border/40">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-[#b300e4]/10 text-[#b300e4] flex items-center justify-center">
                   <Pencil className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">
+                  <h3 className="text-base font-bold text-foreground">
                     Editar {editingAccount.type === "CONTA" ? "Conta Bancária" : "Cartão de Crédito"}
                   </h3>
-                  <p className="text-xs text-zinc-400">Altere as informações e salve as alterações</p>
+                  <p className="text-xs text-muted-foreground">Altere as informações e salve as alterações</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingAccount(null)}
-                className="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+                className="text-muted-foreground hover:text-white p-1.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -465,7 +465,7 @@ export default function AccountsList({
 
             <form onSubmit={handleSaveEdit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-zinc-300">
+                <label className="text-xs font-semibold text-foreground">
                   {editingAccount.type === "CONTA" ? "Nome da Conta ou Banco" : "Nome do Cartão"}
                 </label>
                 <input
@@ -473,7 +473,7 @@ export default function AccountsList({
                   required
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                  className="w-full h-11 px-3.5 rounded-xl bg-muted/60 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                 />
               </div>
 
@@ -481,15 +481,15 @@ export default function AccountsList({
                 <div className="space-y-3 pt-1">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">Vincular a uma Conta</label>
+                      <label className="text-xs font-semibold text-foreground">Vincular a uma Conta</label>
                       <select
                         value={editBankId}
                         onChange={(e) => setEditBankId(e.target.value)}
-                        className="w-full h-11 px-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
+                        className="w-full h-11 px-3 rounded-xl bg-muted/60 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all cursor-pointer"
                       >
-                        <option value="" className="bg-zinc-900 text-zinc-400">Nenhuma (Avulso)</option>
+                        <option value="" className="bg-muted/60 text-muted-foreground">Nenhuma (Avulso)</option>
                         {bankAccounts.map((b) => (
-                          <option key={b.id} value={b.id} className="bg-zinc-900 text-white">
+                          <option key={b.id} value={b.id} className="bg-muted/60 text-white">
                             {b.name}
                           </option>
                         ))}
@@ -497,7 +497,7 @@ export default function AccountsList({
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-zinc-300">Limite Total (R$)</label>
+                      <label className="text-xs font-semibold text-foreground">Limite Total (R$)</label>
                       <input
                         type="number"
                         step="0.01"
@@ -505,7 +505,7 @@ export default function AccountsList({
                         value={editLimit}
                         onChange={(e) => setEditLimit(e.target.value)}
                         placeholder="0,00"
-                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                        className="w-full h-11 px-3.5 rounded-xl bg-muted/60 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                       />
                     </div>
                   </div>
@@ -513,10 +513,10 @@ export default function AccountsList({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-zinc-300">
+                        <label className="text-xs font-semibold text-foreground">
                           Dia Fechamento (Corte) <span className="text-red-400">*</span>
                         </label>
-                        <span className="text-[10px] text-zinc-500">Ex: 10</span>
+                        <span className="text-[10px] text-muted-foreground/80">Ex: 10</span>
                       </div>
                       <input
                         type="number"
@@ -526,19 +526,19 @@ export default function AccountsList({
                         value={editClosingDay}
                         onChange={(e) => setEditClosingDay(e.target.value)}
                         placeholder="Ex: 10"
-                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                        className="w-full h-11 px-3.5 rounded-xl bg-muted/60 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                       />
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted-foreground">
                         Até este dia as compras entram na fatura atual.
                       </p>
                     </div>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold text-zinc-300">
+                        <label className="text-xs font-semibold text-foreground">
                           Dia Vencimento (Pagamento) <span className="text-red-400">*</span>
                         </label>
-                        <span className="text-[10px] text-zinc-500">Ex: 20</span>
+                        <span className="text-[10px] text-muted-foreground/80">Ex: 20</span>
                       </div>
                       <input
                         type="number"
@@ -548,9 +548,9 @@ export default function AccountsList({
                         value={editDueDay}
                         onChange={(e) => setEditDueDay(e.target.value)}
                         placeholder="Ex: 20"
-                        className="w-full h-11 px-3.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
+                        className="w-full h-11 px-3.5 rounded-xl bg-muted/60 border border-border text-white text-sm focus:outline-none focus:border-[#b300e4] focus:ring-1 focus:ring-[#b300e4] transition-all"
                       />
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted-foreground">
                         Dia limite para pagar o valor da fatura.
                       </p>
                     </div>
@@ -558,7 +558,7 @@ export default function AccountsList({
 
                   {/* Resumo do ciclo de faturas */}
                   {editClosingDay && editDueDay && (
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2.5 text-xs text-zinc-300">
+                    <div className="p-3 rounded-xl bg-muted/50 border border-border flex items-center gap-2.5 text-xs text-foreground">
                       <Info className="w-4 h-4 text-[#b300e4] shrink-0" />
                       <span>
                         Resumo: Compras até dia <strong>{editClosingDay}</strong> entram na fatura com vencimento dia <strong>{editDueDay}</strong>.
@@ -569,10 +569,10 @@ export default function AccountsList({
               )}
 
               {/* Toggle Switch Somar no saldo geral */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800/80">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/60/70 border border-border/80">
                 <div className="flex flex-col pr-3">
                   <span className="text-sm font-semibold text-white">Somar no saldo geral</span>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-muted-foreground">
                     {editingAccount.type === "CONTA"
                       ? "Contabiliza o saldo desta conta no valor total do dashboard"
                       : "Contabiliza as faturas deste cartão nas despesas do dashboard"}
@@ -600,7 +600,7 @@ export default function AccountsList({
                 <button
                   type="button"
                   onClick={() => setEditingAccount(null)}
-                  className="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold text-zinc-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs md:text-sm font-semibold text-muted-foreground hover:text-white hover:bg-muted/50 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>

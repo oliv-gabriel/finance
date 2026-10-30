@@ -55,14 +55,22 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
               </div>
             </div>
           </div>
-          <span title="Ocultar valores" className="text-muted-foreground/70 hover:text-foreground cursor-pointer transition-colors shrink-0 mr-1">
+          <button 
+            type="button"
+            aria-label="Alternar visibilidade dos valores"
+            title="Alternar visibilidade dos valores" 
+            className="text-muted-foreground/70 hover:text-foreground cursor-pointer transition-colors shrink-0 mr-1 p-1 rounded-lg hover:bg-muted"
+          >
             <Eye className="h-5 w-5" />
-          </span>
+          </button>
         </div>
 
         {/* Receitas - Metade no mobile */}
         <div className="col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+          <div 
+            className="size-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0"
+            aria-hidden="true"
+          >
             <ArrowUpCircle className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -75,7 +83,10 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
 
         {/* Despesas - Metade no mobile */}
         <div className="col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center shrink-0">
+          <div 
+            className="size-10 rounded-xl bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0"
+            aria-hidden="true"
+          >
             <ArrowDownCircle className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -88,7 +99,10 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
 
         {/* Total Pago ou A Pagar dinâmico baseado no layout ou estado */}
         <div className="col-span-2 lg:col-span-1 bg-card border border-border/70 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center shrink-0">
+          <div 
+            className="size-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center shrink-0"
+            aria-hidden="true"
+          >
             <CheckCircle2 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -102,25 +116,31 @@ export default function DashboardMetrics({ summary }: DashboardMetricsProps) {
         {/* Cards Ocultos: A Pagar e Saldo Projetado */}
         {isExpanded && (
           <>
-            <div className="col-span-2 lg:col-span-2 bg-card border border-amber-500/30 rounded-2xl p-4 md:p-5 shadow-sm bg-gradient-to-r from-amber-500/5 to-transparent transition-all animate-in fade-in slide-in-from-top-4 flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+            <div className="col-span-2 lg:col-span-2 bg-card border border-amber-500/30 rounded-2xl p-4 md:p-5 shadow-sm bg-gradient-to-r from-amber-500/5 to-transparent transition-[opacity,transform] animate-in fade-in slide-in-from-top-4 flex items-center gap-3">
+              <div 
+                className="size-10 rounded-xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center shrink-0"
+                aria-hidden="true"
+              >
                 <Clock className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs font-bold text-amber-500/80 uppercase tracking-wider truncate block">A Pagar (Despesas)</span>
-                <div className="text-xl md:text-2xl font-black tracking-tight text-amber-500 mt-0.5 truncate">
+                <span className="text-xs font-bold text-amber-600/90 dark:text-amber-400/90 uppercase tracking-wider truncate block">A Pagar (Despesas)</span>
+                <div className="text-xl md:text-2xl font-black tracking-tight text-amber-600 dark:text-amber-400 mt-0.5 truncate">
                   {formatCurrency(summary.pendingExpenses)}
                 </div>
               </div>
             </div>
 
-            <div className="col-span-2 lg:col-span-2 bg-card border border-sky-500/30 rounded-2xl p-4 md:p-5 shadow-sm bg-gradient-to-r from-sky-500/5 to-transparent transition-all animate-in fade-in slide-in-from-top-4 flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-sky-500/20 text-sky-500 flex items-center justify-center shrink-0">
+            <div className="col-span-2 lg:col-span-2 bg-card border border-sky-500/30 rounded-2xl p-4 md:p-5 shadow-sm bg-gradient-to-r from-sky-500/5 to-transparent transition-[opacity,transform] animate-in fade-in slide-in-from-top-4 flex items-center gap-3">
+              <div 
+                className="size-10 rounded-xl bg-sky-500/15 text-sky-600 dark:bg-sky-500/20 dark:text-sky-400 flex items-center justify-center shrink-0"
+                aria-hidden="true"
+              >
                 <Wallet className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs font-bold text-sky-500/80 uppercase tracking-wider truncate block">Saldo Projetado</span>
-                <div className={`text-xl md:text-2xl font-black tracking-tight mt-0.5 truncate ${(summary.balance - summary.pendingExpenses) >= 0 ? "text-sky-500" : "text-red-500"}`}>
+                <span className="text-xs font-bold text-sky-600/90 dark:text-sky-400/90 uppercase tracking-wider truncate block">Saldo Projetado</span>
+                <div className={`text-xl md:text-2xl font-black tracking-tight mt-0.5 truncate ${(summary.balance - summary.pendingExpenses) >= 0 ? "text-sky-600 dark:text-sky-400" : "text-rose-600 dark:text-rose-400"}`}>
                   {formatCurrency(summary.balance - summary.pendingExpenses)}
                 </div>
               </div>

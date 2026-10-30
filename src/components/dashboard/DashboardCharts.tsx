@@ -33,14 +33,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const val = Number(payload[0].value) || 0;
     
     return (
-      <div className="bg-[#18181b]/95 border border-border/80 backdrop-blur-md p-3.5 rounded-2xl shadow-2xl flex flex-col gap-1.5 animate-in fade-in zoom-in-95 z-50">
+      <div className="bg-card/95 border border-border backdrop-blur-md p-3.5 rounded-2xl shadow-xl flex flex-col gap-1.5 animate-in fade-in zoom-in-95 z-50 text-foreground">
         <p className="text-[11px] font-black text-muted-foreground uppercase tracking-widest">{displayName}</p>
         <div className="flex items-center gap-2.5 mt-0.5">
           <div 
             className="w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] shrink-0" 
             style={{ backgroundColor: payload[0].color || data.color || "#b300e4" }} 
           />
-          <span className="font-black text-white text-base tracking-tight tabular-nums">
+          <span className="font-black text-foreground text-base tracking-tight tabular-nums">
             {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val)}
           </span>
         </div>
@@ -54,7 +54,7 @@ export function ExpensesBarChart({ data }: { data: any[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%" minWidth={10} minHeight={10}>
       <BarChart data={data} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#242424" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.7} />
         <XAxis 
           dataKey="day" 
           tick={{ fontSize: 11, fill: "#71717a", fontWeight: 700 }} 
@@ -69,7 +69,7 @@ export function ExpensesBarChart({ data }: { data: any[] }) {
           tickFormatter={(value) => `R$${value}`}
           tickMargin={10}
         />
-        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#242424', opacity: 0.4 }} />
+        <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.35 }} />
         <Bar 
           dataKey="amount" 
           fill="#b300e4" 

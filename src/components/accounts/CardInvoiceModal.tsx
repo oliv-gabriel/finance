@@ -203,7 +203,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-3xl rounded-3xl bg-[#121212] border border-border/80 shadow-2xl shadow-[#b300e4]/15 overflow-hidden flex flex-col max-h-[90vh] text-foreground my-auto shrink-0"
+        className="w-full max-w-3xl rounded-3xl bg-card border border-border shadow-2xl shadow-[#b300e4]/15 overflow-hidden flex flex-col max-h-[90vh] text-foreground my-auto shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Cabeçalho */}
@@ -258,7 +258,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="bg-card font-bold text-sm text-foreground border border-border/80 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
+              className="bg-card font-bold text-sm text-foreground border border-border rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
             >
               {MONTH_NAMES.map((name, idx) => (
                 <option key={idx + 1} value={idx + 1}>{name}</option>
@@ -267,7 +267,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
             <select
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="bg-card font-bold text-sm text-foreground border border-border/80 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
+              className="bg-card font-bold text-sm text-foreground border border-border rounded-xl px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
             >
               {[2025, 2026, 2027, 2028].map((y) => (
                 <option key={y} value={y}>{y}</option>
@@ -399,7 +399,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                                 {tx.description || "Compra no cartão"}
                               </p>
                               {isSeries(tx) && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-zinc-400 font-medium shrink-0">
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-border text-muted-foreground font-medium shrink-0">
                                   Parcelado
                                 </span>
                               )}
@@ -488,7 +488,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                   <select
                     value={selectedAccountId}
                     onChange={(e) => setSelectedAccountId(e.target.value)}
-                    className="w-full bg-[#1c1c1f] text-xs font-semibold text-foreground border border-border/80 rounded-xl pl-3 pr-8 py-3 focus:outline-none focus:ring-2 focus:ring-[#b300e4]/50 cursor-pointer appearance-none shadow-sm"
+                    className="w-full bg-muted/60 text-xs font-semibold text-foreground border border-border rounded-xl pl-3 pr-8 py-3 focus:outline-none focus:ring-2 focus:ring-[#b300e4]/50 cursor-pointer appearance-none shadow-sm"
                   >
                     <option value="" disabled>Selecione a conta</option>
                     {data.availableAccounts?.map(acc => (
@@ -536,29 +536,29 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
           onClick={() => setActionTx(null)}
         >
           <div 
-            className="w-full max-w-sm rounded-2xl bg-[#18181b] border border-white/10 p-5 shadow-2xl space-y-4 animate-in zoom-in-95 text-foreground"
+            className="w-full max-w-sm rounded-2xl bg-card border border-border p-5 shadow-2xl space-y-4 animate-in zoom-in-95 text-foreground"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-3 border-b border-white/5">
+            <div className="flex items-center justify-between pb-3 border-b border-border/40">
               <div className="flex items-center gap-2.5 min-w-0 pr-2">
                 <div className="p-2 rounded-xl bg-[#b300e4]/15 text-[#b300e4] shrink-0">
                   <Pencil className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-white">Editar Lançamento</h3>
-                  <p className="text-xs text-zinc-400 truncate">{actionTx.description}</p>
+                  <h3 className="text-sm font-bold text-foreground">Editar Lançamento</h3>
+                  <p className="text-xs text-muted-foreground truncate">{actionTx.description}</p>
                 </div>
               </div>
               <button 
                 onClick={() => setActionTx(null)}
-                className="text-zinc-500 hover:text-white shrink-0 p-1 cursor-pointer"
+                className="text-muted-foreground/80 hover:text-white shrink-0 p-1 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2">
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 {isSeries(actionTx) 
                   ? "Este lançamento pertence a uma compra parcelada. Escolha como deseja editar:" 
                   : "Deseja editar as informações deste lançamento?"}
@@ -573,11 +573,11 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                       onClose();
                       router.push(`/transactions/edit/${targetId}?mode=single`);
                     }}
-                    className="w-full text-left p-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 transition-colors text-xs font-medium text-white flex items-center justify-between cursor-pointer"
+                    className="w-full text-left p-3 rounded-xl bg-muted/60 hover:bg-muted border border-border transition-colors text-xs font-medium text-white flex items-center justify-between cursor-pointer"
                   >
                     <div>
-                      <p className="font-semibold text-white">Editar apenas esta parcela</p>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">Altera somente o valor ou dados deste mês</p>
+                      <p className="font-semibold text-foreground">Editar apenas esta parcela</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">Altera somente o valor ou dados deste mês</p>
                     </div>
                   </button>
                   <button
@@ -590,7 +590,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
                     className="w-full text-left p-3 rounded-xl bg-[#b300e4] hover:bg-[#9a00c4] text-white transition-colors text-xs font-semibold flex items-center justify-between cursor-pointer"
                   >
                     <div>
-                      <p className="font-semibold text-white">Editar toda a série</p>
+                      <p className="font-semibold text-foreground">Editar toda a série</p>
                       <p className="text-[11px] text-white/80 mt-0.5">Aplica a alteração a todas as parcelas pendentes</p>
                     </div>
                   </button>
@@ -612,7 +612,7 @@ export default function CardInvoiceModal({ isOpen, onClose, cardId, initialMonth
 
             <button
               onClick={() => setActionTx(null)}
-              className="w-full py-1 text-xs text-zinc-400 hover:text-white font-medium cursor-pointer"
+              className="w-full py-1 text-xs text-muted-foreground hover:text-white font-medium cursor-pointer"
             >
               Cancelar
             </button>

@@ -50,14 +50,14 @@ export default function RegisterForm() {
 
   if (success) {
     return (
-      <div className="w-full p-6 sm:p-8 rounded-2xl bg-[#18181b] border border-white/10 shadow-2xl text-center">
+      <div className="w-full p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-2xl text-center">
         <div className="w-14 h-14 bg-green-500/15 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
           <CheckCircle2 className="w-7 h-7 text-green-500" aria-hidden="true" />
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-white mb-1.5 tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1.5 tracking-tight">
           Conta Criada!
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 mb-6">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-6">
           Sua conta foi criada com sucesso e você já está conectado.
         </p>
         <button
@@ -72,12 +72,12 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="w-full p-6 sm:p-8 rounded-2xl bg-[#18181b] border border-white/10 shadow-2xl backdrop-blur-sm">
+    <div className="w-full p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-2xl backdrop-blur-sm">
       <div className="text-center mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
           Criar Nova Conta
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1">
           Configure seu acesso restrito para iniciar
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function RegisterForm() {
         <div>
           <label
             htmlFor="register-username"
-            className="block text-xs font-semibold text-zinc-300 mb-1.5"
+            className="block text-xs font-semibold text-foreground font-medium mb-1.5"
           >
             Nome de Usuário
           </label>
@@ -114,7 +114,7 @@ export default function RegisterForm() {
               autoComplete="username"
               spellCheck={false}
               required
-              className="w-full h-11 bg-[#121212] border border-white/10 hover:border-white/20 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-4 text-sm text-white placeholder-zinc-500 transition-colors"
+              className="w-full h-11 bg-muted/50 border border-border hover:border-border/80 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground transition-colors"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function RegisterForm() {
         <div>
           <label
             htmlFor="register-password"
-            className="block text-xs font-semibold text-zinc-300 mb-1.5"
+            className="block text-xs font-semibold text-foreground font-medium mb-1.5"
           >
             Senha (mínimo 6 caracteres)
           </label>
@@ -140,13 +140,13 @@ export default function RegisterForm() {
               autoComplete="new-password"
               required
               minLength={6}
-              className="w-full h-11 bg-[#121212] border border-white/10 hover:border-white/20 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-11 text-sm text-white placeholder-zinc-500 transition-colors"
+              className="w-full h-11 bg-muted/50 border border-border hover:border-border/80 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-11 text-sm text-foreground placeholder:text-muted-foreground transition-colors"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               aria-label={showPassword ? "Ocultar senha" : "Exibir senha"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] transition-colors cursor-pointer"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white p-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] transition-colors cursor-pointer"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" aria-hidden="true" />
@@ -162,7 +162,7 @@ export default function RegisterForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl text-sm font-bold bg-[#b300e4] hover:bg-[#9a00c4] active:scale-[0.99] text-white shadow-md shadow-[#b300e4]/25 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181b]"
+            className="w-full h-11 rounded-xl text-sm font-bold bg-[#b300e4] hover:bg-[#9a00c4] active:scale-[0.99] text-white shadow-md shadow-[#b300e4]/25 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             {loading ? (
               <>

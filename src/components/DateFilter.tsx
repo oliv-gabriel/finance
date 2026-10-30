@@ -185,39 +185,40 @@ export default function DateFilter() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center h-10 px-4 sm:px-5 rounded-full bg-[#18181b] border border-white/10 hover:border-white/20 hover:bg-white/5 focus:border-[#b300e4] focus:ring-2 focus:ring-[#b300e4]/30 shadow-xs transition-all duration-200 cursor-pointer select-none"
+        className="flex items-center justify-center h-10 px-4 sm:px-5 rounded-full bg-card border border-border hover:border-border/80 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] shadow-xs transition-colors duration-200 cursor-pointer select-none"
         title="Clique para navegar pelos meses ou escolher um período"
+        aria-label={`Filtrar por período: ${formatDisplayDate(startDate)} até ${formatDisplayDate(endDate)}`}
       >
-        <span className="text-white text-xs sm:text-sm font-semibold tracking-tight">
+        <span className="text-foreground text-xs sm:text-sm font-semibold tracking-tight">
           {formatDisplayDate(startDate)}
         </span>
-        <span className="text-zinc-500 text-xs mx-2.5 sm:mx-3 select-none font-medium">
+        <span className="text-muted-foreground text-xs mx-2.5 sm:mx-3 select-none font-medium">
           –
         </span>
-        <span className="text-white text-xs sm:text-sm font-semibold tracking-tight">
+        <span className="text-foreground text-xs sm:text-sm font-semibold tracking-tight">
           {formatDisplayDate(endDate)}
         </span>
       </button>
 
       {/* Popover com os botões que abre ao clicar nas datas */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 z-50 w-76 sm:w-80 rounded-2xl bg-[#18181b] border border-white/10 p-4 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 text-foreground">
+        <div className="absolute top-full left-0 mt-2 z-50 w-76 sm:w-80 rounded-2xl bg-card border border-border p-4 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 text-foreground">
           {/* Título do período ativo */}
           <div className="text-center pb-2.5">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
               Período Selecionado
             </span>
-            <p className="text-sm font-bold text-white capitalize mt-0.5">
+            <p className="text-sm font-bold text-foreground capitalize mt-0.5">
               {periodTitle}
             </p>
           </div>
 
           {/* Os 3 botões solicitados: Mês Anterior, Mês Atual, Próximo Mês */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 bg-zinc-900/90 rounded-xl border border-white/5 mb-3">
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-muted/80 rounded-xl border border-border mb-3">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
               title="Mês anterior"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -230,7 +231,7 @@ export default function DateFilter() {
               className={`flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 isCurrentMonthActive
                   ? "bg-[#b300e4] text-white shadow-xs font-bold"
-                  : "text-zinc-300 hover:text-white hover:bg-zinc-800"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card"
               }`}
               title="Mês atual"
             >
@@ -240,7 +241,7 @@ export default function DateFilter() {
             <button
               type="button"
               onClick={handleNextMonth}
-              className="flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1 py-2 px-1 rounded-lg text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-card transition-colors cursor-pointer"
               title="Próximo mês"
             >
               <span>Próximo</span>
@@ -250,35 +251,35 @@ export default function DateFilter() {
 
           {/* Divisor */}
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-white/10"></div>
-            <span className="flex-shrink mx-2 text-[10px] uppercase font-semibold text-zinc-500 tracking-wider">
+            <div className="flex-grow border-t border-border"></div>
+            <span className="flex-shrink mx-2 text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
               Ou escolher datas
             </span>
-            <div className="flex-grow border-t border-white/10"></div>
+            <div className="flex-grow border-t border-border"></div>
           </div>
 
           {/* Formulário Data a Data */}
           <form onSubmit={handleApplyCustom} className="pt-2 space-y-3">
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-zinc-400">De (Início)</label>
+                <label className="text-[10px] font-semibold text-muted-foreground">De (Início)</label>
                 <input
                   type="date"
                   required
                   value={draftStart}
                   onChange={(e) => setDraftStart(e.target.value)}
-                  className="w-full h-9 px-2 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs font-medium focus:outline-none focus:border-[#b300e4] cursor-pointer scheme-dark"
+                  className="w-full h-9 px-2 rounded-xl bg-muted/60 border border-border text-foreground text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-zinc-400">Até (Fim)</label>
+                <label className="text-[10px] font-semibold text-muted-foreground">Até (Fim)</label>
                 <input
                   type="date"
                   required
                   value={draftEnd}
                   onChange={(e) => setDraftEnd(e.target.value)}
-                  className="w-full h-9 px-2 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs font-medium focus:outline-none focus:border-[#b300e4] cursor-pointer scheme-dark"
+                  className="w-full h-9 px-2 rounded-xl bg-muted/60 border border-border text-foreground text-xs font-medium focus:outline-none focus:ring-1 focus:ring-[#b300e4] cursor-pointer"
                 />
               </div>
             </div>
@@ -288,35 +289,35 @@ export default function DateFilter() {
               <button
                 type="button"
                 onClick={() => applyShortcut("today")}
-                className="px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-muted hover:bg-muted/80 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Hoje
               </button>
               <button
                 type="button"
                 onClick={() => applyShortcut("7days")}
-                className="px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-muted hover:bg-muted/80 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 7 dias
               </button>
               <button
                 type="button"
                 onClick={() => applyShortcut("15days")}
-                className="px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-muted hover:bg-muted/80 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 15 dias
               </button>
               <button
                 type="button"
                 onClick={() => applyShortcut("thisMonth")}
-                className="px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-muted hover:bg-muted/80 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Este Mês
               </button>
               <button
                 type="button"
                 onClick={() => applyShortcut("lastMonth")}
-                className="px-2 py-0.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                className="px-2 py-0.5 rounded-lg bg-muted hover:bg-muted/80 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 Mês Passado
               </button>

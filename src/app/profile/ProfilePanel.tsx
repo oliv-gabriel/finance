@@ -1,5 +1,7 @@
 "use client";
 
+import ThemeToggle from "@/components/ThemeToggle";
+
 import { useState, useEffect } from "react";
 import {
   registerUser,
@@ -594,12 +596,12 @@ export function ProfilePanel({
   return (
     <div className="space-y-6">
       {/* Clean Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
         <div>
           <h1 className="text-xl font-semibold text-white tracking-tight">
             {isAdmin ? "Gerenciamento de Conta e Acessos" : "Meu Perfil"}
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             {isAdmin
               ? "Gerencie seu perfil, usuários cadastrados e permissões de acesso."
               : "Visualize os dados da sua conta e altere sua senha de acesso."}
@@ -607,8 +609,8 @@ export function ProfilePanel({
         </div>
 
         {isAdmin && (
-          <div className="flex items-center gap-3 text-xs text-zinc-400">
-            <span><strong className="text-zinc-200 font-medium">{users.length}</strong> {users.length === 1 ? "usuário" : "usuários"}</span>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span><strong className="text-foreground font-medium">{users.length}</strong> {users.length === 1 ? "usuário" : "usuários"}</span>
           </div>
         )}
       </div>
@@ -632,7 +634,7 @@ export function ProfilePanel({
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-zinc-500 hover:text-white"
+            className="text-muted-foreground/80 hover:text-white"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -641,14 +643,14 @@ export function ProfilePanel({
 
       {/* Tabs: Apenas visíveis para Admin */}
       {isAdmin ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
           <div className="flex items-center gap-6 text-sm">
             <button
               onClick={() => setActiveTab("profile")}
               className={`pb-3 font-medium transition-colors relative ${
                 activeTab === "profile"
                   ? "text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#b300e4]"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Meu Perfil
@@ -658,7 +660,7 @@ export function ProfilePanel({
               className={`pb-3 font-medium transition-colors relative ${
                 activeTab === "users"
                   ? "text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#b300e4]"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Usuários ({users.length})
@@ -668,7 +670,7 @@ export function ProfilePanel({
               className={`pb-3 font-medium transition-colors relative ${
                 activeTab === "create"
                   ? "text-white after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#b300e4]"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Novo Usuário
@@ -678,13 +680,13 @@ export function ProfilePanel({
           {activeTab === "users" && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-56">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/80" />
                 <input
                   type="text"
                   placeholder="Buscar usuário..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 text-xs bg-zinc-900 border border-white/10 rounded-lg text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                  className="w-full h-8 pl-8 pr-3 text-xs bg-muted/60 border border-border rounded-lg text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4]"
                 />
               </div>
               <Button
@@ -693,7 +695,7 @@ export function ProfilePanel({
                 disabled={isRefreshing}
                 onClick={reloadUsers}
                 title="Recarregar"
-                className="border-white/10 text-zinc-400 hover:text-white rounded-lg h-8 w-8"
+                className="border-border text-muted-foreground hover:text-white rounded-lg h-8 w-8"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
@@ -705,17 +707,30 @@ export function ProfilePanel({
       {/* ABA 1: MEU PERFIL (Aparece para todos) */}
       {(activeTab === "profile" || !isAdmin) && (
         <div className="space-y-6 max-w-2xl mx-auto">
+          {/* Card de Aparência e Tema */}
+          <div className="bg-card border border-border rounded-xl p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Aparência do Sistema
+              </h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Escolha seu tema preferido: claro, escuro ou sincronizado com o seu dispositivo.
+            </p>
+            <ThemeToggle variant="segmented" />
+          </div>
+
           {/* Card com Informações da Conta e Alterar Nome de Usuário */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
+          <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Dados da Conta
               </h2>
               <span
                 className={`px-2 py-0.5 rounded text-[11px] font-medium ${
                   userSession.isAdmin
-                    ? "bg-zinc-800 text-zinc-200 border border-zinc-700/60"
-                    : "bg-zinc-900 text-zinc-400 border border-zinc-800"
+                    ? "bg-muted text-foreground border border-zinc-700/60"
+                    : "bg-muted/60 text-muted-foreground border border-zinc-800"
                 }`}
               >
                 {userSession.isAdmin ? "Administrador" : "Usuário Normal"}
@@ -724,11 +739,11 @@ export function ProfilePanel({
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center font-semibold text-sm text-zinc-200 uppercase shrink-0">
+                <div className="w-11 h-11 rounded-full bg-muted border border-border flex items-center justify-center font-semibold text-sm text-foreground uppercase shrink-0">
                   {currentUsername ? currentUsername.slice(0, 1) : "U"}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-zinc-400 font-medium">Nome de Login</p>
+                  <p className="text-xs text-muted-foreground font-medium">Nome de Login</p>
                   <p className="text-sm font-semibold text-white truncate">
                     {currentUsername}
                   </p>
@@ -743,9 +758,9 @@ export function ProfilePanel({
                     setIsEditingName(true);
                     setUsernameFeedback(null);
                   }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-white/10 transition-colors flex items-center gap-1.5 self-start sm:self-center"
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium text-foreground hover:text-white bg-muted/60 hover:bg-muted border border-border transition-colors flex items-center gap-1.5 self-start sm:self-center"
                 >
-                  <Pencil className="w-3.5 h-3.5 text-zinc-400" />
+                  <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                   Editar Nome de Login
                 </button>
               )}
@@ -764,9 +779,9 @@ export function ProfilePanel({
             )}
 
             {isEditingName && (
-              <form onSubmit={handleUpdateUsername} className="space-y-3 pt-3 border-t border-white/5 mt-4">
+              <form onSubmit={handleUpdateUsername} className="space-y-3 pt-3 border-t border-border/40 mt-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-300 mb-1">
+                  <label className="block text-xs font-medium text-foreground mb-1">
                     Novo Nome de Login
                   </label>
                   <input
@@ -776,10 +791,10 @@ export function ProfilePanel({
                     value={usernameInput}
                     onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/\s+/g, "_"))}
                     placeholder="Digite o novo nome de usuário"
-                    className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                    className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                     autoFocus
                   />
-                  <p className="text-[11px] text-zinc-500 mt-1">
+                  <p className="text-[11px] text-muted-foreground/80 mt-1">
                     Mínimo 3 caracteres, sem espaços.
                   </p>
                 </div>
@@ -793,7 +808,7 @@ export function ProfilePanel({
                       setUsernameInput(currentUsername);
                       setUsernameFeedback(null);
                     }}
-                    className="h-8 border-white/10 text-zinc-400 hover:text-white rounded-lg text-xs px-3"
+                    className="h-8 border-border text-muted-foreground hover:text-white rounded-lg text-xs px-3"
                   >
                     Cancelar
                   </Button>
@@ -810,7 +825,7 @@ export function ProfilePanel({
           </div>
 
           {/* Card de Conexão com Google e Remetente Bancário */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-5 space-y-4">
+          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[#b300e4]/15 border border-[#b300e4]/30 flex items-center justify-center text-[#d246f8]">
@@ -820,7 +835,7 @@ export function ProfilePanel({
                   <h2 className="text-sm font-semibold text-white tracking-tight">
                     Sincronização de Transações por E-mail (Gmail)
                   </h2>
-                  <p className="text-[11px] text-zinc-400">
+                  <p className="text-[11px] text-muted-foreground">
                     Importação individual de comprovantes bancários recebidos
                   </p>
                 </div>
@@ -829,7 +844,7 @@ export function ProfilePanel({
                 className={`px-2 py-0.5 rounded text-[11px] font-medium flex items-center gap-1.5 ${
                   googleSettings.isConnected
                     ? "bg-emerald-950/40 text-emerald-400 border border-emerald-800/40"
-                    : "bg-zinc-900 text-zinc-400 border border-zinc-800"
+                    : "bg-muted/60 text-muted-foreground border border-zinc-800"
                 }`}
               >
                 <span
@@ -853,7 +868,7 @@ export function ProfilePanel({
                 <button
                   type="button"
                   onClick={() => setGoogleFeedback(null)}
-                  className="text-zinc-500 hover:text-white shrink-0"
+                  className="text-muted-foreground/80 hover:text-white shrink-0"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -861,8 +876,8 @@ export function ProfilePanel({
             )}
 
             {!googleSettings.isConnected ? (
-              <div className="pt-2 border-t border-white/5 space-y-3">
-                <p className="text-xs text-zinc-400 leading-relaxed">
+              <div className="pt-2 border-t border-border/40 space-y-3">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   Conecte sua conta do Google para que o sistema leia com segurança os comprovantes bancários recebidos no seu Gmail e cadastre os lançamentos diretamente na sua conta.
                 </p>
 
@@ -893,8 +908,8 @@ export function ProfilePanel({
                   </a>
                 </div>
 
-                <div className="p-3 rounded-lg bg-zinc-900/60 border border-white/5 text-[11px] text-zinc-500 space-y-1">
-                  <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
+                <div className="p-3 rounded-lg bg-muted/60/60 border border-border/40 text-[11px] text-muted-foreground/80 space-y-1">
+                  <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                     Privacidade e Isolamento
                   </div>
@@ -904,13 +919,13 @@ export function ProfilePanel({
                 </div>
               </div>
             ) : (
-              <div className="pt-2 border-t border-white/5 space-y-4">
+              <div className="pt-2 border-t border-border/40 space-y-4">
                 {/* E-mail Google Conectado */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-900 border border-white/5">
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/60 border border-border/40">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[11px] text-zinc-400 font-medium">Conta Google Conectada</p>
+                      <p className="text-[11px] text-muted-foreground font-medium">Conta Google Conectada</p>
                       <p className="text-xs font-semibold text-white truncate">
                         {googleSettings.googleEmail || "Conexão ativa"}
                       </p>
@@ -933,16 +948,16 @@ export function ProfilePanel({
                 <form onSubmit={handleSaveBankSyncRules} className="space-y-4 pt-1">
                   <div className="space-y-3">
                     <div className="space-y-0.5">
-                      <label className="text-xs font-semibold text-zinc-200">
+                      <label className="text-xs font-semibold text-foreground">
                         Remetentes de Bancos Autorizados
                       </label>
-                      <p className="text-[11px] text-zinc-400">
+                      <p className="text-[11px] text-muted-foreground">
                         Cadastre os e-mails dos bancos e a conta onde as receitas e despesas devem ser creditadas ou debitadas.
                       </p>
                     </div>
 
                     {/* Cabeçalho da tabela no desktop para alinhamento perfeito sem quebra de linha */}
-                    <div className="hidden sm:grid grid-cols-[1fr_1fr_40px] gap-3 px-1 text-[11px] font-medium text-zinc-400">
+                    <div className="hidden sm:grid grid-cols-[1fr_1fr_40px] gap-3 px-1 text-[11px] font-medium text-muted-foreground">
                       <div>E-mail do Remetente</div>
                       <div>Conta de Destino</div>
                       <div />
@@ -952,10 +967,10 @@ export function ProfilePanel({
                       {rules.map((rule) => (
                         <div
                           key={rule.id}
-                          className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_40px] gap-2.5 sm:gap-3 items-center bg-zinc-900/60 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none border border-white/5 sm:border-0"
+                          className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_40px] gap-2.5 sm:gap-3 items-center bg-muted/60/60 sm:bg-transparent p-3 sm:p-0 rounded-lg sm:rounded-none border border-border/40 sm:border-0"
                         >
                           <div>
-                            <label className="sm:hidden block text-[11px] font-medium text-zinc-400 mb-1">
+                            <label className="sm:hidden block text-[11px] font-medium text-muted-foreground mb-1">
                               E-mail do Remetente
                             </label>
                             <input
@@ -963,19 +978,19 @@ export function ProfilePanel({
                               value={rule.email}
                               onChange={(e) => handleUpdateRule(rule.id, "email", e.target.value)}
                               placeholder="Ex: noreply@99app.com"
-                              className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                              className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                             />
                           </div>
 
                           <div>
-                            <label className="sm:hidden block text-[11px] font-medium text-zinc-400 mb-1">
+                            <label className="sm:hidden block text-[11px] font-medium text-muted-foreground mb-1">
                               Conta de Destino
                             </label>
                             <div className="relative">
                               <select
                                 value={rule.accountId}
                                 onChange={(e) => handleUpdateRule(rule.id, "accountId", e.target.value)}
-                                className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg pl-3 pr-8 text-xs text-white focus:outline-none focus:border-[#b300e4] cursor-pointer appearance-none"
+                                className="w-full h-9 bg-muted/60 border border-border rounded-lg pl-3 pr-8 text-xs text-white focus:outline-none focus:border-[#b300e4] cursor-pointer appearance-none"
                               >
                                 <option value="">Automático (criar conta por nome)</option>
                                 {googleSettings.availableAccounts?.map((acc) => (
@@ -984,7 +999,7 @@ export function ProfilePanel({
                                   </option>
                                 ))}
                               </select>
-                              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+                              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                                 <ChevronDown className="w-3.5 h-3.5" />
                               </div>
                             </div>
@@ -996,7 +1011,7 @@ export function ProfilePanel({
                               title="Remover este remetente"
                               onClick={() => handleDeleteRule(rule.id)}
                               disabled={rules.length === 1 && !rule.email}
-                              className="h-9 w-9 flex items-center justify-center rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-950/20 border border-transparent hover:border-rose-900/40 transition-colors disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-zinc-500 cursor-pointer"
+                              className="h-9 w-9 flex items-center justify-center rounded-lg text-muted-foreground/80 hover:text-rose-400 hover:bg-rose-950/20 border border-transparent hover:border-rose-900/40 transition-colors disabled:opacity-25 disabled:hover:bg-transparent disabled:hover:text-muted-foreground/80 cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1027,15 +1042,15 @@ export function ProfilePanel({
                 </form>
 
                 {/* Ação de Sincronizar Agora */}
-                <div className="pt-3 border-t border-white/5 flex items-center justify-between gap-3">
-                  <div className="text-[11px] text-zinc-400">
+                <div className="pt-3 border-t border-border/40 flex items-center justify-between gap-3">
+                  <div className="text-[11px] text-muted-foreground">
                     Deseja buscar novos comprovantes recebidos agora?
                   </div>
                   <Button
                     type="button"
                     disabled={isSyncingGoogle || rules.every((r) => !r.email.trim())}
                     onClick={handleSyncNow}
-                    className="h-8 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-white/10 text-xs rounded-lg px-3 gap-1.5 shrink-0 disabled:opacity-40"
+                    className="h-8 bg-muted hover:bg-zinc-700 text-foreground border border-border text-xs rounded-lg px-3 gap-1.5 shrink-0 disabled:opacity-40"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGoogle ? "animate-spin text-[#d246f8]" : ""}`} />
                     {isSyncingGoogle ? "Sincronizando..." : "Sincronizar E-mails"}
@@ -1046,7 +1061,7 @@ export function ProfilePanel({
           </div>
 
           {/* Card de Notificações no Telegram */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
@@ -1061,12 +1076,12 @@ export function ProfilePanel({
                         Ativo
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold text-zinc-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold text-muted-foreground bg-muted/50 border border-border px-2 py-0.5 rounded-full">
                         Não configurado
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Receba alertas diários das suas contas e despesas pendentes direto no seu Telegram.
                   </p>
                 </div>
@@ -1093,18 +1108,18 @@ export function ProfilePanel({
                 <button
                   type="button"
                   onClick={() => setTelegramFeedback(null)}
-                  className="text-zinc-500 hover:text-white"
+                  className="text-muted-foreground/80 hover:text-white"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
 
-            <div className="bg-[#18181b] border border-white/5 rounded-xl p-4 mb-5 text-xs text-zinc-400 space-y-2">
-              <p className="font-semibold text-zinc-200">Como conectar seu Telegram:</p>
-              <ol className="list-decimal list-inside space-y-1.5 text-zinc-400 text-[11px] leading-relaxed">
+            <div className="bg-card border border-border/40 rounded-xl p-4 mb-5 text-xs text-muted-foreground space-y-2">
+              <p className="font-semibold text-foreground">Como conectar seu Telegram:</p>
+              <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground text-[11px] leading-relaxed">
                 <li>
-                  Abra o bot no Telegram e clique em <span className="text-white font-medium">Começar</span> (<code className="bg-zinc-800 px-1 py-0.5 rounded text-white font-mono">/start</code>).
+                  Abra o bot no Telegram e clique em <span className="text-white font-medium">Começar</span> (<code className="bg-muted px-1 py-0.5 rounded text-white font-mono">/start</code>).
                 </li>
                 <li>
                   Para descobrir seu <span className="text-white font-medium">Chat ID</span>, envie qualquer mensagem para o bot gratuito <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-sky-400 hover:underline">@userinfobot</a> no Telegram.
@@ -1117,7 +1132,7 @@ export function ProfilePanel({
 
             <form onSubmit={handleSaveTelegram} className="space-y-4">
               <div>
-                <label htmlFor="telegram-chat-id" className="block text-xs font-medium text-zinc-300 mb-1.5">
+                <label htmlFor="telegram-chat-id" className="block text-xs font-medium text-foreground mb-1.5">
                   Seu Chat ID do Telegram
                 </label>
                 <input
@@ -1126,7 +1141,7 @@ export function ProfilePanel({
                   placeholder="Ex: 123456789"
                   value={telegramChatId}
                   onChange={(e) => setTelegramChatId(e.target.value.replace(/\D/g, ""))}
-                  className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                  className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                 />
               </div>
 
@@ -1136,9 +1151,9 @@ export function ProfilePanel({
                   type="checkbox"
                   checked={telegramNotifyBills}
                   onChange={(e) => setTelegramNotifyBills(e.target.checked)}
-                  className="w-4 h-4 rounded bg-zinc-900 border-white/20 text-[#b300e4] focus:ring-[#b300e4] accent-[#b300e4] cursor-pointer"
+                  className="w-4 h-4 rounded bg-muted/60 border-border text-[#b300e4] focus:ring-[#b300e4] accent-[#b300e4] cursor-pointer"
                 />
-                <label htmlFor="telegram-notify-bills" className="text-xs text-zinc-300 cursor-pointer select-none">
+                <label htmlFor="telegram-notify-bills" className="text-xs text-foreground cursor-pointer select-none">
                   Receber alertas de contas vencendo e atrasadas diariamente
                 </label>
               </div>
@@ -1158,7 +1173,7 @@ export function ProfilePanel({
                     variant="outline"
                     disabled={isTestingTelegram}
                     onClick={handleSendTestTelegram}
-                    className="h-8 border-white/10 text-zinc-300 hover:text-white hover:bg-white/5 rounded-lg text-xs px-3.5 flex items-center gap-1.5"
+                    className="h-8 border-border text-foreground hover:text-white hover:bg-muted/50 rounded-lg text-xs px-3.5 flex items-center gap-1.5"
                   >
                     <Send className={`w-3 h-3 ${isTestingTelegram ? "animate-pulse text-sky-400" : ""}`} />
                     {isTestingTelegram ? "Enviando teste..." : "Enviar Mensagem de Teste"}
@@ -1169,17 +1184,17 @@ export function ProfilePanel({
           </div>
 
           {/* Card para Trocar Senha */}
-          <div className="bg-[#141414] border border-white/10 rounded-xl p-6">
+          <div className="bg-card border border-border rounded-xl p-6">
             <div className="mb-5">
               <h2 className="text-base font-semibold text-white">Alterar Senha</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Atualize sua senha de acesso para manter sua conta protegida.
               </p>
             </div>
 
             <form onSubmit={handleUpdateMyPassword} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1">
                   Senha Atual
                 </label>
                 <input
@@ -1188,12 +1203,12 @@ export function ProfilePanel({
                   value={currentPass}
                   onChange={(e) => setCurrentPass(e.target.value)}
                   placeholder="Sua senha atual"
-                  className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                  className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1">
                   Nova Senha
                 </label>
                 <div className="relative">
@@ -1204,12 +1219,12 @@ export function ProfilePanel({
                     value={myNewPass}
                     onChange={(e) => setMyNewPass(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                    className="w-full h-9 bg-muted/60 border border-border rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowMyPass(!showMyPass)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/80 hover:text-foreground"
                   >
                     {showMyPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
@@ -1217,7 +1232,7 @@ export function ProfilePanel({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1">
                   Confirmar Nova Senha
                 </label>
                 <input
@@ -1227,7 +1242,7 @@ export function ProfilePanel({
                   value={myConfirmPass}
                   onChange={(e) => setMyConfirmPass(e.target.value)}
                   placeholder="Repita a nova senha"
-                  className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                  className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                 />
               </div>
 
@@ -1245,17 +1260,17 @@ export function ProfilePanel({
 
       {/* ABA 2: USUÁRIOS (Somente Admin) */}
       {isAdmin && activeTab === "users" && (
-        <div className="bg-[#141414] border border-white/10 rounded-xl overflow-hidden">
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
           {filteredUsers.length === 0 ? (
-            <div className="p-10 text-center text-zinc-400 space-y-2">
+            <div className="p-10 text-center text-muted-foreground space-y-2">
               <Users className="w-8 h-8 mx-auto text-zinc-600" />
-              <p className="text-sm font-medium text-zinc-300">Nenhum usuário encontrado</p>
+              <p className="text-sm font-medium text-foreground">Nenhum usuário encontrado</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01] text-zinc-400 font-medium">
+                  <tr className="border-b border-border/40 bg-white/[0.01] text-muted-foreground font-medium">
                     <th className="py-3 px-5">Usuário</th>
                     <th className="py-3 px-5">Acesso</th>
                     <th className="py-3 px-5">Cadastro</th>
@@ -1274,15 +1289,15 @@ export function ProfilePanel({
                         {/* Usuário */}
                         <td className="py-3 px-5">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center font-semibold text-zinc-300 uppercase shrink-0">
+                            <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center font-semibold text-foreground uppercase shrink-0">
                               {user.name ? user.name.slice(0, 1) : "U"}
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <span className="font-medium text-zinc-200">
+                              <span className="font-medium text-foreground">
                                 {user.name || user.email}
                               </span>
                               {isSelf && (
-                                <span className="px-1.5 py-0.2 rounded text-[10px] text-zinc-500 bg-white/5">
+                                <span className="px-1.5 py-0.2 rounded text-[10px] text-muted-foreground/80 bg-muted/50">
                                   Você
                                 </span>
                               )}
@@ -1296,8 +1311,8 @@ export function ProfilePanel({
                             <span
                               className={`px-2 py-0.5 rounded text-[11px] font-medium ${
                                 isAdminUser
-                                  ? "bg-zinc-800 text-zinc-200 border border-zinc-700/60"
-                                  : "bg-zinc-900 text-zinc-400 border border-zinc-800"
+                                  ? "bg-muted text-foreground border border-zinc-700/60"
+                                  : "bg-muted/60 text-muted-foreground border border-zinc-800"
                               }`}
                             >
                               {isAdminUser ? "Administrador" : "Normal"}
@@ -1307,7 +1322,7 @@ export function ProfilePanel({
                               <button
                                 onClick={() => handleToggleRole(user)}
                                 disabled={togglingUserId === user.id}
-                                className="text-[11px] text-zinc-400 hover:text-zinc-200 underline-offset-2 hover:underline ml-1"
+                                className="text-[11px] text-muted-foreground hover:text-foreground underline-offset-2 hover:underline ml-1"
                               >
                                 {togglingUserId === user.id
                                   ? "Salvando..."
@@ -1320,7 +1335,7 @@ export function ProfilePanel({
                         </td>
 
                         {/* Data */}
-                        <td className="py-3 px-5 text-zinc-400 text-[11px]">
+                        <td className="py-3 px-5 text-muted-foreground text-[11px]">
                           {new Date(user.createdAt).toLocaleDateString("pt-BR", {
                             day: "2-digit",
                             month: "2-digit",
@@ -1329,7 +1344,7 @@ export function ProfilePanel({
                         </td>
 
                         {/* Atividade */}
-                        <td className="py-3 px-5 text-zinc-400 text-[11px]">
+                        <td className="py-3 px-5 text-muted-foreground text-[11px]">
                           {user._count.transactions} transações • {user._count.accounts} contas
                         </td>
 
@@ -1338,7 +1353,7 @@ export function ProfilePanel({
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => openPasswordModal(user)}
-                              className="px-2.5 py-1 rounded-md text-xs font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-white/10 transition-colors"
+                              className="px-2.5 py-1 rounded-md text-xs font-medium text-foreground hover:text-white bg-muted/60 hover:bg-muted border border-border transition-colors"
                             >
                               Trocar Senha
                             </button>
@@ -1347,7 +1362,7 @@ export function ProfilePanel({
                               <button
                                 onClick={() => setDeleteModalUser(user)}
                                 title="Excluir usuário"
-                                className="p-1 rounded text-zinc-500 hover:text-rose-400 transition-colors"
+                                className="p-1 rounded text-muted-foreground/80 hover:text-rose-400 transition-colors"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1366,17 +1381,17 @@ export function ProfilePanel({
 
       {/* ABA 3: NOVO USUÁRIO (Somente Admin) */}
       {isAdmin && activeTab === "create" && (
-        <div className="bg-[#141414] border border-white/10 rounded-xl p-6 max-w-lg mx-auto">
+        <div className="bg-card border border-border rounded-xl p-6 max-w-lg mx-auto">
           <div className="mb-5">
             <h2 className="text-base font-semibold text-white">Criar Nova Conta</h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               O novo usuário terá seu espaço de finanças isolado.
             </p>
           </div>
 
           <form onSubmit={handleCreateUser} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-foreground mb-1">
                 Nome de Login
               </label>
               <input
@@ -1385,13 +1400,13 @@ export function ProfilePanel({
                 value={newName}
                 onChange={(e) => setNewName(e.target.value.toLowerCase().replace(/\s+/g, "_"))}
                 placeholder="Ex: ana_silva"
-                className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                className="w-full h-9 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4]"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-medium text-zinc-300">
+                <label className="block text-xs font-medium text-foreground">
                   Senha Provisória
                 </label>
                 <button
@@ -1401,7 +1416,7 @@ export function ProfilePanel({
                     setNewPassword(generated);
                     setShowNewPassword(true);
                   }}
-                  className="text-[11px] text-zinc-400 hover:text-zinc-200"
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
                 >
                   Gerar senha
                 </button>
@@ -1414,12 +1429,12 @@ export function ProfilePanel({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="w-full h-9 bg-zinc-900 border border-white/10 rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                  className="w-full h-9 bg-muted/60 border border-border rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/80 hover:text-foreground"
                 >
                   {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
@@ -1427,7 +1442,7 @@ export function ProfilePanel({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-zinc-300 mb-1.5">
+              <label className="block text-xs font-medium text-foreground mb-1.5">
                 Nível de Permissão
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -1436,12 +1451,12 @@ export function ProfilePanel({
                   onClick={() => setNewRole("USER")}
                   className={`p-3 rounded-lg border text-left transition-all ${
                     newRole === "USER"
-                      ? "bg-white/5 border-white/30 text-white"
-                      : "bg-zinc-900 border-white/5 text-zinc-400 hover:border-white/15"
+                      ? "bg-muted/50 border-border text-white"
+                      : "bg-muted/60 border-border/40 text-muted-foreground hover:border-border/60"
                   }`}
                 >
                   <p className="text-xs font-medium text-white">Normal</p>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Acesso somente às finanças pessoais</p>
+                  <p className="text-[11px] text-muted-foreground/80 mt-0.5">Acesso somente às finanças pessoais</p>
                 </button>
 
                 <button
@@ -1449,12 +1464,12 @@ export function ProfilePanel({
                   onClick={() => setNewRole("ADMIN")}
                   className={`p-3 rounded-lg border text-left transition-all ${
                     newRole === "ADMIN"
-                      ? "bg-white/5 border-white/30 text-white"
-                      : "bg-zinc-900 border-white/5 text-zinc-400 hover:border-white/15"
+                      ? "bg-muted/50 border-border text-white"
+                      : "bg-muted/60 border-border/40 text-muted-foreground hover:border-border/60"
                   }`}
                 >
                   <p className="text-xs font-medium text-white">Administrador</p>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Acesso total e gestão de usuários</p>
+                  <p className="text-[11px] text-muted-foreground/80 mt-0.5">Acesso total e gestão de usuários</p>
                 </button>
               </div>
             </div>
@@ -1473,17 +1488,17 @@ export function ProfilePanel({
       {/* MODAL: REDEFINIR SENHA DE OUTRO USUÁRIO (Admin) */}
       {passwordModalUser && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#18181b] border border-white/10 rounded-xl w-full max-w-sm p-5 shadow-2xl relative">
+          <div className="bg-card border border-border rounded-xl w-full max-w-sm p-5 shadow-2xl relative">
             <button
               onClick={() => setPasswordModalUser(null)}
-              className="absolute right-3.5 top-3.5 text-zinc-400 hover:text-white"
+              className="absolute right-3.5 top-3.5 text-muted-foreground hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-white">Redefinir Senha</h3>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Usuário: <span className="font-medium text-white">{passwordModalUser.name}</span>
               </p>
             </div>
@@ -1503,7 +1518,7 @@ export function ProfilePanel({
             <form onSubmit={handleSaveUserPassword} className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-zinc-300">Nova Senha</label>
+                  <label className="block text-xs font-medium text-foreground">Nova Senha</label>
                   <button
                     type="button"
                     onClick={() => {
@@ -1512,7 +1527,7 @@ export function ProfilePanel({
                       setModalConfirmPassword(gen);
                       setShowModalPassword(true);
                     }}
-                    className="text-[11px] text-zinc-400 hover:text-zinc-200"
+                    className="text-[11px] text-muted-foreground hover:text-foreground"
                   >
                     Gerar senha
                   </button>
@@ -1525,12 +1540,12 @@ export function ProfilePanel({
                     value={modalNewPassword}
                     onChange={(e) => setModalNewPassword(e.target.value)}
                     placeholder="Mínimo 6 caracteres"
-                    className="w-full h-8 bg-zinc-900 border border-white/10 rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                    className="w-full h-8 bg-muted/60 border border-border rounded-lg pl-3 pr-8 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowModalPassword(!showModalPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/80 hover:text-foreground"
                   >
                     {showModalPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
@@ -1538,7 +1553,7 @@ export function ProfilePanel({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-zinc-300 mb-1">Confirmar Senha</label>
+                <label className="block text-xs font-medium text-foreground mb-1">Confirmar Senha</label>
                 <input
                   type={showModalPassword ? "text" : "password"}
                   required
@@ -1546,7 +1561,7 @@ export function ProfilePanel({
                   value={modalConfirmPassword}
                   onChange={(e) => setModalConfirmPassword(e.target.value)}
                   placeholder="Repita a senha"
-                  className="w-full h-8 bg-zinc-900 border border-white/10 rounded-lg px-3 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4] font-mono"
+                  className="w-full h-8 bg-muted/60 border border-border rounded-lg px-3 text-xs text-white placeholder:text-muted-foreground/80 focus:outline-none focus:border-[#b300e4] font-mono"
                 />
               </div>
 
@@ -1555,7 +1570,7 @@ export function ProfilePanel({
                   type="button"
                   variant="outline"
                   onClick={() => setPasswordModalUser(null)}
-                  className="border-white/10 text-zinc-300 hover:text-white rounded-lg h-8 text-xs px-3"
+                  className="border-border text-foreground hover:text-white rounded-lg h-8 text-xs px-3"
                 >
                   Cancelar
                 </Button>
@@ -1575,9 +1590,9 @@ export function ProfilePanel({
       {/* MODAL: CONFIRMAR EXCLUSÃO (Admin) */}
       {deleteModalUser && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#18181b] border border-white/10 rounded-xl w-full max-w-sm p-5 shadow-2xl relative">
+          <div className="bg-card border border-border rounded-xl w-full max-w-sm p-5 shadow-2xl relative">
             <h3 className="text-sm font-semibold text-white mb-2">Excluir Usuário</h3>
-            <p className="text-xs text-zinc-400 mb-5 leading-relaxed">
+            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
               Deseja realmente remover o usuário <span className="text-white font-medium">{deleteModalUser.name}</span>? Todos os dados vinculados a ele serão excluídos.
             </p>
 
@@ -1586,7 +1601,7 @@ export function ProfilePanel({
                 type="button"
                 variant="outline"
                 onClick={() => setDeleteModalUser(null)}
-                className="border-white/10 text-zinc-300 hover:text-white rounded-lg h-8 text-xs px-3"
+                className="border-border text-foreground hover:text-white rounded-lg h-8 text-xs px-3"
               >
                 Cancelar
               </Button>

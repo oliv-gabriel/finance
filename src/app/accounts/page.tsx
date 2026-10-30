@@ -21,17 +21,17 @@ export default async function AccountsPage({
   const creditCards = accounts.filter((a) => a.type === "CARTAO");
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212]">
+    <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Navbar isAdmin={admin} />
 
       <div className="max-w-6xl mx-auto w-full px-4 py-5 md:px-8 md:py-8 space-y-6 flex-1 overflow-auto pb-36 sm:pb-16">
         {/* Cabeçalho da Página */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
               Contas e Cartões
             </h1>
-            <p className="text-xs md:text-sm text-zinc-400 mt-1">
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Gerencie suas contas, cartões e controle se os saldos entram no total do seu dashboard.
             </p>
           </div>

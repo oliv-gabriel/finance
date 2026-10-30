@@ -40,7 +40,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 rounded-2xl bg-[#18181b] border border-white/10 shadow-2xl backdrop-blur-sm">
+    <div className="w-full p-6 sm:p-8 rounded-2xl bg-card border border-border shadow-2xl backdrop-blur-sm">
       <h2 className="sr-only">Entrar na conta</h2>
 
       {/* Mensagem de Erro com acessibilidade aria-live */}
@@ -60,7 +60,7 @@ export default function LoginForm() {
         <div>
           <label
             htmlFor="login-username"
-            className="block text-xs font-semibold text-zinc-300 mb-1.5"
+            className="block text-xs font-semibold text-foreground font-medium mb-1.5"
           >
             Nome de Usuário
           </label>
@@ -79,7 +79,7 @@ export default function LoginForm() {
               autoComplete="username"
               spellCheck={false}
               required
-              className="w-full h-11 bg-[#121212] border border-white/10 hover:border-white/20 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-4 text-sm text-white placeholder-zinc-500 transition-colors"
+              className="w-full h-11 bg-muted/50 border border-border hover:border-border/80 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground transition-colors"
             />
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function LoginForm() {
         <div>
           <label
             htmlFor="login-password"
-            className="block text-xs font-semibold text-zinc-300 mb-1.5"
+            className="block text-xs font-semibold text-foreground font-medium mb-1.5"
           >
             Senha
           </label>
@@ -106,7 +106,7 @@ export default function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
-              className="w-full h-11 bg-[#121212] border border-white/10 hover:border-white/20 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-11 text-sm text-white placeholder-zinc-500 transition-colors"
+              className="w-full h-11 bg-muted/50 border border-border hover:border-border/80 focus:border-[#b300e4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4]/40 rounded-xl pl-10 pr-11 text-sm text-foreground placeholder:text-muted-foreground transition-colors"
             />
             <button
               type="button"
@@ -128,7 +128,7 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl text-sm font-bold bg-[#b300e4] hover:bg-[#9a00c4] active:scale-[0.99] text-white shadow-md shadow-[#b300e4]/25 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] focus-visible:ring-offset-2 focus-visible:ring-offset-[#18181b]"
+            className="w-full h-11 rounded-xl text-sm font-bold bg-[#b300e4] hover:bg-[#9a00c4] active:scale-[0.99] text-white shadow-md shadow-[#b300e4]/25 transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b300e4] focus-visible:ring-offset-2 focus-visible:ring-offset-card"
           >
             {loading ? (
               <>

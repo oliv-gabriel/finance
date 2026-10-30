@@ -284,10 +284,11 @@ export default function TransactionTable({
               <button
                 type="button"
                 onClick={() => setIsFilterModalOpen(true)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer relative ${
+                aria-label="Filtrar transações"
+                className={`p-2.5 rounded-xl border transition-colors cursor-pointer relative ${
                   activeFilterCount > 0
                     ? "bg-[#b300e4]/20 border-[#b300e4]/60 text-[#d246f8]"
-                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                    : "bg-muted border-border text-muted-foreground hover:text-foreground"
                 }`}
                 title="Filtrar transações"
               >
@@ -301,6 +302,7 @@ export default function TransactionTable({
 
               <button
                 type="button"
+                aria-label="Alterar ordenação"
                 onClick={() => {
                   setSortOrder((prev) => {
                     if (prev === "date-desc") return "amount-desc";
@@ -309,10 +311,10 @@ export default function TransactionTable({
                     return "date-desc";
                   });
                 }}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
                   sortOrder !== "date-desc"
                     ? "bg-[#b300e4]/20 border-[#b300e4]/60 text-[#d246f8]"
-                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                    : "bg-muted border-border text-muted-foreground hover:text-foreground"
                 }`}
                 title={`Ordenar: ${
                   sortOrder === "date-desc" ? "Mais recentes" :
@@ -325,11 +327,12 @@ export default function TransactionTable({
 
               <button
                 type="button"
+                aria-label="Buscar transações"
                 onClick={() => setShowMobileSearch((prev) => !prev)}
-                className={`p-2.5 rounded-xl border transition-all cursor-pointer ${
+                className={`p-2.5 rounded-xl border transition-colors cursor-pointer ${
                   showMobileSearch || searchTerm
-                    ? "bg-white/10 border-white/20 text-white"
-                    : "bg-zinc-900 border-white/10 text-zinc-300 hover:text-white"
+                    ? "bg-card border-border text-foreground"
+                    : "bg-muted border-border text-muted-foreground hover:text-foreground"
                 }`}
                 title="Buscar"
               >
@@ -347,7 +350,7 @@ export default function TransactionTable({
                 placeholder="Buscar por descrição, categoria ou conta..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-9 bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-8 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-[#b300e4]"
+                className="w-full h-9 bg-muted/60 border border-border rounded-xl pl-9 pr-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#b300e4]"
                 autoFocus
               />
               {searchTerm && (
@@ -363,24 +366,24 @@ export default function TransactionTable({
           )}
 
           {/* Resumo de 3 colunas exatamente como no print do usuário */}
-          <div className="grid grid-cols-3 gap-2 py-3 px-3.5 bg-zinc-900/60 border border-white/5 rounded-2xl">
-            <div>
-              <p className="text-sm font-extrabold text-emerald-400 tabular-nums truncate">
+          <div className="grid grid-cols-3 gap-2 py-3 px-3.5 bg-card border border-border/80 rounded-2xl shadow-xs">
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 tabular-nums truncate">
                 {formatCurrency(calcIncome)}
               </p>
-              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Receitas</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate">Receitas</p>
             </div>
-            <div>
-              <p className="text-sm font-extrabold text-rose-500 tabular-nums truncate">
+            <div className="min-w-0">
+              <p className="text-sm font-extrabold text-rose-600 dark:text-rose-400 tabular-nums truncate">
                 {formatCurrency(calcExpense)}
               </p>
-              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Despesas</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate">Despesas</p>
             </div>
-            <div>
-              <p className={`text-sm font-extrabold tabular-nums truncate ${calcBalance >= 0 ? "text-white" : "text-rose-400"}`}>
+            <div className="min-w-0">
+              <p className={`text-sm font-extrabold tabular-nums truncate ${calcBalance >= 0 ? "text-foreground" : "text-rose-600 dark:text-rose-400"}`}>
                 {formatCurrency(calcBalance)}
               </p>
-              <p className="text-[11px] text-zinc-400 font-medium mt-0.5">Balanço</p>
+              <p className="text-[11px] text-muted-foreground font-medium mt-0.5 truncate">Balanço</p>
             </div>
           </div>
 
@@ -438,7 +441,7 @@ export default function TransactionTable({
           <div className="rounded-2xl border border-border/60 bg-card overflow-hidden shadow-sm divide-y divide-border/30">
             {groupedMobile.map((group) => (
               <div key={group.dateKey} className="flex flex-col">
-                <div className="bg-[#18181b] text-[#9e9ea3] text-[13px] font-semibold px-4 py-2.5 border-y border-border/40 select-none">
+                <div className="bg-card text-muted-foreground text-[13px] font-semibold px-4 py-2.5 border-y border-border/40 select-none">
                   {formatGroupHeader(group.dateKey)}
                 </div>
 
@@ -548,7 +551,7 @@ export default function TransactionTable({
         return (
           <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in-0 p-3">
             <div 
-              className="w-full max-w-md bg-[#18181b] border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
+              className="w-full max-w-md bg-card border border-border/80 rounded-3xl p-5 shadow-2xl space-y-5 text-foreground animate-in zoom-in-95"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between pb-2 border-b border-border/40">
@@ -664,7 +667,7 @@ export default function TransactionTable({
 
       {deleteModalTx && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in-0">
-          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-[#18181b] p-6 shadow-2xl animate-in zoom-in-95">
+          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center gap-3.5 border-b border-border/40 pb-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-500">
                 <Trash2 className="size-6 stroke-[2.2]" />
@@ -709,7 +712,7 @@ export default function TransactionTable({
 
       {editModalTx && (
         <div className="fixed inset-0 flex items-center justify-center p-4 animate-in fade-in-0">
-          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-[#18181b] p-6 shadow-2xl animate-in zoom-in-95">
+          <div className="w-full max-w-md space-y-5 rounded-3xl border border-border/80 bg-card p-6 shadow-2xl animate-in zoom-in-95">
             <div className="flex items-center gap-3.5 border-b border-border/40 pb-3">
               <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[#b300e4]/15 text-[#b300e4]">
                 <Edit2 className="size-6 stroke-[2.2]" />
@@ -750,35 +753,50 @@ export default function TransactionTable({
       {/* 2. VERSÃO DESKTOP                                                         */}
       {/* ========================================================================= */}
       <div className="hidden md:flex flex-col space-y-4">
-        <div className="sticky top-[56px] z-20 bg-[#121212]/95 backdrop-blur-md pt-2 pb-3 -mx-2 px-2 grid grid-cols-3 gap-4 shadow-sm">
-          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Entradas</span>
-              <p className="text-lg font-black text-emerald-400 mt-0.5 tabular-nums">{formatCurrency(calcIncome)}</p>
+        <div className="sticky top-[56px] z-20 bg-background/95 backdrop-blur-md pt-2 pb-3.5 -mx-2 px-2 grid grid-cols-3 gap-3.5 md:gap-4 shadow-xs">
+          <div className="bg-card border border-border/80 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">Entradas</span>
+              <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums tracking-tight truncate">
+                {formatCurrency(calcIncome)}
+              </p>
             </div>
-            <div className="size-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shadow-inner">
+            <div 
+              className="size-10 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs"
+              aria-hidden="true"
+            >
               <ArrowUpRight className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
 
-          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
-            <div>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Saídas</span>
-              <p className="text-lg font-black text-rose-500 mt-0.5 tabular-nums">{formatCurrency(calcExpense)}</p>
+          <div className="bg-card border border-border/80 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">Saídas</span>
+              <p className="text-xl md:text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1 tabular-nums tracking-tight truncate">
+                {formatCurrency(calcExpense)}
+              </p>
             </div>
-            <div className="size-9 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shadow-inner">
+            <div 
+              className="size-10 rounded-2xl bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center shrink-0 shadow-2xs"
+              aria-hidden="true"
+            >
               <ArrowDownLeft className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
 
-          <div className="bg-card border border-border/70 rounded-xl p-3.5 shadow-xs flex items-center justify-between border-l-4 border-l-[#b300e4]">
-            <div>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Balanço</span>
-              <p className={`text-lg font-black mt-0.5 tabular-nums ${calcBalance >= 0 ? "text-foreground" : "text-red-500"}`}>
+          <div className="bg-card border border-border/80 rounded-2xl p-4 md:p-5 shadow-xs hover:border-border transition-colors flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">Balanço</span>
+              <p className={`text-xl md:text-2xl font-bold mt-1 tabular-nums tracking-tight truncate ${
+                calcBalance >= 0 ? "text-foreground" : "text-rose-600 dark:text-rose-400"
+              }`}>
                 {formatCurrency(calcBalance)}
               </p>
             </div>
-            <div className="size-9 rounded-xl bg-[#b300e4]/15 text-[#b300e4] flex items-center justify-center shadow-inner">
+            <div 
+              className="size-10 rounded-2xl bg-[#b300e4]/10 text-[#b300e4] dark:bg-[#b300e4]/20 dark:text-[#d246f8] flex items-center justify-center shrink-0 shadow-2xs"
+              aria-hidden="true"
+            >
               <TrendingUp className="h-5 w-5 stroke-[2.5]" />
             </div>
           </div>
@@ -795,7 +813,12 @@ export default function TransactionTable({
               className="w-full pl-10 pr-4 py-2 text-sm bg-muted/30 border border-border/80 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#b300e4]/60 transition-all"
             />
             {searchTerm && (
-              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <button 
+                type="button"
+                onClick={() => setSearchTerm("")} 
+                aria-label="Limpar busca"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              >
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -860,7 +883,7 @@ export default function TransactionTable({
                 <tbody className="divide-y divide-border/40">
                   {groupedDesktop.map((group) => (
                     <React.Fragment key={group.dateKey}>
-                      <tr className="bg-[#18181b]/90 text-[#a0a0a5] font-bold text-xs border-y border-border/40">
+                      <tr className="bg-muted/70 text-muted-foreground font-bold text-xs border-y border-border/40">
                         <td colSpan={6} className="px-6 py-2.5 tracking-wide uppercase">
                           {formatGroupHeader(group.dateKey)}
                         </td>
@@ -994,25 +1017,25 @@ export default function TransactionTable({
       {/* ========================================================================= */}
       {/* 4. TOTALIZADOR FIXO NA TELA (MOBILE APENAS)                               */}
       {/* ========================================================================= */}
-      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-[#18181b]/95 backdrop-blur-md border-t border-border/70 px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] transition-all">
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-30 bg-card/95 backdrop-blur-md border-t border-border/70 px-4 py-3 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] transition-all">
         <div className="w-full flex items-center justify-between gap-2">
           <div className="flex flex-col flex-1">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Receitas</span>
-            <span className="text-sm font-black tabular-nums text-emerald-400 mt-0.5">
+            <span className="text-sm font-black tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5">
               {formatCurrency(calcIncome)}
             </span>
           </div>
           
           <div className="flex flex-col flex-1 items-center border-x border-border/50 px-2">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Despesas</span>
-            <span className="text-sm font-black tabular-nums text-rose-500 mt-0.5">
+            <span className="text-sm font-black tabular-nums text-rose-600 dark:text-rose-400 mt-0.5">
               {formatCurrency(calcExpense)}
             </span>
           </div>
           
           <div className="flex flex-col flex-1 items-end">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Balanço</span>
-            <span className={`text-sm font-black tabular-nums mt-0.5 ${calcBalance >= 0 ? "text-foreground" : "text-rose-500"}`}>
+            <span className={`text-sm font-black tabular-nums mt-0.5 ${calcBalance >= 0 ? "text-foreground" : "text-rose-600 dark:text-rose-400"}`}>
               {formatCurrency(calcBalance)}
             </span>
           </div>
