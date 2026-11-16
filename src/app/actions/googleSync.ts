@@ -382,9 +382,9 @@ export async function syncGoogleEmails() {
         }
       }
 
-      // Busca mensagens no Gmail recebidas deste remetente
-      const query = `from:${senderFilter}`;
-      console.log(`[GoogleSync] Buscando mensagens no Gmail ("${query}") para a conta "${account.name}"...`);
+      // Busca apenas mensagens NÃO LIDAS no Gmail recebidas deste remetente
+      const query = `from:${senderFilter} is:unread`;
+      console.log(`[GoogleSync] Buscando mensagens não lidas no Gmail ("${query}") para a conta "${account.name}"...`);
       const listRes = await fetch(
         `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&q=${encodeURIComponent(query)}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -427,6 +427,13 @@ export async function syncGoogleEmails() {
           if (!msgRes.ok) continue;
 
           const msgData = await msgRes.json();
+
+          // Garante estritamente que a mensagem é não lida
+          if (!msgData.labelIds?.includes("UNREAD")) {
+            console.log(`[GoogleSync] Mensagem ${msg.id} já foi lida, ignorando.`);
+            continue;
+          }
+
           const headers = msgData.payload?.headers || [];
           const subject = headers.find((h: any) => h.name?.toLowerCase() === "subject")?.value || "";
           const from = headers.find((h: any) => h.name?.toLowerCase() === "from")?.value || "";
@@ -560,8 +567,8 @@ export async function syncGoogleEmails() {
         success: true,
         count: 0,
         message: totalMessagesFound === 0
-          ? `Nenhum e-mail recente encontrado para os remetentes configurados (${rules.map(r => r.email).join(", ")}).`
-          : `Foram encontrados ${totalMessagesFound} e-mail(s), mas nenhum valor em R$ foi identificado no corpo dos comprovantes.`,
+          ? `Nenhum e-mail não lido recente encontrado para os remetentes configurados (${rules.map(r => r.email).join(", ")}).`
+          : `Foram encontrados ${totalMessagesFound} e-mail(s) não lido(s), mas nenhum valor em R$ foi identificado no corpo dos comprovantes.`,
       };
     }
 
