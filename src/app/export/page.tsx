@@ -15,7 +15,7 @@ export default function ExportPage() {
   async function handleExport() {
     setIsExporting(true);
     try {
-      const transactions = await getTransactions();
+      const transactions = await getTransactions({ all: true });
       
       const data = transactions.map((t) => ({
         ID: t.id,
